@@ -50,7 +50,7 @@
             </Border>
         </Grid>
         <Grid Grid.Row="2" Name="ConBtnGrid" HorizontalAlignment="Stretch">
-            <Button Name="CommandBtn" Content="&#xE765;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="100" Click="CommandBtn_Click"/>
+            <Button Name="CommandBtn" Content="&#xE765;" FontFamily="Segoe MDL2 Assets" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="100" Click="CommandBtn_Click"/>
             <TextBox Name="TelnetCommandBox" FontSize="15" VerticalAlignment="Center" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" HorizontalAlignment="Stretch" Margin="10,0,50,0" TextChanged="TelnetCommandBox_TextChanged" PlaceholderText="Enter command here" TextWrapping="NoWrap"/>
             <Button Name="CommandSendBtn" Content="&#xE751;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Margin="0,0,10,0" Height="30" Click="CommandSendBtn_Click" IsEnabled="False"/>
         </Grid>

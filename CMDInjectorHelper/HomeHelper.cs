@@ -11,20 +11,28 @@ namespace CMDInjectorHelper
     {
         public static bool IsCMDInjected()
         {
-            if (File.Exists(@"C:\Windows\System32\Boot\startup.bsc") && File.Exists(@"C:\Windows\System32\en-US\bootshsvc.dll.mui") && File.Exists(@"C:\Windows\System32\en-US\bcdedit.exe.mui") &&
-                File.Exists(@"C:\Windows\System32\en-US\CheckNetIsolation.exe.mui") && File.Exists(@"C:\Windows\System32\en-US\cmd.exe.mui") && File.Exists(@"C:\Windows\System32\en-US\reg.exe.mui") &&
-                File.Exists(@"C:\Windows\System32\bootshsvc.dll") && File.Exists(@"C:\Windows\System32\bcdedit.exe") && File.Exists(@"C:\Windows\System32\CheckNetIsolation.exe") &&
-                File.Exists(@"C:\Windows\System32\cmd.exe") && File.Exists(@"C:\Windows\System32\MinDeployAppX.exe") && File.Exists(@"C:\Windows\System32\more.com") &&
-                File.Exists(@"C:\Windows\System32\PowerTool.exe") && File.Exists(@"C:\Windows\System32\reg.exe") && File.Exists(@"C:\Windows\System32\ScreenCapture.exe") &&
-                File.Exists(@"C:\Windows\System32\shutdown.exe") && File.Exists(@"C:\Windows\System32\telnetd.exe") && File.Exists(@"C:\Windows\System32\TestNavigationApi.exe") &&
-                File.Exists(@"C:\Windows\System32\ICacls.exe") && File.Exists(@"C:\Windows\System32\takeown.exe") && File.Exists(@"C:\Windows\System32\sleep.exe") &&
-                File.Exists(@"C:\Windows\System32\findstr.exe") && File.Exists(@"C:\Windows\System32\CMDInjectorSetup.bat") && File.Exists(@"C:\Windows\System32\sort.exe") &&
-                File.Exists(@"C:\Windows\System32\en-US\sort.exe.mui") && File.Exists(@"C:\Windows\System32\xcopy.exe") && File.Exists(@"C:\Windows\System32\AppXTest.Common.Feature.DeployAppx.dll") &&
-                File.Exists(@"C:\Windows\System32\SendKeys.exe") && File.Exists(@"C:\Windows\System32\InputProcessorClient.dll"))
-            {
-                return true;
-            }
-            return false;
+            // This versus doing a bunch of File.Exists, which is faster?
+            var topFiles = Directory.EnumerateFiles(@"C:\Windows\System32");
+            var bootFiles = Directory.EnumerateFiles(@"C:\Windows\System32\Boot");
+            var enUSFiles = Directory.EnumerateFiles(@"C:\Windows\System32\en-US");
+
+            var topFiles_needs = new List<string> {
+                "cmd.exe", "PowerTool.exe", "bootshsvc.dll", "bcdedit.exe", "CheckNetIsolation.exe", "MinDeployAppX.exe", "more.com",
+                "reg.exe", "ScreenCapture.exe", "shutdown.exe", "telnetd.exe", "TestNavigationApi.exe", "ICacls.exe", "takeown.exe",
+                "xcopy.exe", "AppXTest.Common.Feature.DeployAppx.dll", "SendKeys.exe", "InputProcessorClient.dll", "sleep.exe"
+            };
+
+            var bootFiles_needs = new List<string> {
+                "startup.bsc", "bootshsvc.dll.mui"
+            };
+
+            var enUSFiles_needs = new List<string> {
+                "sort.exe.mui", "CheckNetIsolation.exe.mui", "cmd.exe.mui", "reg.exe.mui"
+            };
+
+            return (topFiles_needs.Intersect(topFiles).Count() == topFiles_needs.Count()) &&
+                   (bootFiles_needs.Intersect(bootFiles).Count() == bootFiles_needs.Count()) &&
+                   (enUSFiles_needs.Intersect(enUSFiles).Count() == enUSFiles_needs.Count());
         }
 
         public static string GetTelnetTroubleshoot()
@@ -35,7 +43,7 @@ namespace CMDInjectorHelper
             }
             else if (File.Exists(@"C:\Windows\System32\Boot\startup.bsc") && !string.Equals(File.ReadAllText(@"C:\Windows\System32\Boot\startup.bsc"), File.ReadAllText($"{Helper.installedLocation.Path}\\Contents\\Startup\\startup.bsc")))
             {
-                Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\Startup\\startup.bsc", @"C:\Windows\System32\Boot\startup.bsc");
+                Helper.CopyFromAppRoot("Contents\\Startup\\startup.bsc", @"C:\Windows\System32\Boot\startup.bsc");
                 return "The Bootsh service component has manually changed, or corrupted. Please reboot the device to fix it.";
             }
             else if (File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat"))
@@ -68,7 +76,7 @@ namespace CMDInjectorHelper
             }
             else if (File.Exists(@"C:\Windows\System32\Boot\startup.bsc") && !string.Equals(File.ReadAllText(@"C:\Windows\System32\Boot\startup.bsc"), File.ReadAllText($"{Helper.installedLocation.Path}\\Contents\\Startup\\startup.bsc")))
             {
-                Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\Startup\\startup.bsc", @"C:\Windows\System32\Boot\startup.bsc");
+                Helper.CopyFromAppRoot("Contents\\Startup\\startup.bsc", @"C:\Windows\System32\Boot\startup.bsc");
                 return false;
             }
             else if (File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat"))

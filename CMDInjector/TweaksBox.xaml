@@ -46,13 +46,13 @@
                         <StackPanel Orientation="Horizontal">
                         <ListBox Name="RootOrderList" BorderThickness="2" BorderBrush="{ThemeResource AppAccentColor}" SelectionMode="Single" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Auto" Height="130" MinWidth="150" Margin="40,0,0,0"/>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,40,0">
-                            <Button Name="AddBtn" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" Content="&#xE710;" Height="30" Margin="0,0,0,12">
+                            <Button Name="AddBtn" FontFamily="Segoe MDL2 Assets" Content="&#xE710;" Height="30" Margin="0,0,0,12">
                                 <Button.Flyout>
                                     <MenuFlyout x:Name="AddFlyMenu"/>
                                 </Button.Flyout>
                             </Button>
-                            <Button Name="RemoveBtn" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" Content="&#xE738;" Height="30" Margin="0,0,0,12" Click="RemoveBtn_Click"/>
-                            <Button Name="MoveUpBtn" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" Content="&#xE74A;" Height="30" Margin="0,0,0,0" Click="MoveUpBtn_Click"/>
+                            <Button Name="RemoveBtn" FontFamily="Segoe MDL2 Assets" Content="&#xE738;" Height="30" Margin="0,0,0,12" Click="RemoveBtn_Click"/>
+                            <Button Name="MoveUpBtn" FontFamily="Segoe MDL2 Assets" Content="&#xE74A;" Height="30" Margin="0,0,0,0" Click="MoveUpBtn_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -63,7 +63,7 @@
                             <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
                         <ComboBox Name="FolderPathCombo" Margin="40,0,10,0" SelectionChanged="FolderPathCombo_SelectionChanged" HorizontalAlignment="Stretch"/>
-                        <ComboBox Grid.Column="1" Name="FolderIconCombo" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" MinWidth="70" Margin="0,0,40,0" SelectionChanged="FolderIconCombo_SelectionChanged">
+                        <ComboBox Grid.Column="1" Name="FolderIconCombo" FontFamily="Segoe MDL2 Assets" MinWidth="70" Margin="0,0,40,0" SelectionChanged="FolderIconCombo_SelectionChanged">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding}" FontSize="20" HorizontalAlignment="Center"/>
@@ -235,7 +235,7 @@
                         <ComboBox Name="AccentColorCombo" MinWidth="150" MaxWidth="250" SelectedIndex="0" SelectionChanged="AccentColorCombo_SelectionChanged">
                             <ComboBoxItem Content="Select" FontWeight="Bold" IsHitTestVisible="False"/>
                         </ComboBox>
-                        <Button Name="AccentColorInfoBtn" Content="&#xE171;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" HorizontalAlignment="Right" Height="30" Click="AccentColorInfoBtn_Click" />
+                        <Button Name="AccentColorInfoBtn" Content="&#xE171;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Height="30" Click="AccentColorInfoBtn_Click" />
                     </StackPanel>
                     <ComboBox Name="AccentColorTwoCombo" MinWidth="150" Margin="40,5,0,0" SelectedIndex="0" SelectionChanged="AccentColorTwoCombo_SelectionChanged" IsEnabled="False">
                         <ComboBoxItem Content="Select" FontWeight="Bold" IsHitTestVisible="False"/>
@@ -358,7 +358,7 @@
                         <TextBlock Text="Transition interval" FontSize="18" Margin="25,10,10,0"/>
                         <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
                             <TextBox Name="WallIntervalBox" MinWidth="150" MaxWidth="250" InputScope="Number" PlaceholderText="50 - 600000" MaxLength="5" TextChanged="WallIntervalBox_TextChanged"/>
-                            <Button Name="WallIntervalBtn" Content="&#xE74e;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" HorizontalAlignment="Right" Height="30" Click="WallIntervalBtn_Click"/>
+                            <Button Name="WallIntervalBtn" Content="&#xE74e;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Height="30" Click="WallIntervalBtn_Click"/>
                         </StackPanel>
                         <TextBlock Text="Reverse loop" FontSize="18" Margin="25,10,10,0"/>
                         <ToggleSwitch Name="WallRevLoopTog" OnContent="Enabled" OffContent="Disabled" Margin="40,-5,0,0" Toggled="WallRevLoopTog_Toggled"/>
@@ -427,7 +427,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBox Name="BurninTimeoutBox" FontSize="15" InputScope="Number" MaxLength="2" VerticalAlignment="Center" IsSpellCheckEnabled="False" MinWidth="150" MaxWidth="250" Margin="40,0,0,0" TextChanged="BurninTimeoutBox_TextChanged"/>
-                        <Button Name="BurninTimeoutBtn" Content="&#xE74e;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" HorizontalAlignment="Right" Height="30" Click="BurninTimeoutBtn_Click"/>
+                        <Button Name="BurninTimeoutBtn" Content="&#xE74e;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Height="30" Click="BurninTimeoutBtn_Click"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Burn-in replacement color" FontSize="18" Margin="25,10,10,0"/>
@@ -479,7 +479,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBox Name="VirtualMemBox" FontSize="15" VerticalAlignment="Center" MaxLength="25" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" MinWidth="150" MaxWidth="250" Margin="40,0,0,0" TextChanged="VirtualMemBox_TextChanged"/>
-                        <Button Name="VirtualMemBtn" Content="&#xE74e;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" HorizontalAlignment="Right" Height="30" Click="VirtualMemBtn_Click"/>
+                        <Button Name="VirtualMemBtn" Content="&#xE74e;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Height="30" Click="VirtualMemBtn_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>

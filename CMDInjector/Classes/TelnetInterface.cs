@@ -109,7 +109,7 @@ namespace MinimalisticTelnet
         public void Write(string cmd)
         {
             if (!tcpSocket.Connected) return;
-            byte[] buf = System.Text.ASCIIEncoding.ASCII.GetBytes(cmd.Replace("\0xFF","\0xFF\0xFF"));
+            byte[] buf = Encoding.ASCII.GetBytes(cmd.Replace("\0xFF","\0xFF\0xFF"));
             tcpSocket.GetStream().Write(buf, 0, buf.Length);
 
             //Task.Delay(TimeOutMs);

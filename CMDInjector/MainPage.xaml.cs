@@ -38,7 +38,7 @@ namespace CMDInjector
         public MainPage()
         {
             this.InitializeComponent();
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
+            this.NavigationCacheMode = NavigationCacheMode.Enabled;
             Helper.pageNavigation = (sender, args) =>
             {
                 if ((int)sender == 45 || (int)sender == 0)

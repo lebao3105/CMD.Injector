@@ -93,7 +93,7 @@ namespace CMDInjector
         public Snapper()
         {
             this.InitializeComponent();
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
+            this.NavigationCacheMode = NavigationCacheMode.Enabled;
             FolderGen();
             if (HomeHelper.IsCMDInjected())
             {
@@ -212,7 +212,7 @@ namespace CMDInjector
             Task.Run(async () =>
             {
                 await Helper.BackgroundTaskHelper.RequestSessionAsync("BackgorundNotify");
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
                 {
                     if (displayRequest == null)
                     {
@@ -281,7 +281,7 @@ namespace CMDInjector
                 Task.Run(async () =>
                 {
                     await Helper.BackgroundTaskHelper.RequestSessionAsync("BackgorundNotify");
-                    await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                    await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
                     {
                         if (displayRequest == null)
                         {

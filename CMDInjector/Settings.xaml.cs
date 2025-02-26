@@ -79,7 +79,7 @@ namespace CMDInjector
         public Settings()
         {
             this.InitializeComponent();
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
+            this.NavigationCacheMode = NavigationCacheMode.Enabled;
             Connect();
             Initialize();
         }
@@ -265,16 +265,16 @@ namespace CMDInjector
                 {
                     CustomAccent.Visibility = Visibility.Collapsed;
                     Color accentColor = new UISettings().GetColorValue(UIColorType.Accent);
-                    (App.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
-                    (App.Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
-                    if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
+                    (Application.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
+                    (Application.Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
+                    if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
                     {
                         var statusBar = StatusBar.GetForCurrentView();
                         if (statusBar != null)
@@ -323,16 +323,16 @@ namespace CMDInjector
                             if (CustomAccent.SelectedIndex == count)
                             {
                                 var accentColor = (Color)color.GetValue(null);
-                                (App.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
-                                (App.Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
-                                (App.Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
-                                (App.Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
-                                (App.Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
-                                (App.Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
-                                (App.Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
-                                (App.Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
-                                (App.Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
-                                if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
+                                (Application.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
+                                (Application.Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
+                                (Application.Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
+                                (Application.Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
+                                (Application.Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
+                                (Application.Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
+                                (Application.Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
+                                (Application.Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
+                                (Application.Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
+                                if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
                                 {
                                     var statusBar = StatusBar.GetForCurrentView();
                                     if (statusBar != null)
@@ -566,7 +566,7 @@ namespace CMDInjector
             var result = await Helper.MessageBox("Are you sure you want to reset the Startup commands?", Helper.SoundHelper.Sound.Alert, "", "No", true, "Yes");
             if (result == 0)
             {
-                Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\BatchScripts\\Startup.bat", @"C:\Windows\System32\Startup.bat");
+                Helper.CopyFromAppRoot("\\BatchScripts\\Startup.bat", @"C:\Windows\System32\Startup.bat");
             }
         }
 

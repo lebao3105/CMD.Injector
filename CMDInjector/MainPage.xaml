@@ -17,68 +17,68 @@
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Button Name="HamburgBtn" Content="&#xE700;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="25" Click="HamburgBtn_Click"/>
+                    <Button Name="HamburgBtn" Content="&#xE700;" FontFamily="Segoe MDL2 Assets" FontSize="25" Click="HamburgBtn_Click"/>
                     <ScrollViewer Grid.Row="1">
                         <StackPanel>
                             <ListBox Name="HamburgItems" SelectionMode="Single" SelectionChanged="HamburgItems_SelectionChanged" Background="Transparent" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
                                 <ListBoxItem Name="CMDInjectorPage" Visibility="Collapsed"/>
                                 <ListBoxItem Name="HomePage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE80F;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="Home" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="TerminalPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE756;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="Terminal" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="StartupPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE768;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="Startup" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="PacManPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE74c;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE74c;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="PacMan" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="SnapperPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE931;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE931;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="Snapper" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="BootConfigPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE950;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE950;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="BootConfig" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="TweaksPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE2ac;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE2ac;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="TweakBox" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="SettingsPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE713;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="Settings" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="HelpPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE897;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="Help" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Name="AboutPage">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE783;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE783;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="About" FontSize="15" Margin="25,0,0,0"/>
                                     </StackPanel>
                                 </ListBoxItem>

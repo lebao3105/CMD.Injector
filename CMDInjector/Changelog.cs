@@ -22,12 +22,19 @@ namespace CMDInjector
         {
             if (build < 15063)
             {
+                // WHAT
                 await Helper.MessageBox($"\nCMD Injector v{currentVersion}\n" +
                     " • Fixed an issue with capabilities not reading correctly.\n" +
                     " • Changed KeepWiFiOnSvc to an optional setting.\n\n\n", Helper.SoundHelper.Sound.Alert, "Changelog");
             }
             else
             {
+                // Time for Octokit ig
+                // Flashback: I worked for an IDE made for i(Pad)OS - jailbroken ones ofc.
+                // One of the things I have done there was remove these hardcoded changelog and fetch releases content off GitHub.
+                // I got kicked, or I gone by myself I do NOT remember - but surely I was wrong that I joined that project.
+                // Skill issues.
+                // Btw, I thought \n was only made for UNIX lol. Great, no need for Environment.NewLine anymore.
                 TextBlock textBlock = new TextBlock
                 {
                     TextWrapping = TextWrapping.Wrap
@@ -249,16 +256,17 @@ namespace CMDInjector
                 textBlock.Inlines.Add(new Run { Text = " • Removed step running \"Setup\" command on first CMD connection.\n\n\n" });
                 textBlock.Inlines.Add(new Run { Text = "CMD Injector v1.1.0.0\n", FontWeight = Windows.UI.Text.FontWeights.Bold });
                 textBlock.Inlines.Add(new Run { Text = " • Initial public release.\n\n\n" });
-                ScrollViewer scrollViewer = new ScrollViewer
-                {
-                    Content = textBlock
-                };
+
                 ContentDialog contentDialog = new ContentDialog
                 {
                     Title = "Changelog",
-                    Content = scrollViewer,
+                    Content = new ScrollViewer
+                    {
+                        Content = textBlock
+                    },
                     CloseButtonText = "Close"
                 };
+
                 Helper.SoundHelper.PlaySound(Helper.SoundHelper.Sound.Alert);
                 await contentDialog.ShowAsync();
             }

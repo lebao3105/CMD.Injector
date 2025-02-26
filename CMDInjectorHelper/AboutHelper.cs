@@ -19,8 +19,7 @@ namespace CMDInjectorHelper
             if (NetworkInterface.GetIsNetworkAvailable())
             {
                 GitHubClient client = new GitHubClient(new ProductHeaderValue("MyClient"));
-                Release latestRelease = client.Repository.Release.GetLatest("fadilfadz01", "CMD.Injector").Result;
-                return latestRelease;
+                return client.Repository.Release.GetLatest("lebao3105", "CMD.Injector").Result;
             }
             return null;
         });
@@ -29,16 +28,15 @@ namespace CMDInjectorHelper
         {
             var latestRelease = await GetLatestVersion();
             var latestReleaseVersion = latestRelease.TagName;
-            //Get current build
+            // Get current build
             PackageVersion version = Package.Current.Id.Version;
 
             string current = string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
 
-            //Cleanup the target version
-            latestReleaseVersion = latestReleaseVersion.Replace("v", "").Replace("V", "");
+            // Cleanup the target version: it follows v{Major}.{Minor}.{Build}.{Revision} format.
+            latestReleaseVersion = latestReleaseVersion.Remove(0, 1);
 
-            var newVersionRequested = Helper.IsStrAGraterThanStrB(latestReleaseVersion, current, '.');
-            if (newVersionRequested)
+            if (Helper.IsStrAGraterThanStrB(latestReleaseVersion, current, '.'))
             {
                 return latestRelease;
             }
@@ -47,8 +45,7 @@ namespace CMDInjectorHelper
 
         public async static Task<string> GetLatestReleaseNote()
         {
-            var latestRelease = await GetLatestVersion();
-            return latestRelease.Body;
+            return (await GetLatestVersion()).Body;
         }
 
         public static async Task<StorageFolder> GetDownloadsFolder()

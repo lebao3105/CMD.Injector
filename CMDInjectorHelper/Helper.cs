@@ -1,15 +1,12 @@
 ﻿using Microsoft.Toolkit.Uwp.Notifications;
 using ndtklib;
 using Newtonsoft.Json;
-using Octokit;
 using OEMSharedFolderAccessLib;
 using SecureBootRuntimeComponent;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,8 +18,6 @@ using Windows.Foundation;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Security.Credentials.UI;
 using Windows.Storage;
-using Windows.Storage.AccessCache;
-using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.System.Profile;
 using Windows.UI;
@@ -32,8 +27,71 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml.Controls;
 using WinUniversalTool;
 
+public static class BoolExtension
+{
+    public static int ToInt(this bool value)
+    {
+        return value ? 1 : 0;
+    }
+}
+
+public static class StringExtension
+{
+    public static int ToInt32(this string value)
+    {
+        return Convert.ToInt32(value);
+    }
+}
+
 namespace CMDInjectorHelper
 {
+    /// <summary>
+    /// Variables that are widely used within the application.
+    /// </summary>
+    public static class Globals
+    {
+        public static bool splashScreenDisplayed = false;
+
+        /// <summary>
+        /// Confirms that the user is "logged in".
+        /// </summary>
+        public static bool userVerified = false;
+
+        /// <summary>
+        /// Windows build number.
+        /// The latest, non-Insider build of Windows 10 Mobile is 1709 (15063)
+        /// </summary>
+        public static ulong build = (ulong.Parse(AnalyticsInfo.VersionInfo.DeviceFamilyVersion) & 0x00000000FFFF0000L) >> 16;
+
+        /// <summary>
+        /// Pretty much CMD Injector version.
+        /// </summary>
+        public static int currentBatchVersion =
+            string.Format("{0}{1}{2}{3}", Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
+                          Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision).ToInt32();
+        /// <summary>
+        /// CMD Injector version, each part is separated by a dot.
+        /// </summary>
+        public static string currentVersion =
+            string.Format("{0}.{1}.{2}.{3}", Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
+                          Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
+
+        public static string InjectedBatchVersion {
+            get {
+                return File.Exists(@"C:\Windows\System32\CMDInjectorVersion.dat") ? File.ReadAllText(@"C:\Windows\System32\CMDInjectorVersion.dat", Encoding.UTF8) : "0000";
+            }
+        }
+
+        public static StorageFolder installedLocation = Package.Current.Installed­Location;
+        public static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+        public static StorageFolder cacheFolder = ApplicationData.Current.LocalCacheFolder;
+        public static StorageFolder externalFolder = KnownFolders.RemovableDevices;
+
+        public static Color color = Colors.Black;
+        public static EventHandler pageNavigation;
+        public static Rect rect;
+    }
+
     public static class Helper
     {
         private static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -41,14 +99,30 @@ namespace CMDInjectorHelper
 
         public static bool splashScreenDisplayed = false;
         public static bool userVerified = false;
+
+        /// <summary>
+        /// Windows build number.
+        /// The latest, non-Insider build of Windows 10 Mobile is 1709 (15063)
+        /// </summary>
         public static ulong build = (ulong.Parse(AnalyticsInfo.VersionInfo.DeviceFamilyVersion) & 0x00000000FFFF0000L) >> 16;
+
+        /// <summary>
+        /// Pretty much CMD Injector version.
+        /// </summary>
         public static int currentBatchVersion = Convert.ToInt32(string.Format("{0}{1}{2}{3}", Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor, Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision));
+
+        /// <summary>
+        /// CMD Injector version, each part is separated by a dot.
+        /// </summary>
         public static string currentVersion = string.Format("{0}.{1}.{2}.{3}", Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor, Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
+
         public static string InjectedBatchVersion { get { return File.Exists(@"C:\Windows\System32\CMDInjectorVersion.dat") ? File.ReadAllText(@"C:\Windows\System32\CMDInjectorVersion.dat", Encoding.UTF8) : "0000"; } }
+
         public static StorageFolder installedLocation = Package.Current.Installed­Location;
         public static StorageFolder localFolder = ApplicationData.Current.LocalFolder;
         public static StorageFolder cacheFolder = ApplicationData.Current.LocalCacheFolder;
         public static StorageFolder externalFolder = KnownFolders.RemovableDevices;
+
         public static Color color = Colors.Black;
         public static EventHandler pageNavigation;
         public static Rect rect;
@@ -59,13 +133,17 @@ namespace CMDInjectorHelper
 
         private static async void Connect()
         {
-            _ = tClient.Connect();
+            await tClient.Connect();
+
             long i = 0;
             while (tClient.IsConnected == false && i < 150)
             {
                 await Task.Delay(100);
                 i++;
             }
+
+            if (i >= 150)
+                ThrowException(new TimeoutException("Timed out waiting for the Telnet client to be ready"));
         }
 
         public static void Init()
@@ -82,117 +160,178 @@ namespace CMDInjectorHelper
                 while (LocalSettingsHelper.LoadSettings("SplashScreen", true))
                 {
                     await Task.Delay(200);
-                    if (splashScreenDisplayed) break;
+                    if (Globals.splashScreenDisplayed)
+                    {
+                        break;
+                    }
                 }
-                while (LocalSettingsHelper.LoadSettings("LoginTogReg", true) && (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available)
+
+                while (LocalSettingsHelper.LoadSettings("LoginTogReg", true) &&
+                       (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available)
                 {
                     await Task.Delay(200);
-                    if (userVerified) break;
+                    if (Globals.userVerified)
+                    {
+                        break;
+                    }
                 }
             }
         }
 
+        #region Permission and capabilities
+        public static bool oemPublicDir_Allowed;
+        public static bool extendedBackgroundTaskTime_Allowed;
+        public static bool extendedExecutionUnconstrained_Allowed;
+        public static bool fullPublicFolderCap;
+        public static bool chamberPfpDataReadWrite;
+        public static bool chamberPfpCodeReadWrite;
+
+        /// <summary>
+        /// Check if CMD Injector is allowed to do stuff.
+        /// </summary>
+        /// <returns>A boolean.</returns>
         public static async Task<bool> IsCapabilitiesAllowed()
         {
             var manifest = await installedLocation.GetFileAsync("AppxManifest.xml");
             var manifestText = await FileIO.ReadTextAsync(manifest);
-            var reqCaps = RegistryHelper.GetRegValue(RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\SecurityManager\\Applications\\CMDINJECTOR_KQYNG60ENG17C", "RequiredCapabilities", RegistryHelper.RegistryType.REG_MULTI_SZ);
-            if (manifestText.Contains("extendedBackgroundTaskTime") && manifestText.Contains("extendedExecutionUnconstrained") && manifestText.Contains("oemPublicDirectory") && manifestText.Contains("id_cap_public_folder_full") && manifestText.Contains("id_cap_chamber_profile_data_rw") && manifestText.Contains("id_cap_chamber_profile_code_rw") &&
-                reqCaps.Contains("id_cap_public_folder_full") && reqCaps.Contains("id_cap_chamber_profile_data_rw") && reqCaps.Contains("id_cap_chamber_profile_code_rw"))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            var reqCaps = RegistryHelper.GetRegValue(
+                RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+                "Software\\Microsoft\\SecurityManager\\Applications\\CMDINJECTOR_KQYNG60ENG17C",
+                "RequiredCapabilities",
+                RegistryHelper.RegistryType.REG_MULTI_SZ
+            );
+
+            oemPublicDir_Allowed = manifestText.Contains("oemPublicDirectory");
+            extendedBackgroundTaskTime_Allowed = manifestText.Contains("extendedBackgroundTaskTime");
+            extendedExecutionUnconstrained_Allowed = manifestText.Contains("extendedExecutionUnconstrained");
+
+            fullPublicFolderCap = manifestText.Contains("id_cap_public_folder_full") && reqCaps.Contains("id_cap_public_folder_full");
+            chamberPfpCodeReadWrite = manifestText.Contains("id_cap_chamber_profile_code_rw") && reqCaps.Contains("id_cap_chamber_profile_code_rw");
+            chamberPfpDataReadWrite = manifestText.Contains("id_cap_chamber_profile_data_rw") && reqCaps.Contains("id_cap_chamber_profile_data_rw");
+
+            return oemPublicDir_Allowed && extendedExecutionUnconstrained_Allowed && extendedBackgroundTaskTime_Allowed &&
+                   fullPublicFolderCap && chamberPfpDataReadWrite && chamberPfpCodeReadWrite;
+
         }
 
         public static async Task<bool> AskCapabilitiesPermission()
         {
+            var question =
+                "Allow App to access the following capabilities to use certain features?" + Environment.NewLine +
+                "• extendedBackgroundTaskTime" + Environment.NewLine +
+                "• extendedExecutionUnconstrained" + Environment.NewLine +
+                "• oemPublicDirectory" + Environment.NewLine +
+                "• id_cap_chamber_profile_code_rw" + Environment.NewLine +
+                "• id_cap_chamber_profile_data_rw" + Environment.NewLine +
+                "• id_cap_public_folder_full" + Environment.NewLine + Environment.NewLine +
+                "The App will close or relaunch itself on allow.";
+
             if (build < 15063)
             {
-                var result = await MessageBox("Allow App to access the following capabilities to use certain features?\n • extendedBackgroundTaskTime\n • extendedExecutionUnconstrained\n • oemPublicDirectory\n • id_cap_chamber_profile_code_rw\n • id_cap_chamber_profile_data_rw\n • id_cap_public_folder_full\n\nThe App will close or relaunch itself on allow.", SoundHelper.Sound.Alert, "Permission", "Deny", true, "Allow");
-                if (result != 0) return false;
+                var result = await MessageBox(question, SoundHelper.Sound.Alert, "Permission", "Deny", true, "Allow");
+                if (result != 0)
+                {
+                    return false;
+                }
             }
             else
             {
                 ContentDialog contentDialog = new ContentDialog
                 {
                     Title = "Permission",
-                    Content = "Allow App to access the following capabilities to use certain features?\n • extendedBackgroundTaskTime\n • extendedExecutionUnconstrained\n • oemPublicDirectory\n • id_cap_chamber_profile_code_rw\n • id_cap_chamber_profile_data_rw\n • id_cap_public_folder_full\n\nThe App will close or relaunch itself on allow.",
+                    Content = question,
                     PrimaryButtonText = "Allow",
                     CloseButtonText = "Deny",
                 };
                 SoundHelper.PlaySound(SoundHelper.Sound.Alert);
                 var result = await contentDialog.ShowAsync();
-                if (result != ContentDialogResult.Primary) return false;
+                if (result != ContentDialogResult.Primary)
+                {
+                    return false;
+                }
             }
+
             var manifest = await installedLocation.GetFileAsync("AppxManifest.xml");
             var duplicateManifest = await manifest.CopyAsync(cacheFolder, "AppxManifest.xml", NameCollisionOption.ReplaceExisting);
             var manifestText = await FileIO.ReadTextAsync(manifest);
+
             using (var stream = await duplicateManifest.OpenStreamForWriteAsync())
             {
                 XmlDocument xml = new XmlDocument();
                 xml.Load(stream);
+
                 var nsUri = xml.DocumentElement.GetNamespaceOfPrefix("rescap");
                 var caps = xml.GetElementsByTagName("Capabilities");
+
                 if (caps.Count > 0)
                 {
-                    if (!manifestText.Contains("extendedBackgroundTaskTime"))
+                    // One way is to create an array of capabilities, iterate that array
+                    // The code will be much cleaner. But as we've already stored the
+                    // check results we don't do that. At least for now.
+
+                    if (!extendedBackgroundTaskTime_Allowed)
                     {
                         var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "extendedBackgroundTaskTime");
                         caps[0].AppendChild(newNode);
                     }
-                    if (!manifestText.Contains("extendedExecutionUnconstrained"))
+
+                    if (!extendedExecutionUnconstrained_Allowed)
                     {
                         var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "extendedExecutionUnconstrained");
                         caps[0].AppendChild(newNode);
                     }
-                    if (!manifestText.Contains("oemPublicDirectory"))
+
+                    if (!oemPublicDir_Allowed)
                     {
                         var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "oemPublicDirectory");
                         caps[0].AppendChild(newNode);
                     }
-                    if (!manifestText.Contains("id_cap_chamber_profile_code_rw"))
+                    if (!chamberPfpCodeReadWrite)
                     {
                         var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "id_cap_chamber_profile_code_rw");
                         caps[0].AppendChild(newNode);
                     }
-                    if (!manifestText.Contains("id_cap_chamber_profile_data_rw"))
+
+                    if (!chamberPfpDataReadWrite)
                     {
                         var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "id_cap_chamber_profile_data_rw");
                         caps[0].AppendChild(newNode);
                     }
-                    if (!manifestText.Contains("id_cap_public_folder_full"))
+
+                    if (!fullPublicFolderCap)
                     {
                         var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "id_cap_public_folder_full");
                         caps[0].AppendChild(newNode);
                     }
+
                     stream.SetLength(0);
                     xml.Save(stream);
                     await duplicateManifest.CopyAndReplaceAsync(manifest);
                 }
                 stream.Flush();
             }
+
             File.Delete($"{cacheFolder.Path}\\UnlockEnd.txt");
             File.Delete($"{cacheFolder.Path}\\UnlockResult.txt");
+
             RegistryHelper.SetRegValue(RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\SecurityManager\\CapabilityClasses", "ID_CAP_CHAMBER_PROFILE_CODE_RW", RegistryHelper.RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
             RegistryHelper.SetRegValue(RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\SecurityManager\\CapabilityClasses", "ID_CAP_CHAMBER_PROFILE_DATA_RW", RegistryHelper.RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
             RegistryHelper.SetRegValue(RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\SecurityManager\\CapabilityClasses", "ID_CAP_PUBLIC_FOLDER_FULL", RegistryHelper.RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
+
             if (tClient.IsConnected && HomeHelper.IsConnected())
             {
-                _ = tClient.Send($"MinDeployAppx.exe /Register /PackagePath:\"{installedLocation.Path}\\AppxManifest.xml\" /DeploymentOption:1 >{cacheFolder.Path}\\UnlockResult.txt 2>&1&echo. >{cacheFolder.Path}\\UnlockEnd.txt");
-                while (!File.Exists($"{cacheFolder.Path}\\UnlockEnd.txt"))
-                {
-                    await Task.Delay(200);
-                }
+                // The task below was not awaited before. Why? Also should I?
+                await tClient.Send($"MinDeployAppx.exe /Register /PackagePath:\"{installedLocation.Path}\\AppxManifest.xml\" /DeploymentOption:1 >{cacheFolder.Path}\\UnlockResult.txt 2>&1&echo. >{cacheFolder.Path}\\UnlockEnd.txt");
+                //while (!File.Exists($"{cacheFolder.Path}\\UnlockEnd.txt"))
+                //{
+                //    await Task.Delay(200);
+                //}
                 var unlockResult = File.ReadAllText($"{cacheFolder.Path}\\UnlockResult.txt");
                 if (!unlockResult.Contains("ReturnCode:[0x0]"))
                 {
@@ -207,6 +346,7 @@ namespace CMDInjectorHelper
             }
             return true;
         }
+        #endregion
 
         public static async Task<int?> MessageBox(string content, SoundHelper.Sound sound = SoundHelper.Sound.Alert, string title = "", string buttonText = "Close", bool seconadaryButton = false, string seconadaryButtonText = "Ok")
         {
@@ -237,6 +377,7 @@ namespace CMDInjectorHelper
         public static void ThrowException(Exception ex)
         {
             _ = MessageBox(ex.Message + "\n" + ex.StackTrace, SoundHelper.Sound.Error);
+            throw ex; // Hmm...
         }
 
         public static bool IsStrAGraterThanStrB(string strA, string strB, char separator)
@@ -245,26 +386,16 @@ namespace CMDInjectorHelper
             var stringA = strA.Trim().Split(separator);
             var stringB = strB.Trim().Split(separator);
 
-            int length;
-            if (stringA.Length > stringB.Length)
-            {
-                length = stringA.Length;
-            }
-            else
-            {
-                length = stringB.Length;
-            }
+            int length = Math.Max(stringA.Length, stringB.Length);
 
             for (int i = 0; i < length; i++)
             {
-                if (int.Parse(stringA[i]) > int.Parse(stringB[i]))
+                var partOfA = int.Parse(stringA[i]);
+                var partOfB = int.Parse(stringB[i]);
+
+                if (partOfA != partOfB)
                 {
-                    result = true;
-                    break;
-                }
-                else if (int.Parse(stringA[i]) < int.Parse(stringB[i]))
-                {
-                    result = false;
+                    result = partOfA > partOfB;
                     break;
                 }
             }
@@ -274,6 +405,11 @@ namespace CMDInjectorHelper
         public static uint CopyFile(string source, string destination)
         {
             return rpc.FileCopy(source, destination, 0);
+        }
+        
+        public static uint CopyFromAppRoot(string path, string destination)
+        {
+            return CopyFile($"{installedLocation.Path}\\{path}", destination);
         }
 
         public static uint RebootSystem()
@@ -285,16 +421,13 @@ namespace CMDInjectorHelper
         {
             try
             {
-                if (sbp.GetSecureBootPolicyPublisher() != "{" + Guid.Empty + "}" && !string.IsNullOrEmpty(sbp.GetSecureBootPolicyPublisher()))
-                {
-                    return true;
-                }
+                // CHECK: Is $"{{{Guid.Empty}}}" the same as { + Guid.Empty + } ?
+                return sbp.GetSecureBootPolicyPublisher() != $"{{{Guid.Empty}}}" && !string.IsNullOrEmpty(sbp.GetSecureBootPolicyPublisher());
             }
             catch
             {
-
+                return false;
             }
-            return false;
         }
 
         public static async Task DownloadFile(Uri downloadURL, StorageFile file, IProgress<int> progression)
@@ -310,7 +443,7 @@ namespace CMDInjectorHelper
             {
                 var _total = (long)dOperation.Progress.TotalBytesToReceive;
                 var _received = (long)dOperation.Progress.BytesReceived;
-                int _progress = (int)(100 * (double)(_received / (double)_total));
+                int _progress = (int)(100 * (_received / (double)_total));
                 switch (dOperation.Progress.Status)
                 {
                     case BackgroundTransferStatus.Running:
@@ -489,7 +622,7 @@ namespace CMDInjectorHelper
                         byteArr = Encoding.Unicode.GetBytes(buffer + '\0');
                         break;
                 }
-                return rpc.RegSetValueW((uint)hKey, subKey, value, (uint)type, byteArr);
+                return rpc.RegSetValue((uint)hKey, subKey, value, (uint)type, byteArr);
             }
 
             private static int GetHexVal(char hex)
@@ -528,51 +661,45 @@ namespace CMDInjectorHelper
 
         public static class NotificationHelper
         {
-            public static void PushNotification(string content, string title, string argument = "", string tag = null, int expireTime = 30, string buttonContent = null, string buttonArgumentKey = null, string buttonArgumentValue = null)
+            public static void PushNotification(
+                string content, string title, string argument = "", string tag = null, int expireTime = 30,
+                string buttonContent = null, string buttonArgumentKey = null, string buttonArgumentValue = null)
             {
-                if (buttonContent == null)
-                {
-                    new ToastContentBuilder()
+                var builder = new ToastContentBuilder()
                     .AddArgument(argument)
                     .AddText(title)
-                    .AddText(content)
-                    .Show(toast =>
-                    {
-                        if (expireTime != 0) toast.ExpirationTime = DateTime.Now.AddSeconds(expireTime);
-                        if (tag != null) toast.Tag = tag;
-                    });
-                }
-                else
+                    .AddText(content);
+
+                if (buttonContent != null)
                 {
-                    new ToastContentBuilder()
-                    .AddArgument(argument)
-                    .AddText(title)
-                    .AddText(content)
-                    .AddButton(new ToastButton()
-                        .SetContent(buttonContent)
-                        .AddArgument(buttonArgumentKey, buttonArgumentValue)
-                    //.SetBackgroundActivation()
-                    )
-                    .Show(toast =>
-                    {
-                        if (expireTime != 0) toast.ExpirationTime = DateTime.Now.AddSeconds(expireTime);
-                        if (tag != null) toast.Tag = tag;
-                    });
-                    //.AddAudio(new Uri("ms-appx:///Sound.mp3"));
+                    builder = builder.AddButton(
+                        new ToastButton()
+                            .SetContent(buttonContent)
+                            .AddArgument(buttonArgumentKey, buttonArgumentValue)
+                    );
                 }
+
+                builder.Show(toast =>
+                {
+                    if (expireTime != 0)
+                    {
+                        toast.ExpirationTime = DateTime.Now.AddSeconds(expireTime);
+                    }
+
+                    if (tag != null)
+                    {
+                        toast.Tag = tag;
+                    }
+                });
             }
 
             public static bool IsToastAlreadyThere(string tag)
             {
-                var toastsHistory = ToastNotificationManager.History.GetHistory();
-                foreach (var toastHistory in toastsHistory)
-                {
-                    if (toastHistory.Tag == tag)
-                    {
-                        return true;
-                    }
-                }
-                return false;
+                var toastsHistory = new List<ToastNotification>(
+                    ToastNotificationManager.History.GetHistory()
+                ).Find(o => o.Tag == tag);
+
+                return toastsHistory != null;
             }
         }
 
@@ -612,7 +739,11 @@ namespace CMDInjectorHelper
         {
             public static void CreateZip(string sourceFolder, string destinationFile, CompressionLevel level, bool includeBaseFolder = false, bool overWrite = false)
             {
-                if (overWrite && File.Exists(destinationFile)) File.Delete(destinationFile);
+                if (overWrite && File.Exists(destinationFile))
+                {
+                    File.Delete(destinationFile);
+                }
+
                 ZipFile.CreateFromDirectory(sourceFolder, destinationFile, level, includeBaseFolder);
             }
 
@@ -625,7 +756,11 @@ namespace CMDInjectorHelper
             {
                 try
                 {
-                    if (baseFolder) destinationFolder = await destinationFolder.CreateFolderAsync(zipFile.DisplayName, CreationCollisionOption.ReplaceExisting);
+                    if (baseFolder)
+                    {
+                        destinationFolder = await destinationFolder.CreateFolderAsync(zipFile.DisplayName, CreationCollisionOption.ReplaceExisting);
+                    }
+
                     using (Stream fileStream = await zipFile.OpenStreamForReadAsync())
                     using (ZipArchive archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
                     {
@@ -680,16 +815,9 @@ namespace CMDInjectorHelper
             {
                 using (ZipArchive archive = ZipFile.OpenRead(zipFilePath))
                 {
-                    foreach (ZipArchiveEntry entry in archive.Entries)
-                    {
-                        if (entry.FullName == fileName)
-                        {
-                            return true;
-                        }
-                    }
+                    var entries = new List<ZipArchiveEntry>(archive.Entries);
+                    return entries.Find(obj => obj.FullName == fileName) != null;
                 }
-
-                return false;
             }
 
             public static async Task<string> ReadTextFromZip(string zipFilePath, string fileName)
@@ -787,67 +915,35 @@ namespace CMDInjectorHelper
 
             private static async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
             {
-                try
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    switch (args.Reason)
                     {
-                        try
-                        {
-                            switch (args.Reason)
-                            {
-                                case ExtendedExecutionRevokedReason.Resumed:
-                                    //Helpers.ShowToastNotification("Background Session", "Extended execution revoked due to returning to foreground.");
-                                    break;
+                        case ExtendedExecutionRevokedReason.Resumed:
+                            //Helpers.ShowToastNotification("Background Session", "Extended execution revoked due to returning to foreground.");
+                            break;
 
-                                case ExtendedExecutionRevokedReason.SystemPolicy:
-                                    //Helpers.ShowToastNotification("Background Session", "Extended execution revoked due to system policy.");
-                                    break;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-
-                }
-                try
-                {
-                    //The session has been prematurely revoked due to system constraints, ensure the session is disposed
-                    if (session != null)
-                    {
-                        session.Dispose();
-                        session = null;
+                        case ExtendedExecutionRevokedReason.SystemPolicy:
+                            //Helpers.ShowToastNotification("Background Session", "Extended execution revoked due to system policy.");
+                            break;
                     }
-
-                    taskCount = 0;
-
-                }
-                catch (Exception ex)
+                });
+                
+                //The session has been prematurely revoked due to system constraints, ensure the session is disposed
+                if (session != null)
                 {
-
+                    session.Dispose();
+                    session = null;
                 }
+
+                taskCount = 0;
+
                 IsSessionStarted = false;
             }
 
-            private static string ThemeTaskName
-            {
-                get
-                {
-                    return "ThemeUpdater";
-                }
-            }
+            private const string ThemeTaskName = "ThemeUpdater";
 
-            private static string ThemeTaskEntryPoint
-            {
-                get
-                {
-                    return "BackgroundTasks.ThemeUpdater";
-                }
-            }
+            private const string ThemeTaskEntryPoint = "BackgroundTasks.ThemeUpdater";
 
             public static bool IsThemeTaskActivated()
             {
@@ -863,14 +959,12 @@ namespace CMDInjectorHelper
 
             public static async Task<bool> RegisterThemeTask(uint? interval = null, SystemTrigger trigger = null)
             {
-                bool result = await RegisterBackgroundTask(
+                return await RegisterBackgroundTask(
                     ThemeTaskName,
                     ThemeTaskEntryPoint,
                     interval,
                     trigger
                 );
-
-                return result;
             }
 
             public static void UnregisterThemeTask()
@@ -878,21 +972,9 @@ namespace CMDInjectorHelper
                 UnregisterBackgroundTask(ThemeTaskName);
             }
 
-            private static string WallpaperTaskName
-            {
-                get
-                {
-                    return "WallpaperUpdater";
-                }
-            }
+            private const string WallpaperTaskName = "WallpaperUpdater";
 
-            private static string WallpaperTaskEntryPoint
-            {
-                get
-                {
-                    return "BackgroundTasks.WallpaperUpdater";
-                }
-            }
+            private const string WallpaperTaskEntryPoint = "BackgroundTasks.WallpaperUpdater";
 
             public static bool IsWallpaperTaskActivated()
             {
@@ -908,14 +990,12 @@ namespace CMDInjectorHelper
 
             public static async Task<bool> RegisterWallpaperTask(uint? interval = null, SystemTrigger trigger = null)
             {
-                bool result = await RegisterBackgroundTask(
+                return await RegisterBackgroundTask(
                     WallpaperTaskName,
                     WallpaperTaskEntryPoint,
                     interval,
                     trigger
                 );
-
-                return result;
             }
 
             public static void UnregisterWallpaperTask()

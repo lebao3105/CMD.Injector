@@ -186,7 +186,7 @@ namespace CMDInjector
                 {
                     await Task.Run(async () =>
                     {
-                        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                         {
                             if (Helper.LocalSettingsHelper.LoadSettings("AccentSettings", false))
                             {
@@ -199,15 +199,15 @@ namespace CMDInjector
                                         if (Helper.LocalSettingsHelper.LoadSettings("Accent", 11) == count)
                                         {
                                             var accentColor = (Color)color.GetValue(null);
-                                            (App.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
-                                            (App.Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
-                                            (App.Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
-                                            (App.Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
-                                            (App.Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
-                                            (App.Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
-                                            (App.Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
-                                            (App.Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
-                                            (App.Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
+                                            (Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
+                                            (Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
+                                            (Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
+                                            (Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
+                                            (Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
+                                            (Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
+                                            (Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
+                                            (Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
+                                            (Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
                                             if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
                                             {
                                                 var statusBar = StatusBar.GetForCurrentView();
@@ -256,7 +256,7 @@ namespace CMDInjector
                 }
                 if (!flag && File.Exists(@"C:\Windows\System32\CMDInjectorVersion.dat"))
                 {
-                    if (!Helper.NotificationHelper.IsToastAlreadyThere("Re-InjectTag") && Convert.ToInt32(Helper.InjectedBatchVersion) < Helper.currentBatchVersion)
+                    if (!Helper.NotificationHelper.IsToastAlreadyThere("Re-InjectTag") && Convert.ToInt32(Globals.InjectedBatchVersion) < Globals.currentBatchVersion)
                     {
                         if (File.Exists(@"C:\Windows\System32\CMDInjector.dat")) Helper.NotificationHelper.PushNotification("The App has been updated, required re-injection in order to work the app fine.", "Re-injection required", "ReinjectionRequired", "Re-InjectTag", 1800);
                         else Helper.NotificationHelper.PushNotification("The App has been updated, required re-injection in order to work the App fine.", "Re-injection required", "ReinjectionRequired", "Re-InjectTag", 1800, "Re-Inject", "InjectCMD", "Re-Inject");
@@ -564,13 +564,13 @@ namespace CMDInjector
 
         private async Task<bool> CallLoginPage()
         {
-            if (Helper.build >= 10586 && (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available && Helper.LocalSettingsHelper.LoadSettings("LoginTogReg", true) && !Helper.userVerified)
+            if (Helper.build >= 10586 && (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available && Helper.LocalSettingsHelper.LoadSettings("LoginTogReg", true) && !Globals.userVerified)
             {
                 rootFrame.Navigate(typeof(Login));
                 while (true)
                 {
                     await Task.Delay(200);
-                    if (Helper.userVerified) break;
+                    if (Globals.userVerified) break;
                 }
                 return true;
             }

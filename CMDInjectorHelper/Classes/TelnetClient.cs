@@ -173,7 +173,7 @@ namespace WinUniversalTool
         public void Write(string cmd)
         {
             if (!_tcpClient.Connected) return;
-            byte[] buf = System.Text.ASCIIEncoding.ASCII.GetBytes(cmd + "\r\n".Replace("\0xFF", "\0xFF\0xFF"));
+            byte[] buf = Encoding.ASCII.GetBytes(cmd + "\r\n".Replace("\0xFF", "\0xFF\0xFF"));
             _tcpClient.GetStream().Write(buf, 0, buf.Length);
 
             //Task.Delay(TimeOutMs);

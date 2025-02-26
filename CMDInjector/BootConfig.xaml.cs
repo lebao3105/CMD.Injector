@@ -80,17 +80,18 @@ namespace CMDInjector
             try
             {
                 flag = 1;
-                if (!Helper.LocalSettingsHelper.LoadSettings("HaveCamera", false) && !Helper.LocalSettingsHelper.LoadSettings("UnlockHidden", false))
+                VolUpBox.Items.Add(new ComboBoxItem
                 {
-                    VolUpBox.Items.Add(new ComboBoxItem { Content = "None (Use for navigation)", IsEnabled = false });
-                    VolDownBox.Items.Add(new ComboBoxItem { Content = "None (Use for navigation)", IsEnabled = false });
-                }
-                else
-                {
-                    VolUpBox.Items.Add(new ComboBoxItem { Content = "None (Use for navigation)", IsEnabled = true });
-                    VolDownBox.Items.Add(new ComboBoxItem { Content = "None (Use for navigation)", IsEnabled = true });
-                }
-                DescriptionBox.Text = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ);
+                    Content = "None (Use for navigation)",
+                    IsEnabled = !(!Helper.LocalSettingsHelper.LoadSettings("HaveCamera", false) && !Helper.LocalSettingsHelper.LoadSettings("UnlockHidden", false))
+                });
+
+                DescriptionBox.Text = Helper.RegistryHelper.GetRegValue(
+                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+                    "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\12000004",
+                    "Element",
+                    Helper.RegistryHelper.RegistryType.REG_SZ
+                );
 
                 if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ) != string.Empty)
                 {
@@ -100,38 +101,28 @@ namespace CMDInjector
                         DisplayOrderList.Items.Add(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + DisplayOrder[i] + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ));
                     }
                 }
-                if (DisplayOrderList.Items.Count <= 1)
-                {
-                    RemoveBtn.IsEnabled = false;
-                    MoveUpBtn.IsEnabled = false;
-                }
-                else
-                {
-                    RemoveBtn.IsEnabled = true;
-                    MoveUpBtn.IsEnabled = true;
-                }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000049", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
-                {
-                    ManTestSigningTog.IsOn = true;
-                }
-                else
-                {
-                    ManTestSigningTog.IsOn = false;
-                }
+                RemoveBtn.IsEnabled = DisplayOrderList.Items.Count > 1;
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000048", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
-                {
-                    ManNoIntegrityChecksTog.IsOn = true;
-                }
-                else
-                {
-                    ManNoIntegrityChecksTog.IsOn = false;
-                }
+                ManTestSigningTog.IsOn = Helper.RegistryHelper.GetRegValue(
+                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+                    "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000049",
+                    "Element",
+                    Helper.RegistryHelper.RegistryType.REG_BINARY
+                ).Contains("01");
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\25000004", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY) != string.Empty)
+                ManNoIntegrityChecksTog.IsOn = Helper.RegistryHelper.GetRegValue(
+                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+                    "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000048",
+                    "Element",
+                    Helper.RegistryHelper.RegistryType.REG_BINARY
+                ).Contains("01");
+
+                var timeOutGet = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\25000004", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY);
+
+                if (!string.IsNullOrWhiteSpace(timeOutGet))
                 {
-                    string[] HexTimeout = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\25000004", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).ToCharArray().Select(c => c.ToString()).ToArray();
+                    string[] HexTimeout = timeOutGet.ToCharArray().Select(c => c.ToString()).ToArray();
                     TimeoutBox.Text = Convert.ToString(Convert.ToInt32(HexTimeout[0] + HexTimeout[1], 16));
                 }
 
@@ -199,7 +190,7 @@ namespace CMDInjector
                 {
                     File.Delete($"{Helper.localFolder.Path}\\BootConfigEnd.txt");
                     File.Delete($"{Helper.localFolder.Path}\\BootConfigObjects.txt");
-                    _ = SendCommand($"for /f \"delims=\\ tokens=4\" %a in ('reg query hklm\\bcd00000001\\objects') do echo %a >>{Helper.localFolder.Path}\\BootConfigObjects.txt&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
+                    await SendCommand($"for /f \"delims=\\ tokens=4\" %a in ('reg query hklm\\bcd00000001\\objects') do echo %a >>{Helper.localFolder.Path}\\BootConfigObjects.txt&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
                     while (File.Exists($"{Helper.localFolder.Path}\\BootConfigEnd.txt") == false)
                     {
                         await Task.Delay(200);
@@ -337,7 +328,7 @@ namespace CMDInjector
         public BootConfig()
         {
             this.InitializeComponent();
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
+            this.NavigationCacheMode = NavigationCacheMode.Enabled;
             HardwareButtons.CameraPressed += HardwareButtons_CameraPressed;
             FirstRun();
             Connect();
@@ -433,11 +424,11 @@ namespace CMDInjector
         {
             if (ManTestSigningTog.IsOn)
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000049", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000049", "Element", 3, ToBinary("01"));
             }
             else
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000049", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000049", "Element", 3, ToBinary("00"));
             }
         }
 
@@ -445,11 +436,11 @@ namespace CMDInjector
         {
             if (ManNoIntegrityChecksTog.IsOn)
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000048", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000048", "Element", 3, ToBinary("01"));
             }
             else
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000048", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000048", "Element", 3, ToBinary("00"));
             }
         }
 
@@ -467,18 +458,18 @@ namespace CMDInjector
 
         private void TimeoutBtn_Click(object sender, RoutedEventArgs e)
         {
-            rpc.RegSetValueW(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\25000004", "Element", 3, BitConverter.GetBytes(Convert.ToInt32(TimeoutBox.Text)));
+            rpc.RegSetValue(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\25000004", "Element", 3, BitConverter.GetBytes(Convert.ToInt32(TimeoutBox.Text)));
         }
 
         private void BootMenuTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (BootMenuTog.IsOn)
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\26000020", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\26000020", "Element", 3, ToBinary("01"));
             }
             else
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\26000020", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\26000020", "Element", 3, ToBinary("00"));
             }
         }
 
@@ -577,38 +568,28 @@ namespace CMDInjector
 
         private void LoadTestSigningTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (LoadTestSigningTog.IsOn)
-            {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000049", "Element", 3, ToBinary("01"));
-            }
-            else
-            {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000049", "Element", 3, ToBinary("00"));
-            }
+            rpc.RegSetValue(
+                1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000049",
+                "Element", 3, ToBinary(LoadTestSigningTog.IsOn ? "01" : "00"));
         }
 
         private void LoadNoIntegrityChecksTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (LoadNoIntegrityChecksTog.IsOn)
-            {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000048", "Element", 3, ToBinary("01"));
-            }
-            else
-            {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000048", "Element", 3, ToBinary("00"));
-            }
+            rpc.RegSetValue(
+                1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000048",
+                "Element", 3, ToBinary(LoadNoIntegrityChecksTog.IsOn ? "01" : "00"));
         }
 
         private void LoadFlightSignTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (LoadFlightSignTog.IsOn)
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\1600007e", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\1600007e", "Element", 3, ToBinary("01"));
                 rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\Certificates\\SbcpFlightToken.p7b", "C:\\EFIESP\\efi\\Microsoft\\boot\\policies\\SbcpFlightToken.p7b", 0);
             }
             else
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\1600007e", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\1600007e", "Element", 3, ToBinary("00"));
             }
         }
 
@@ -616,11 +597,11 @@ namespace CMDInjector
         {
             if (BootMenuPolBox.SelectedIndex == 0)
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\250000c2", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\250000c2", "Element", 3, ToBinary("00"));
             }
             else
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\250000c2", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\250000c2", "Element", 3, ToBinary("01"));
             }
         }
 
@@ -628,15 +609,15 @@ namespace CMDInjector
         {
             if (AdvOptTog.IsOn)
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000040", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000040", "Element", 3, ToBinary("01"));
                 if (flag == 0)
                 {
-                    _ = Helper.MessageBox("Make sure BootMenuPolicy is set to Legacy, otherwise you won't be able to boot to the Windows anymore.", Helper.SoundHelper.Sound.Alert, "Warning");
+                    _ = Helper.MessageBox("Make sure BootMenuPolicy is set to Legacy, otherwise you WON'T be able to boot to the Windows ANYMORE.", Helper.SoundHelper.Sound.Alert, "Warning");
                 }
             }
             else
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000040", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000040", "Element", 3, ToBinary("00"));
             }
         }
 
@@ -644,11 +625,11 @@ namespace CMDInjector
         {
             if (OptEditTog.IsOn)
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000041", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000041", "Element", 3, ToBinary("01"));
             }
             else
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000041", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000041", "Element", 3, ToBinary("00"));
             }
         }
 
@@ -710,6 +691,7 @@ namespace CMDInjector
             MenuFlyoutItem clickedItem = (MenuFlyoutItem)sender;
             DisplayOrderList.Items.Add(clickedItem.Text);
             AddFlyMenu.Items.Remove(clickedItem);
+
             if (DisplayOrderList.Items.Count > 1)
             {
                 RemoveBtn.IsEnabled = true;
@@ -726,9 +708,9 @@ namespace CMDInjector
             Indicator.Text = "Writing...";
             if ((DevMenuBtn.Content as string) == "Install")
             {
-                if (Helper.build < 14393)
+                if (Helper.build <= 14393)
                 {
-                    rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\DeveloperMenu\\developermenu1607.efi", "C:\\EFIESP\\Windows\\System32\\Boot\\developermenu.efi", 0);
+                    Helper.CopyFromAppRoot("Contents\\DeveloperMenu\\developermenu1607.efi", "C:\\EFIESP\\Windows\\System32\\Boot\\developermenu.efi");
                     await SendCommand("bcdedit /create {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} /d \"Developer Menu\" /application \"bootapp\"" +
                     "&bcdedit /set {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} path \"\\windows\\system32\\BOOT\\developermenu.efi\"" +
                     "&bcdedit /set {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} device \"partition=%SystemDrive%\\Efiesp\"" +
@@ -739,14 +721,10 @@ namespace CMDInjector
                 }
                 else
                 {
-                    if (Helper.build == 14393)
-                    {
-                        rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\DeveloperMenu\\developermenu1607.efi", "C:\\EFIESP\\Windows\\System32\\Boot\\developermenu.efi", 0);
-                    }
-                    else
-                    {
-                        rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\DeveloperMenu\\developermenu1709.efi", "C:\\EFIESP\\Windows\\System32\\Boot\\developermenu.efi", 0);
-                    }
+                    Helper.CopyFromAppRoot(
+                        $"Contents\\DeveloperMenu\\developermenu1709.efi",
+                        "C:\\EFIESP\\Windows\\System32\\Boot\\developermenu.efi"
+                    );
                     await SendCommand("bcdedit /create {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} /d \"Developer Menu\" /application \"bootapp\"" +
                     "&bcdedit /set {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} path \"\\windows\\system32\\BOOT\\developermenu.efi\"" +
                     "&bcdedit /set {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} device \"partition=%SystemDrive%\\Efiesp\"" +
@@ -754,9 +732,10 @@ namespace CMDInjector
                     "&bcdedit /set {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} isolatedcontext \"yes\"" +
                     $"&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
                 }
-                rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\DeveloperMenu\\ui\\boot.ums.connected.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.connected.bmpx", 0);
-                rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\DeveloperMenu\\ui\\boot.ums.disconnected.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.disconnected.bmpx", 0);
-                rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\DeveloperMenu\\ui\\boot.ums.waiting.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.waiting.bmpx", 0);
+
+                Helper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.connected.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.connected.bmpx");
+                Helper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.disconnected.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.disconnected.bmpx");
+                Helper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.waiting.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.waiting.bmpx");
             }
             else
             {
@@ -790,11 +769,11 @@ namespace CMDInjector
                 {
                     if (DevTestSigningTog.IsOn)
                     {
-                        rpc.RegSetValueW(1, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\16000049", "Element", 3, ToBinary("01"));
+                        rpc.RegSetValue(1, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\16000049", "Element", 3, ToBinary("01"));
                     }
                     else
                     {
-                        rpc.RegSetValueW(1, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\16000049", "Element", 3, ToBinary("00"));
+                        rpc.RegSetValue(1, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\16000049", "Element", 3, ToBinary("00"));
                     }
                     break;
                 }
@@ -809,11 +788,11 @@ namespace CMDInjector
                 {
                     if (DevNoIntegrityChecksTog.IsOn)
                     {
-                        rpc.RegSetValueW(1, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\16000048", "Element", 3, ToBinary("01"));
+                        rpc.RegSetValue(1, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\16000048", "Element", 3, ToBinary("01"));
                     }
                     else
                     {
-                        rpc.RegSetValueW(1, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\16000048", "Element", 3, ToBinary("00"));
+                        rpc.RegSetValue(1, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\16000048", "Element", 3, ToBinary("00"));
                     }
                     break;
                 }

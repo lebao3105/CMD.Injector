@@ -46,7 +46,7 @@
                             <ComboBoxItem Content="Force Application Shutdown"/>
                             <ComboBoxItem Content="None"/>
                         </ComboBox>
-                        <Button Name="DeploymentInfoBtn" Content="&#xE171;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" Height="30" Click="DeploymentInfoBtn_Click"/>
+                        <Button Name="DeploymentInfoBtn" Content="&#xE171;" FontFamily="Segoe MDL2 Assets" Height="30" Click="DeploymentInfoBtn_Click"/>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Row="2">

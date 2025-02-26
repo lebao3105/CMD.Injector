@@ -63,7 +63,7 @@ namespace CMDInjector
         public PacMan()
         {
             this.InitializeComponent();
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
+            this.NavigationCacheMode = NavigationCacheMode.Enabled;
             BrowseBtnTip.Visibility = Helper.LocalSettingsHelper.LoadSettings("BrowseBtnTipSettings", true) ? Visibility.Visible : Visibility.Collapsed;
             PacManMangerTip.Visibility = Helper.LocalSettingsHelper.LoadSettings("PacManMangerTipSettings", true) ? Visibility.Visible : Visibility.Collapsed;
             PacmanManager(false);
@@ -508,7 +508,7 @@ namespace CMDInjector
             while (Helper.LocalSettingsHelper.LoadSettings("LoginTogReg", true) && (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available)
             {
                 await Task.Delay(200);
-                if (Helper.userVerified) break;
+                if (Globals.userVerified) break;
             }
             base.OnNavigatedTo(e);
             if (e.Parameter != null)

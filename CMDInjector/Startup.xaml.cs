@@ -30,7 +30,7 @@ namespace CMDInjector
         public Startup()
         {
             this.InitializeComponent();
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
+            this.NavigationCacheMode = NavigationCacheMode.Enabled;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -51,7 +51,7 @@ namespace CMDInjector
                     }
                     else
                     {
-                        Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\BatchScripts\\Startup.bat", Helper.localFolder.Path + "\\Startup.bat");
+                        Helper.CopyFromAppRoot("\\BatchScripts\\Startup.bat", Helper.localFolder.Path + "\\Startup.bat");
                     }
                     var text = await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Startup.bat"), Windows.Storage.Streams.UnicodeEncoding.Utf8);
                     CommandBox.Text = text;

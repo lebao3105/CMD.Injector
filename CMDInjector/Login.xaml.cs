@@ -42,13 +42,15 @@ namespace CMDInjector
         private async void Verify()
         {
             VerifyBtn.IsEnabled = false;
+
             UserConsentVerificationResult consentResult = await UserConsentVerifier.RequestVerificationAsync("Please enter your lockscreen PIN");
             if (consentResult == UserConsentVerificationResult.Canceled || consentResult == UserConsentVerificationResult.RetriesExhausted)
             {
                 VerifyBtn.IsEnabled = true;
                 return;
             }
-            Helper.userVerified = true;
+
+            Globals.userVerified = true;
             if (Frame.CanGoBack)
             {
                 Frame.GoBack();

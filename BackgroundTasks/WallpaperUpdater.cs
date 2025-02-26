@@ -62,7 +62,9 @@ namespace BackgroundTasks
                 int j = 0;
                 for (int i = 0; i < files.Count; i++)
                 {
-                    if (Path.GetExtension(files[i].Name).ToLower() == ".jpg" || Path.GetExtension(files[i].Name).ToLower() == ".jpeg" || Path.GetExtension(files[i].Name).ToLower() == ".png")
+                    var extension = Path.GetExtension(files[i].Name).ToLower();
+
+                    if (extension == ".jpg" || extension == ".jpeg" || extension == ".png")
                     {
                         if(Helper.LocalSettingsHelper.LoadSettings("StartWallImagePosition", 0) == j)
                         {
@@ -79,6 +81,7 @@ namespace BackgroundTasks
                 }
             }
 
+            // This is a label, kinda a piece of code that can be resued without creating a function
             Update:
             if (NetworkInterface.GetIsNetworkAvailable())
             {

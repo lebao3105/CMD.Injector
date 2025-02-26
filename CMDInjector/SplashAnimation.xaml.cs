@@ -34,7 +34,7 @@ namespace CMDInjector
         internal bool dismissed = false; // Variable to track splash screen dismissal status
 
         private SplashScreen splash; // Variable to hold the splash screen object
-        private double ScaleFactor; //Variable to hold the device scale factor
+        private double ScaleFactor; // Variable to hold the device scale factor
 
         public SplashAnimation(LaunchActivatedEventArgs e, bool loadState)
         {
@@ -49,6 +49,7 @@ namespace CMDInjector
                 ExtendedSplashImage.Source = new BitmapImage(new Uri($"ms-appx:///Assets/Images/Splashscreens/{Helper.LocalSettingsHelper.LoadSettings("SplashAnim", "Glitch")}_Light.gif"));
                 SplashProgressRing.Foreground = new SolidColorBrush(Colors.Black);
             }
+
             DismissExtendedSplash();
             Window.Current.SizeChanged += Current_SizeChanged;
             ScaleFactor = (double)DisplayInformation.GetForCurrentView().ResolutionScale / 100;
@@ -100,25 +101,11 @@ namespace CMDInjector
         {
             if (Helper.LocalSettingsHelper.LoadSettings("ThemeSettings", false))
             {
-                if (Helper.LocalSettingsHelper.LoadSettings("Theme", 0) == 0)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return Helper.LocalSettingsHelper.LoadSettings("Theme", 0) == 0;
             }
             else
             {
-                if (Application.Current.RequestedTheme == ApplicationTheme.Light)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                return Application.Current.RequestedTheme != ApplicationTheme.Light;
             }
         }
     }

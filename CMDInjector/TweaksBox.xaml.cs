@@ -73,7 +73,7 @@ namespace CMDInjector
         public TweakBox()
         {
             this.InitializeComponent();
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
+            this.NavigationCacheMode = NavigationCacheMode.Enabled;
             rpc.Initialize();
             Connect();
             Init();
@@ -716,7 +716,7 @@ namespace CMDInjector
             }
             else if (clickedItem.Text == "This PC")
             {
-                rpc.RegSetValueW(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 4, BitConverter.GetBytes(uint.Parse("57873")));
+                rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 4, BitConverter.GetBytes(uint.Parse("57873")));
             }
             RootOrderList.Items.Add(clickedItem.Text);
             AddFlyMenu.Items.Remove(clickedItem);
@@ -748,7 +748,7 @@ namespace CMDInjector
                 StorageFolder CustomFolder = await folderPicker.PickSingleFolderAsync();
                 if (CustomFolder != null)
                 {
-                    rpc.RegSetValueW(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", CustomFolder.Path, 4, BitConverter.GetBytes(uint.Parse("60737")));
+                    rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", CustomFolder.Path, 4, BitConverter.GetBytes(uint.Parse("60737")));
                     string value;
                     if (CustomFolder.Path.Equals("shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}", StringComparison.CurrentCultureIgnoreCase)) value = "MainOS (C:)";
                     if (CustomFolder.Path.Equals("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", StringComparison.CurrentCultureIgnoreCase)) value = "This PC";
@@ -787,7 +787,7 @@ namespace CMDInjector
                             {
                                 inputTextBox.Text = inputTextBox.Text.Remove(inputTextBox.Text.Length - 1);
                             }
-                            rpc.RegSetValueW(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", inputTextBox.Text, 4, BitConverter.GetBytes(uint.Parse("60737")));
+                            rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", inputTextBox.Text, 4, BitConverter.GetBytes(uint.Parse("60737")));
                             if (inputTextBox.Text.Equals("C:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "MainOS (C:)";
                             else if (inputTextBox.Text.Equals("U:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "Data (U:)";
                             else if (inputTextBox.Text.Equals("D:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "SD Card (D:)";
@@ -806,7 +806,7 @@ namespace CMDInjector
                     {
                         inputTextBox.Text = inputTextBox.Text.Remove(inputTextBox.Text.Length - 1);
                     }
-                    rpc.RegSetValueW(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", inputTextBox.Text, 4, BitConverter.GetBytes(uint.Parse("60737")));
+                    rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", inputTextBox.Text, 4, BitConverter.GetBytes(uint.Parse("60737")));
                     if (inputTextBox.Text.Equals("C:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "MainOS (C:)";
                     else if (inputTextBox.Text.Equals("U:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "Data (U:)";
                     else if (inputTextBox.Text.Equals("D:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "SD Card (D:)";
@@ -895,7 +895,7 @@ namespace CMDInjector
                     if (glyphUnicodes[i] == Convert.ToInt32(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, Helper.RegistryHelper.RegistryType.REG_DWORD), 16))
                     {
                         FolderIconCombo.SelectedIndex = i;
-                        rpc.RegSetValueW(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[i].ToString())));
+                        rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[i].ToString())));
                         break;
                     }
                     else
@@ -917,7 +917,7 @@ namespace CMDInjector
                 else if (SelFoldUri.Equals("MainOS (C:)", StringComparison.CurrentCultureIgnoreCase)) SelFoldUri = "C:";
                 else if (SelFoldUri.Equals("Data (U:)", StringComparison.CurrentCultureIgnoreCase)) SelFoldUri = "U:";
                 else if (SelFoldUri.Equals("SD Card (D:)", StringComparison.CurrentCultureIgnoreCase)) SelFoldUri = "D:";
-                rpc.RegSetValueW(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[FolderIconCombo.SelectedIndex].ToString())));
+                rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[FolderIconCombo.SelectedIndex].ToString())));
             }
         }
 
@@ -1007,7 +1007,7 @@ namespace CMDInjector
         {
             if (BrightTog.IsOn)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight", "UserSettingNoBrightnessSettings", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight", "UserSettingNoBrightnessSettings", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
@@ -1086,48 +1086,48 @@ namespace CMDInjector
                         }
                     }
                     Directory.CreateDirectory("C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\NsgGlance_NlpmService_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P.bin");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin");
-                    Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin");
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "PluginPath", 1, Encoding.Unicode.GetBytes("\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll" + '\0'));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Path", 1, Encoding.Unicode.GetBytes("C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll" + '\0'));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Version", 1, Encoding.Unicode.GetBytes("4.1.12.4" + '\0'));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "PluginVersion", 1, Encoding.Unicode.GetBytes("4.1.12.4" + '\0'));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Enabled", 4, BitConverter.GetBytes(uint.Parse("1")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "UsingBeta", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "UseBeta", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AlwaysOnInCharger", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AppGraphicTimeout", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "BSSwitchOffTimeout", 4, BitConverter.GetBytes(uint.Parse("30")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkMode", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeElements", 4, BitConverter.GetBytes(uint.Parse("15")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeEnd", 4, BitConverter.GetBytes(uint.Parse("420")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeOverrideColor", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeStart", 4, BitConverter.GetBytes(uint.Parse("1320")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeThreshold", 4, BitConverter.GetBytes(uint.Parse("20000")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DoubleTapEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "Enabled", 4, BitConverter.GetBytes(uint.Parse("1")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MinimizeIcon", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "Mode", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "NormalModeElements", 4, BitConverter.GetBytes(uint.Parse("31")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SwipeEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SwitchOffTimeout", 4, BitConverter.GetBytes(uint.Parse("15")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "PanelType", 4, BitConverter.GetBytes(uint.Parse("1")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ShowDetailedAppStatus", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ShowSystemNotifications", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", 1, Encoding.Unicode.GetBytes("\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_wxga.bin" + '\0'));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AppGraphicGestures", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SingleTapWakeup", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "EnablePublicSDK", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SupportedTouchEvents", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValueW(1, "SYSTEM\\CurrentControlSet\\Services\\NlpmService", "ImagePath", 2, Encoding.Unicode.GetBytes("C:\\windows\\System32\\OEMServiceHost.exe -k NsgGlance" + '\0'));
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\NsgGlance_NlpmService_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P.bin");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin");
+                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin");
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "PluginPath", 1, Encoding.Unicode.GetBytes("\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll" + '\0'));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Path", 1, Encoding.Unicode.GetBytes("C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll" + '\0'));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Version", 1, Encoding.Unicode.GetBytes("4.1.12.4" + '\0'));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "PluginVersion", 1, Encoding.Unicode.GetBytes("4.1.12.4" + '\0'));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Enabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "UsingBeta", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "UseBeta", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AlwaysOnInCharger", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AppGraphicTimeout", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "BSSwitchOffTimeout", 4, BitConverter.GetBytes(uint.Parse("30")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkMode", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeElements", 4, BitConverter.GetBytes(uint.Parse("15")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeEnd", 4, BitConverter.GetBytes(uint.Parse("420")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeOverrideColor", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeStart", 4, BitConverter.GetBytes(uint.Parse("1320")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeThreshold", 4, BitConverter.GetBytes(uint.Parse("20000")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DoubleTapEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "Enabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MinimizeIcon", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "Mode", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "NormalModeElements", 4, BitConverter.GetBytes(uint.Parse("31")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SwipeEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SwitchOffTimeout", 4, BitConverter.GetBytes(uint.Parse("15")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "PanelType", 4, BitConverter.GetBytes(uint.Parse("1")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ShowDetailedAppStatus", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ShowSystemNotifications", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", 1, Encoding.Unicode.GetBytes("\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_wxga.bin" + '\0'));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AppGraphicGestures", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SingleTapWakeup", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "EnablePublicSDK", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SupportedTouchEvents", 4, BitConverter.GetBytes(uint.Parse("0")));
+                    rpc.RegSetValue(1, "SYSTEM\\CurrentControlSet\\Services\\NlpmService", "ImagePath", 2, Encoding.Unicode.GetBytes("C:\\windows\\System32\\OEMServiceHost.exe -k NsgGlance" + '\0'));
                     FontFileBox.SelectedIndex = 3;
                     RestoreGlanceIndicator.Visibility = Visibility.Visible;
                 }
@@ -1148,7 +1148,7 @@ namespace CMDInjector
             else if (FontFileBox.SelectedIndex == 5) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
             else if (FontFileBox.SelectedIndex == 6)
             {
-                Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
+                Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
                 Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
             }
             else if (FontFileBox.SelectedIndex == 7) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
@@ -1159,13 +1159,13 @@ namespace CMDInjector
         {
             if (FontColorTog.IsOn)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711680")));
+                rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711680")));
                 RedRadio.IsChecked = true;
                 GlanceColorStack.Visibility = Visibility.Visible;
             }
             else
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("0")));
+                rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("0")));
                 GlanceAutoColor.SelectedIndex = 0;
                 RedRadio.IsChecked = false;
                 GreenRadio.IsChecked = false;
@@ -1186,23 +1186,23 @@ namespace CMDInjector
         private void FontColor_Checked(object sender, RoutedEventArgs e)
         {
             RadioButton rb = sender as RadioButton;
-            if (rb.Content as string == "Red") rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711680")));
-            else if (rb.Content as string == "Green") rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("65280")));
-            else if (rb.Content as string == "Blue") rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("255")));
-            else if (rb.Content as string == "Cyan") rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("65535")));
-            else if (rb.Content as string == "Magenta") rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711935")));
-            else if (rb.Content as string == "Yellow") rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16776960")));
+            if (rb.Content as string == "Red") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711680")));
+            else if (rb.Content as string == "Green") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("65280")));
+            else if (rb.Content as string == "Blue") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("255")));
+            else if (rb.Content as string == "Cyan") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("65535")));
+            else if (rb.Content as string == "Magenta") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711935")));
+            else if (rb.Content as string == "Yellow") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16776960")));
         }
 
         private void MoveClockTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (MoveClockTog.IsOn)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", 4, BitConverter.GetBytes(uint.Parse("0")));
+                rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
         }
 
@@ -1498,13 +1498,13 @@ namespace CMDInjector
         {
             if (BootAnimTog.IsOn)
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", 3, ToBinary("00"));
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", 3, ToBinary("00"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", 3, ToBinary("00"));
             }
             else
             {
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", 3, ToBinary("01"));
-                rpc.RegSetValueW(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", 3, ToBinary("01"));
+                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", 3, ToBinary("01"));
             }
         }
 
@@ -1596,11 +1596,11 @@ namespace CMDInjector
         {
             if (SoftNavTog.IsOn)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
             if (flag == true)
             {
@@ -1613,12 +1613,12 @@ namespace CMDInjector
             if (DoubleTapTog.IsOn)
             {
 
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
 
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
             if (flag == true)
             {
@@ -1630,11 +1630,11 @@ namespace CMDInjector
         {
             if (AutoHideTog.IsOn)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
             if (flag == true)
             {
@@ -1646,11 +1646,11 @@ namespace CMDInjector
         {
             if (SwipeUpTog.IsOn)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
             if (flag == true)
             {
@@ -1662,11 +1662,11 @@ namespace CMDInjector
         {
             if (UserManagedTog.IsOn)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", 4, BitConverter.GetBytes(uint.Parse("0")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
             if (flag == true)
             {
@@ -1678,12 +1678,12 @@ namespace CMDInjector
         {
             if (BurninProtTog.IsOn)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionMaskSwitchingInterval", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionMaskSwitchingInterval", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
             if (flag == true)
             {
@@ -1707,7 +1707,7 @@ namespace CMDInjector
         {
             if (BurninTimeoutBox.Text != string.Empty)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", 4, BitConverter.GetBytes(uint.Parse(BurninTimeoutBox.Text)));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", 4, BitConverter.GetBytes(uint.Parse(BurninTimeoutBox.Text)));
                 BurnInTimeoutIndicator.Visibility = Visibility.Visible;
             }
         }
@@ -1722,7 +1722,7 @@ namespace CMDInjector
                 SolidColorBrush solidColor = (SolidColorBrush)selectedColor;
                 string hexColor = solidColor.Color.ToString().Remove(0, 3);
                 int decimalColor = Convert.ToInt32(hexColor, 16);
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionBlackReplacementColor", 4, BitConverter.GetBytes(uint.Parse(decimalColor.ToString())));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionBlackReplacementColor", 4, BitConverter.GetBytes(uint.Parse(decimalColor.ToString())));
                 BurnInColorIndicator.Visibility = Visibility.Visible;
             }
         }
@@ -1731,7 +1731,7 @@ namespace CMDInjector
         {
             if (sender is Slider slide)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", 4, BitConverter.GetBytes(uint.Parse(slide.Value.ToString())));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", 4, BitConverter.GetBytes(uint.Parse(slide.Value.ToString())));
             }
             if (flag == true)
             {
@@ -1746,7 +1746,7 @@ namespace CMDInjector
 
         private void DumpCountCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", 4, BitConverter.GetBytes(uint.Parse(((ComboBoxItem)DumpCountCombo.SelectedItem).Content.ToString())));
+            rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", 4, BitConverter.GetBytes(uint.Parse(((ComboBoxItem)DumpCountCombo.SelectedItem).Content.ToString())));
         }
 
         private async void DumpFolderBtn_Click(object sender, RoutedEventArgs e)
@@ -1759,18 +1759,18 @@ namespace CMDInjector
             StorageFolder dumpFolder = await folderPicker.PickSingleFolderAsync();
             if (dumpFolder != null)
             {
-                rpc.RegSetValueW(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", 7, Encoding.Unicode.GetBytes(dumpFolder.Path + '\0'));
+                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", 7, Encoding.Unicode.GetBytes(dumpFolder.Path + '\0'));
                 DumpFolderBox.Text = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ);
             }
         }
 
         private void TileCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (TileCombo.SelectedIndex == 0) rpc.RegSetValueW(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("4")));
-            else if (TileCombo.SelectedIndex == 1) rpc.RegSetValueW(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("6")));
-            else if (TileCombo.SelectedIndex == 2) rpc.RegSetValueW(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("8")));
-            else if (TileCombo.SelectedIndex == 3) rpc.RegSetValueW(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("10")));
-            else if (TileCombo.SelectedIndex == 4) rpc.RegSetValueW(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("12")));
+            if (TileCombo.SelectedIndex == 0) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("4")));
+            else if (TileCombo.SelectedIndex == 1) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("6")));
+            else if (TileCombo.SelectedIndex == 2) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("8")));
+            else if (TileCombo.SelectedIndex == 3) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("10")));
+            else if (TileCombo.SelectedIndex == 4) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("12")));
             if (flag == true)
             {
                 StartTileIndicator.Visibility = Visibility.Visible;
@@ -1805,7 +1805,7 @@ namespace CMDInjector
         {
             if (VirtualMemBox.Text != string.Empty)
             {
-                rpc.RegSetValueW(1, "System\\CurrentControlSet\\Control\\Session Manager\\Memory Management", "PagingFiles", 7, Encoding.Unicode.GetBytes(VirtualMemBox.Text + '\0'));
+                rpc.RegSetValue(1, "System\\CurrentControlSet\\Control\\Session Manager\\Memory Management", "PagingFiles", 7, Encoding.Unicode.GetBytes(VirtualMemBox.Text + '\0'));
                 VirtualMemoryIndicator.Visibility = Visibility.Visible;
             }
         }
@@ -1932,15 +1932,15 @@ namespace CMDInjector
                     Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", Helper.RegistryHelper.RegistryType.REG_BINARY, newpalette);
                     await Task.Delay(200);
                     Color accentColor = new UISettings().GetColorValue(UIColorType.Accent);
-                    (App.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
-                    (App.Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
-                    (App.Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
+                    (Application.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
+                    (Application.Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
+                    (Application.Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
                     if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
                     {
                         var statusBar = StatusBar.GetForCurrentView();
@@ -2025,8 +2025,8 @@ namespace CMDInjector
         private void NightModeSlide_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             Slider slider = sender as Slider;
-            rpc.RegSetValueW(1, @"SOFTWARE\OEM\Nokia\Display\ColorAndLight", "UserSettingWhitePoint", 4, BitConverter.GetBytes(uint.Parse(Convert.ToInt32(Math.Round(slider.Value / 100 * (63 - 32) + (63 - 32) + 1).ToString(), 16).ToString())));
-            rpc.RegSetValueW(1, @"SOFTWARE\OEM\Nokia\Display\ColorAndLight", "UserSettingNightLightPct", 1, Encoding.Unicode.GetBytes($"0,{Math.Round(slider.Value / 100 * (63 - 32) + (63 - 32) + 1)}" + '\0'));
+            rpc.RegSetValue(1, @"SOFTWARE\OEM\Nokia\Display\ColorAndLight", "UserSettingWhitePoint", 4, BitConverter.GetBytes(uint.Parse(Convert.ToInt32(Math.Round(slider.Value / 100 * (63 - 32) + (63 - 32) + 1).ToString(), 16).ToString())));
+            rpc.RegSetValue(1, @"SOFTWARE\OEM\Nokia\Display\ColorAndLight", "UserSettingNightLightPct", 1, Encoding.Unicode.GetBytes($"0,{Math.Round(slider.Value / 100 * (63 - 32) + (63 - 32) + 1)}" + '\0'));
         }
 
         private async Task Restart()
@@ -2299,7 +2299,7 @@ namespace CMDInjector
             var result = await Helper.MessageBox("Are you sure you want to patch the driver?", Helper.SoundHelper.Sound.Alert, "", "No", true, "Yes");
             if (result == 0)
             {
-                Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\Drivers\\PatchedSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
+                Helper.CopyFromAppRoot("\\Drivers\\PatchedSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
                 SecMgrIndicator.Visibility = Visibility.Visible;
             }
         }
@@ -2309,7 +2309,7 @@ namespace CMDInjector
             var result = await Helper.MessageBox("Are you sure you want to restore the driver?", Helper.SoundHelper.Sound.Alert, "", "No", true, "Yes");
             if (result == 0)
             {
-                Helper.CopyFile(Helper.installedLocation.Path + "\\Contents\\Drivers\\OriginalSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
+                Helper.CopyFromAppRoot("\\Drivers\\OriginalSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
                 SecMgrIndicator.Visibility = Visibility.Visible;
             }
         }

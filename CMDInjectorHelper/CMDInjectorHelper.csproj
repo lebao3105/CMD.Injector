@@ -128,7 +128,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TerminalHelper.cs" />
     <Compile Include="TweakBoxHelper.cs" />
-    <EmbeddedResource Include="Properties\CMDInjectorHelper.rd.xml" />
+    <Content Include="Properties\CMDInjectorHelper.rd.xml">
+      <SubType>Designer</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
@@ -149,13 +151,16 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ndtklib">
-      <HintPath>..\..\..\..\Desktop\App Libraries\ndtklib.winmd</HintPath>
+      <HintPath>..\ndtklib\bin\ndtklib.winmd</HintPath>
     </Reference>
     <Reference Include="OEMSharedFolderAccessLib">
-      <HintPath>..\..\..\..\Desktop\App Libraries\OEMSharedFolderAccessLib.winmd</HintPath>
+      <HintPath>..\dependencies\OEMSharedFolderAccessLib.winmd</HintPath>
+    </Reference>
+    <Reference Include="Registry">
+      <HintPath>..\dependencies\Registry.winmd</HintPath>
     </Reference>
     <Reference Include="SecureBootRuntimeComponent">
-      <HintPath>..\..\..\..\Desktop\App Libraries\SecureBootRuntimeComponent.winmd</HintPath>
+      <HintPath>..\dependencies\SecureBootRuntimeComponent.winmd</HintPath>
     </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

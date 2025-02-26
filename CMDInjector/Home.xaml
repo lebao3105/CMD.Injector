@@ -13,10 +13,12 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        
         <StackPanel>
             <TextBlock Text="HOME" FontSize="35" FontWeight="Bold" Foreground="{ThemeResource AppAccentColor}" Margin="10,0,0,0"/>
             <TextBlock Text="System-wide injection &amp; activation." Margin="20,0,0,0"/>
         </StackPanel>
+        
         <ScrollViewer Grid.Row="1" Margin="0,20,0,0">
             <Grid>
                 <Grid.RowDefinitions>
@@ -52,7 +54,7 @@
                             <ComboBoxItem Content="Temporary"/>
                             <ComboBoxItem Content="Permanent"/>
                         </ComboBox>
-                        <Button Name="InjectionInfoBtn" Content="&#xE171;" FontFamily="ms-appx:///Assets/Fonts/segmdl2.ttf#Segoe MDL2 Assets" Height="30" Click="InjectionInfoBtn_Click"/>
+                        <Button Name="InjectionInfoBtn" Content="&#xE171;" FontFamily="Segoe MDL2 Assets" Height="30" Click="InjectionInfoBtn_Click"/>
                     </StackPanel>
                     <TextBlock Name="reInjectionBox" Text="The App has been updated, required re-injection in order to update the CMD components and files to the system." Foreground="Yellow" TextWrapping="Wrap" Margin="25,0,0,0" Visibility="Collapsed"/>
                     <TextBlock Name="reInjectionNote" Text="You have already injected using a higher version of this App. Please update to the latest version to re-inject." Foreground="Yellow" TextWrapping="Wrap" Margin="25,0,0,0" Visibility="Collapsed"/>
