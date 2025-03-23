@@ -122,10 +122,14 @@
   <ItemGroup>
     <Compile Include="AboutHelper.cs" />
     <Compile Include="Classes\TelnetClient.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="FilesHelper.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="HomeHelper.cs" />
     <Compile Include="PacManHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegEdit.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="TerminalHelper.cs" />
     <Compile Include="TweakBoxHelper.cs" />
     <Content Include="Properties\CMDInjectorHelper.rd.xml">

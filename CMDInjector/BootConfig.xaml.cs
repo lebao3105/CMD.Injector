@@ -86,39 +86,39 @@ namespace CMDInjector
                     IsEnabled = !(!Helper.LocalSettingsHelper.LoadSettings("HaveCamera", false) && !Helper.LocalSettingsHelper.LoadSettings("UnlockHidden", false))
                 });
 
-                DescriptionBox.Text = Helper.RegistryHelper.GetRegValue(
-                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+                DescriptionBox.Text = RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE,
                     "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\12000004",
                     "Element",
-                    Helper.RegistryHelper.RegistryType.REG_SZ
+                    RegistryType.REG_SZ
                 );
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ) != string.Empty)
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", RegistryType.REG_MULTI_SZ) != string.Empty)
                 {
-                    string[] DisplayOrder = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ).Split(' ');
+                    string[] DisplayOrder = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", RegistryType.REG_MULTI_SZ).Split(' ');
                     for (int i = 0; i < DisplayOrder.Length; i++)
                     {
-                        DisplayOrderList.Items.Add(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + DisplayOrder[i] + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ));
+                        DisplayOrderList.Items.Add(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + DisplayOrder[i] + "\\Elements\\12000004", "Element", RegistryType.REG_SZ));
                     }
                 }
 
                 RemoveBtn.IsEnabled = DisplayOrderList.Items.Count > 1;
 
-                ManTestSigningTog.IsOn = Helper.RegistryHelper.GetRegValue(
-                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+                ManTestSigningTog.IsOn = RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE,
                     "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000049",
                     "Element",
-                    Helper.RegistryHelper.RegistryType.REG_BINARY
+                    RegistryType.REG_BINARY
                 ).Contains("01");
 
-                ManNoIntegrityChecksTog.IsOn = Helper.RegistryHelper.GetRegValue(
-                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+                ManNoIntegrityChecksTog.IsOn = RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE,
                     "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\16000048",
                     "Element",
-                    Helper.RegistryHelper.RegistryType.REG_BINARY
+                    RegistryType.REG_BINARY
                 ).Contains("01");
 
-                var timeOutGet = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\25000004", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY);
+                var timeOutGet = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\25000004", "Element", RegistryType.REG_BINARY);
 
                 if (!string.IsNullOrWhiteSpace(timeOutGet))
                 {
@@ -126,7 +126,7 @@ namespace CMDInjector
                     TimeoutBox.Text = Convert.ToString(Convert.ToInt32(HexTimeout[0] + HexTimeout[1], 16));
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\26000020", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\26000020", "Element", RegistryType.REG_BINARY).Contains("01"))
                 {
                     BootMenuTog.IsOn = true;
                 }
@@ -135,7 +135,7 @@ namespace CMDInjector
                     BootMenuTog.IsOn = false;
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000049", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000049", "Element", RegistryType.REG_BINARY).Contains("01"))
                 {
                     LoadTestSigningTog.IsOn = true;
                 }
@@ -144,7 +144,7 @@ namespace CMDInjector
                     LoadTestSigningTog.IsOn = false;
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000048", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\16000048", "Element", RegistryType.REG_BINARY).Contains("01"))
                 {
                     LoadNoIntegrityChecksTog.IsOn = true;
                 }
@@ -153,7 +153,7 @@ namespace CMDInjector
                     LoadNoIntegrityChecksTog.IsOn = false;
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\1600007e", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\1600007e", "Element", RegistryType.REG_BINARY).Contains("01"))
                 {
                     LoadFlightSignTog.IsOn = true;
                 }
@@ -162,13 +162,13 @@ namespace CMDInjector
                     LoadFlightSignTog.IsOn = false;
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\250000c2", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY) != string.Empty)
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\250000c2", "Element", RegistryType.REG_BINARY) != string.Empty)
                 {
-                    string[] BootMenuPol = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\250000c2", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).ToCharArray().Select(c => c.ToString()).ToArray();
+                    string[] BootMenuPol = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\250000c2", "Element", RegistryType.REG_BINARY).ToCharArray().Select(c => c.ToString()).ToArray();
                     BootMenuPolBox.SelectedIndex = Convert.ToInt32(BootMenuPol[1]);
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000040", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000040", "Element", RegistryType.REG_BINARY).Contains("01"))
                 {
                     AdvOptTog.IsOn = true;
                 }
@@ -177,7 +177,7 @@ namespace CMDInjector
                     AdvOptTog.IsOn = false;
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000041", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\\Elements\\16000041", "Element", RegistryType.REG_BINARY).Contains("01"))
                 {
                     OptEditTog.IsOn = true;
                 }
@@ -204,20 +204,20 @@ namespace CMDInjector
                     int j = 0;
                     for (int i = 0; i < Objects.Length; i++)
                     {
-                        if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ) == string.Empty || Regex.Replace(Objects[i], @"\s+", "") == "{311b88b5-9b30-491d-bad9-167ca3e2d417}" || Regex.Replace(Objects[i], @"\s+", "") == "{01de5a27-8705-40db-bad6-96fa5187d4a6}" || Regex.Replace(Objects[i], @"\s+", "") == "{0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9}" || Regex.Replace(Objects[i], @"\s+", "") == "{4636856e-540f-4170-a130-a84776f4c654}" || Regex.Replace(Objects[i], @"\s+", "") == "{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}" || Regex.Replace(Objects[i], @"\s+", "") == "{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}" || Regex.Replace(Objects[i], @"\s+", "") == "{ae5534e0-a924-466c-b836-758539a3ee3a}" || Regex.Replace(Objects[i], @"\s+", "") == "{9dea862c-5cdd-4e70-acc1-f32b344d4795}")
+                        if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", RegistryType.REG_SZ) == string.Empty || Regex.Replace(Objects[i], @"\s+", "") == "{311b88b5-9b30-491d-bad9-167ca3e2d417}" || Regex.Replace(Objects[i], @"\s+", "") == "{01de5a27-8705-40db-bad6-96fa5187d4a6}" || Regex.Replace(Objects[i], @"\s+", "") == "{0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9}" || Regex.Replace(Objects[i], @"\s+", "") == "{4636856e-540f-4170-a130-a84776f4c654}" || Regex.Replace(Objects[i], @"\s+", "") == "{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}" || Regex.Replace(Objects[i], @"\s+", "") == "{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}" || Regex.Replace(Objects[i], @"\s+", "") == "{ae5534e0-a924-466c-b836-758539a3ee3a}" || Regex.Replace(Objects[i], @"\s+", "") == "{9dea862c-5cdd-4e70-acc1-f32b344d4795}")
                         {
                             continue;
                         }
                         Identifier[j] = Regex.Replace(Objects[i], @"\s+", "");
-                        if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ) == "Developer Menu")
+                        if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", RegistryType.REG_SZ) == "Developer Menu")
                         {
                             foundDevMenu = true;
                             DevMenuBtn.Content = "Uninstall";
-                            if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\16000049", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\16000049", "Element", RegistryType.REG_BINARY).Contains("01"))
                             {
                                 DevTestSigningTog.IsOn = true;
                             }
-                            if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\16000048", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\16000048", "Element", RegistryType.REG_BINARY).Contains("01"))
                             {
                                 DevNoIntegrityChecksTog.IsOn = true;
                             }
@@ -239,35 +239,35 @@ namespace CMDInjector
                                 }
                             }
                         }
-                        if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ).Contains(Regex.Replace(Objects[i], @"\s+", "")) == false)
+                        if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", RegistryType.REG_MULTI_SZ).Contains(Regex.Replace(Objects[i], @"\s+", "")) == false)
                         {
                             MenuFlyoutItem Items = new MenuFlyoutItem();
                             Items.Click += Items_Click;
-                            Items.Text = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ);
+                            Items.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", RegistryType.REG_SZ);
                             AddFlyMenu.Items.Add(Items);
                         }
-                        DefaultBox.Items.Add(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ));
-                        VolUpBox.Items.Add(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ));
-                        VolDownBox.Items.Add(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ));
-                        if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\23000003", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ) == Regex.Replace(Objects[i], @"\s+", ""))
+                        DefaultBox.Items.Add(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", RegistryType.REG_SZ));
+                        VolUpBox.Items.Add(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", RegistryType.REG_SZ));
+                        VolDownBox.Items.Add(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Regex.Replace(Objects[i], @"\s+", "") + "\\Elements\\12000004", "Element", RegistryType.REG_SZ));
+                        if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\23000003", "Element", RegistryType.REG_MULTI_SZ) == Regex.Replace(Objects[i], @"\s+", ""))
                         {
                             DefaultBox.SelectedIndex = j;
                         }
-                        if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000001", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ) == Regex.Replace(Objects[i], @"\s+", ""))
+                        if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000001", "Element", RegistryType.REG_MULTI_SZ) == Regex.Replace(Objects[i], @"\s+", ""))
                         {
                             VolUpBox.SelectedIndex = j + 1;
                         }
-                        if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000002", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ) == Regex.Replace(Objects[i], @"\s+", ""))
+                        if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000002", "Element", RegistryType.REG_MULTI_SZ) == Regex.Replace(Objects[i], @"\s+", ""))
                         {
                             VolDownBox.SelectedIndex = j + 1;
                         }
                         j++;
                     }
-                    if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000001", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ) == string.Empty)
+                    if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000001", "Element", RegistryType.REG_MULTI_SZ) == string.Empty)
                     {
                         VolUpBox.SelectedIndex = 0;
                     }
-                    if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000002", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ) == string.Empty)
+                    if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000002", "Element", RegistryType.REG_MULTI_SZ) == string.Empty)
                     {
                         VolDownBox.SelectedIndex = 0;
                     }
@@ -411,7 +411,7 @@ namespace CMDInjector
                 //DefaultBox.IsEnabled = false;
                 //statusProgress();
                 //_ = sendCommand("bcdedit /set {bootmgr} default \"" + Identifier[DefaultBox.SelectedIndex] + $"\"&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\23000003", "Element", Helper.RegistryHelper.RegistryType.REG_SZ, Identifier[DefaultBox.SelectedIndex]);
+                RegEdit.SetHKLMValue("BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\23000003", "Element", RegistryType.REG_SZ, Identifier[DefaultBox.SelectedIndex]);
                 if (Identifier[DefaultBox.SelectedIndex] != "{7619dcc9-fafe-11d9-b411-000476eba25f}")
                 {
                     await Helper.MessageBox("Make sure the Windows Loader is selected in DisplayOrder or any of the Volume buttons. Otherwise you won't be able to boot to Windows anymore.", Helper.SoundHelper.Sound.Alert, "Warning");
@@ -489,7 +489,7 @@ namespace CMDInjector
                     {
                         await SendCommand($"bcdedit /set {{bootmgr}} customactions \"0x1000048000001\" \"0x54000001\"&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
                     }
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000001", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ, Regex.Replace(Identifier[VolUpBox.SelectedIndex - 1], @"\s+", ""));
+                    RegEdit.SetHKLMValue("BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000001", "Element", RegistryType.REG_MULTI_SZ, Regex.Replace(Identifier[VolUpBox.SelectedIndex - 1], @"\s+", ""));
                 }
                 else
                 {
@@ -522,7 +522,7 @@ namespace CMDInjector
                     {
                         await SendCommand($"bcdedit /set {{bootmgr}} customactions \"0x1000050000001\" \"0x54000002\"&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
                     }
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000002", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ, Regex.Replace(Identifier[VolDownBox.SelectedIndex - 1], @"\s+", ""));
+                    RegEdit.SetHKLMValue("BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\54000002", "Element", RegistryType.REG_MULTI_SZ, Regex.Replace(Identifier[VolDownBox.SelectedIndex - 1], @"\s+", ""));
                 }
                 else
                 {
@@ -542,7 +542,7 @@ namespace CMDInjector
         private async void DescriptionBtn_Click(object sender, RoutedEventArgs e)
         {
             DescriptionBtn.IsEnabled = false;
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ, DescriptionBox.Text);
+            RegEdit.SetHKLMValue("BCD00000001\\Objects\\{7619dcc9-fafe-11d9-b411-000476eba25f}\\Elements\\12000004", "Element", RegistryType.REG_SZ, DescriptionBox.Text);
             Indicator.ProgressValue = null;
             Indicator.Text = "Writing";
             DefaultBox.Items.Clear();
@@ -655,7 +655,7 @@ namespace CMDInjector
             {
                 for (int j = 0; j < DefaultBox.Items.Count; j++)
                 {
-                    if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Identifier[j] + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ) == DisplayOrderList.Items[i].ToString())
+                    if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Identifier[j] + "\\Elements\\12000004", "Element", RegistryType.REG_SZ) == DisplayOrderList.Items[i].ToString())
                     {
                         orderList += /*"\"" +*/ Identifier[j] + " " /*+ "\" "*/;
                         break;
@@ -663,7 +663,7 @@ namespace CMDInjector
                 }
             }
             //await sendCommand("bcdedit /set {bootmgr} displayorder " + orderList + $"&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ, orderList);
+            RegEdit.SetHKLMValue("BCD00000001\\Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\24000001", "Element", RegistryType.REG_MULTI_SZ, orderList);
             /*SaveBtn.IsEnabled = true;
             InputPane.GetForCurrentView().TryHide();*/
         }
@@ -710,7 +710,7 @@ namespace CMDInjector
             {
                 if (Helper.build <= 14393)
                 {
-                    Helper.CopyFromAppRoot("Contents\\DeveloperMenu\\developermenu1607.efi", "C:\\EFIESP\\Windows\\System32\\Boot\\developermenu.efi");
+                    FilesHelper.CopyFromAppRoot("Contents\\DeveloperMenu\\developermenu1607.efi", "C:\\EFIESP\\Windows\\System32\\Boot\\developermenu.efi");
                     await SendCommand("bcdedit /create {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} /d \"Developer Menu\" /application \"bootapp\"" +
                     "&bcdedit /set {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} path \"\\windows\\system32\\BOOT\\developermenu.efi\"" +
                     "&bcdedit /set {dcc0bd7c-ed9d-49d6-af62-23a3d901117b} device \"partition=%SystemDrive%\\Efiesp\"" +
@@ -721,7 +721,7 @@ namespace CMDInjector
                 }
                 else
                 {
-                    Helper.CopyFromAppRoot(
+                    FilesHelper.CopyFromAppRoot(
                         $"Contents\\DeveloperMenu\\developermenu1709.efi",
                         "C:\\EFIESP\\Windows\\System32\\Boot\\developermenu.efi"
                     );
@@ -733,15 +733,15 @@ namespace CMDInjector
                     $"&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
                 }
 
-                Helper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.connected.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.connected.bmpx");
-                Helper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.disconnected.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.disconnected.bmpx");
-                Helper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.waiting.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.waiting.bmpx");
+                FilesHelper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.connected.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.connected.bmpx");
+                FilesHelper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.disconnected.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.disconnected.bmpx");
+                FilesHelper.CopyFromAppRoot("Contents\\DeveloperMenu\\ui\\boot.ums.waiting.bmpx", "C:\\EFIESP\\Windows\\System32\\Boot\\ui\\boot.ums.waiting.bmpx");
             }
             else
             {
                 for (int i = 0; i < DefaultBox.Items.Count; i++)
                 {
-                    if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ) == "Developer Menu")
+                    if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\12000004", "Element", RegistryType.REG_SZ) == "Developer Menu")
                     {
                         await SendCommand("bcdedit /delete \"" + Identifier[i] + $"\"&echo. >{Helper.localFolder.Path}\\BootConfigEnd.txt");
                         break;
@@ -765,7 +765,7 @@ namespace CMDInjector
         {
             for (int i = 0; i < DefaultBox.Items.Count; i++)
             {
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ) == "Developer Menu")
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\12000004", "Element", RegistryType.REG_SZ) == "Developer Menu")
                 {
                     if (DevTestSigningTog.IsOn)
                     {
@@ -784,7 +784,7 @@ namespace CMDInjector
         {
             for (int i = 0; i < DefaultBox.Items.Count; i++)
             {
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\12000004", "Element", Helper.RegistryHelper.RegistryType.REG_SZ) == "Developer Menu")
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\" + Identifier[i] + "\\Elements\\12000004", "Element", RegistryType.REG_SZ) == "Developer Menu")
                 {
                     if (DevNoIntegrityChecksTog.IsOn)
                     {

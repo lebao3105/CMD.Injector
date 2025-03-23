@@ -1,12 +1,6 @@
 ﻿using CMDInjectorHelper;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
-using Windows.Storage;
-using Windows.UI.Popups;
 
 namespace BackgroundTasks
 {
@@ -20,45 +14,28 @@ namespace BackgroundTasks
 
             Helper.Init();
 
-            if (Helper.LocalSettingsHelper.LoadSettings("AutoThemeMode", 0) != 0)
+            if (Settings.AutoThemeMode)
             {
                 var lightTime = Helper.LocalSettingsHelper.LoadSettings("AutoThemeLight", "06:00");
                 var darkTime = Helper.LocalSettingsHelper.LoadSettings("AutoThemeDark", "18:00");
                 var currentTime = DateTime.Now.ToString("HH:mm");
 
                 string useLightTheme;
-                string controlPanelTheme;
 
-                if (Helper.IsStrAGraterThanStrB(darkTime, lightTime, ':'))
-                {
-                    useLightTheme = (Helper.IsStrAGraterThanStrB(currentTime, lightTime, ':') && Helper.IsStrAGraterThanStrB(darkTime, currentTime, ':')) ? "00000001" : "00000000";
-                    controlPanelTheme = (useLightTheme == "00000001") ? "00000000" : "00000001";
-                }
-                else
-                {
-                    useLightTheme = (Helper.IsStrAGraterThanStrB(currentTime, darkTime, ':') && Helper.IsStrAGraterThanStrB(lightTime, currentTime, ':')) ? "00000000" : "00000001";
-                    controlPanelTheme = (useLightTheme == "00000001") ? "00000000" : "00000001";
-                }
+                useLightTheme = darkTime.IsGreaterThan(lightTime, ':')
+                    ? (currentTime.IsGreaterThan(lightTime, ':') && darkTime.IsGreaterThan(currentTime, ':')).ToDWORDStr()
+                    : (currentTime.IsGreaterThan(darkTime, ':') && lightTime.IsGreaterThan(currentTime, ':')).Toggle().ToDWORDStr();
 
-                Helper.RegistryHelper.SetRegValue(
-                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
-                    "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
-                    "SystemUsesLightTheme",
-                    Helper.RegistryHelper.RegistryType.REG_DWORD,
-                    useLightTheme
-                );
-                Helper.RegistryHelper.SetRegValue(
-                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
-                    "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
-                    "AppsUseLightTheme",
-                    Helper.RegistryHelper.RegistryType.REG_DWORD,
-                    useLightTheme
-                );
-                Helper.RegistryHelper.SetRegValue(
-                    Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+                string controlPanelTheme = (useLightTheme == "00000001") ? "00000000" : "00000001";
+
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize");
+
+                RegEdit.SetRegValue("SystemUsesLightTheme", RegistryType.REG_DWORD, useLightTheme);
+                RegEdit.SetRegValue("AppsUseLightTheme", RegistryType.REG_DWORD, useLightTheme);
+                RegEdit.SetHKLMValue(
                     "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme",
                     "CurrentTheme",
-                    Helper.RegistryHelper.RegistryType.REG_DWORD,
+                    RegistryType.REG_DWORD,
                     controlPanelTheme
                 );
             }

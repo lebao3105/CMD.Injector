@@ -37,68 +37,67 @@ namespace CMDInjectorHelper
 
         public static string GetTelnetTroubleshoot()
         {
-            if (!File.Exists(@"C:\Windows\System32\Boot\startup.bsc") || !File.Exists(@"C:\Windows\System32\cmd.exe") || !File.Exists(@"C:\Windows\System32\telnetd.exe"))
-            {
-                return "Make sure you have restored NDTKSvc and reboot the device.";
-            }
-            else if (File.Exists(@"C:\Windows\System32\Boot\startup.bsc") && !string.Equals(File.ReadAllText(@"C:\Windows\System32\Boot\startup.bsc"), File.ReadAllText($"{Helper.installedLocation.Path}\\Contents\\Startup\\startup.bsc")))
-            {
-                Helper.CopyFromAppRoot("Contents\\Startup\\startup.bsc", @"C:\Windows\System32\Boot\startup.bsc");
-                return "The Bootsh service component has manually changed, or corrupted. Please reboot the device to fix it.";
-            }
-            else if (File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat"))
-            {
+            if ("CMDInjectorFirstLaunch.dat".IsAFileInSystem32())
                 return "The system isn't rebooted to initialize the App after the first launch, please reboot the device.";
-            }
-            else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000004" && Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000000")
+
+            if ("Boot\\startup.bsc".IsAFileInSystem32())
             {
-                return "The Bootsh service & UMCIAuditMode is disabled. Please enable it from the App settings and reboot the device.";
-            }
-            else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000004")
-            {
-                return "The Bootsh service is disabled. Please enable it from the App settings and reboot the device.";
-            }
-            else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000000")
-            {
-                return "The UMCIAuditMode is disabled. Please enable it from the App settings and reboot the device.";
+                if (!string.Equals("Boot\\startup.bsc".ReadFromDir("C:\\Windows\\System32"), "Contents\\Startup\\startup.bsc".ReadFromDir(Globals.installedLocation.Path)))
+                {
+                    FilesHelper.CopyToSystem32FromAppRoot("Contents\\Startup", "startup.bsc", "Boot\\startup.bsc");
+                    return "The Bootsh service component has manually changed, or corrupted. Please reboot the device to fix it.";
+                }
+
+                if (!"cmd.exe".IsAFileInSystem32() || !"telnetd.exe".IsAFileInSystem32())
+                    return "Make sure you have restored NDTKSvc and reboot the device.";
+
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh");
+                bool isBootShDisabled = RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD) == "00000004";
+
+                bool isUMCIAuditModeDisabled = RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD) == "00000000";
+
+                if (isBootShDisabled && isUMCIAuditModeDisabled)
+                    return "The Bootsh service & UMCIAuditMode are disabled. Please enable them from the App settings and reboot the device.";
+                else if (isBootShDisabled)
+                    return "The Bootsh service is disabled. Please enable it from the App settings and reboot the device.";
+                else if (isUMCIAuditModeDisabled)
+                    return "The UMCIAuditMode is disabled. Please enable it from the App settings and reboot the device.";
             }
             else
             {
-                return "Something went wrong, try restarting the App or the device.";
+                return "Make sure you have restored NDTKSvc and reboot the device.";
             }
+
+            return "Something went wrong, try restarting the App or the device.";
         }
 
         public static bool IsConnected()
         {
-            if (!File.Exists(@"C:\Windows\System32\Boot\startup.bsc") || !File.Exists(@"C:\Windows\System32\cmd.exe") || !File.Exists(@"C:\Windows\System32\telnetd.exe"))
-            {
+            if ("CMDInjectorFirstLaunch.dat".IsAFileInSystem32())
                 return false;
-            }
-            else if (File.Exists(@"C:\Windows\System32\Boot\startup.bsc") && !string.Equals(File.ReadAllText(@"C:\Windows\System32\Boot\startup.bsc"), File.ReadAllText($"{Helper.installedLocation.Path}\\Contents\\Startup\\startup.bsc")))
+
+            if ("Boot\\startup.bsc".IsAFileInSystem32())
             {
-                Helper.CopyFromAppRoot("Contents\\Startup\\startup.bsc", @"C:\Windows\System32\Boot\startup.bsc");
-                return false;
+                if (!string.Equals("Boot\\startup.bsc".ReadFromDir("C:\\Windows\\System32"), "Contents\\Startup\\startup.bsc".ReadFromDir(Globals.installedLocation.Path)))
+                {
+                    FilesHelper.CopyToSystem32FromAppRoot("Contents\\Startup", "startup.bsc", "Boot\\startup.bsc");
+                    return false;
+                }
+
+                if (!"cmd.exe".IsAFileInSystem32() || !"telnetd.exe".IsAFileInSystem32())
+                    return false;
+
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh");
+                if (RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD) == "00000004") return false;
+
+                if (RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD) == "00000000") return false;
             }
-            else if (File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat"))
-            {
-                return false;
-            }
-            else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000004" && Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000000")
-            {
-                return false;
-            }
-            else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000004")
-            {
-                return false;
-            }
-            else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000000")
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+
+            return true;
         }
     }
 }

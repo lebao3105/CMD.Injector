@@ -117,7 +117,9 @@
                         <ComboBox Name="SearchPressParaCombo" MinWidth="150" Margin="40,5,0,0" IsEnabled="False" Visibility="Collapsed" SelectionChanged="SearchPressParaCombo_SelectionChanged">
                             <ComboBoxItem Content="Default" FontWeight="Bold" IsHitTestVisible="False"/>
                             <ComboBoxItem Content="None"/>
+                            
                             <ComboBoxItem IsHitTestVisible="False"/>
+                            
                             <ComboBoxItem Content="Menus" FontWeight="Bold" IsHitTestVisible="False"/>
                             <ComboBoxItem Content="Home"/>
                             <ComboBoxItem Content="Terminal"/>
@@ -130,12 +132,14 @@
                             <ComboBoxItem Content="Help"/>
                             <ComboBoxItem Content="About"/>
                             <ComboBoxItem IsHitTestVisible="False"/>
+                            
                             <ComboBoxItem Content="Power Options" FontWeight="Bold" IsHitTestVisible="False"/>
                             <ComboBoxItem Content="Shutdown"/>
                             <ComboBoxItem Content="Restart"/>
                             <ComboBoxItem Content="Lockscreen"/>
                             <ComboBoxItem Content="FFU Loader"/>
                             <ComboBoxItem IsHitTestVisible="False"/>
+                            
                             <ComboBoxItem Content="Volume Options" FontWeight="Bold" IsHitTestVisible="False"/>
                             <ComboBoxItem Content="Volume Down"/>
                             <ComboBoxItem Content="Volume Up"/>

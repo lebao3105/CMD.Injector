@@ -1,5 +1,6 @@
 ﻿using CMDInjectorHelper;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -13,13 +14,8 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using XamlBrewer.Uwp.Controls;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
-
 namespace CMDInjector
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class CMDInjector : Page
     {
         bool buttonOnHold = false;
@@ -33,44 +29,49 @@ namespace CMDInjector
 
         private async void Initialize()
         {
-            //Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000002");
-            Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "Path", Helper.RegistryHelper.RegistryType.REG_EXPAND_SZ, "%SystemRoot%\\system32;%SystemRoot%;%SystemDrive%\\Programs\\CommonFiles\\System;%SystemDrive%\\wtt;%SystemDrive%\\data\\test\\bin;%SystemRoot%\\system32\\WindowsPowerShell\\v1.0;");
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\SecurityManager\\PrincipalClasses\\PRINCIPAL_CLASS_TCB", "Directories", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ, "C:\\ ");
+            //RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD, "00000002");
+            RegEdit.SetHKLMValueEx(
+                "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "Path", RegistryType.REG_EXPAND_SZ,
+                "%SystemRoot%\\system32;%SystemRoot%;%SystemDrive%\\Programs\\CommonFiles\\System;" +
+                "%SystemDrive%\\wtt;%SystemDrive%\\data\\test\\bin;%SystemRoot%\\system32\\WindowsPowerShell\\v1.0;"
+            );
+            RegEdit.SetHKLMValue("SOFTWARE\\Microsoft\\SecurityManager\\PrincipalClasses\\PRINCIPAL_CLASS_TCB", "Directories", RegistryType.REG_MULTI_SZ, "C:\\ ");
 
             await Helper.WaitAppLaunch();
             bool isFirstLaunch = false;
 
-            if (!File.Exists(@"C:\Windows\System32\Startup.bat"))
+            if (!"Startup.bat".IsAFileInSystem32())
             {
-                Helper.CopyFromAppRoot("Contents\\BatchScripts\\Startup.bat", @"C:\Windows\System32\Startup.bat");
+                FilesHelper.CopyToSystem32FromAppRoot("Contents\\BatchScripts", "Startup.bat", null);
             }
 
-            if (Helper.IsStrAGraterThanStrB(Helper.currentVersion, Helper.LocalSettingsHelper.LoadSettings("InitialLaunch", "0.0.0.0"), '.'))
+            if (Helper.currentVersion.IsGreaterThan(CMDInjectorHelper.Settings.InitialLaunch, '.'))
             {
-                if (Convert.ToInt32(Helper.InjectedBatchVersion) < 3800)
+                if (Helper.InjectedBatchVersion.ToInt32() < 3800)
                 {
-                    Helper.CopyFromAppRoot("Contents\\BatchScripts\\Startup.bat", @"C:\Windows\System32\Startup.bat");
+                    FilesHelper.CopyToSystem32FromAppRoot("Contents\\BatchScripts\\", "Startup.bat", null);
                 }
+
                 await Changelog.DisplayLog();
-                Helper.LocalSettingsHelper.SaveSettings("InitialLaunch", Helper.currentVersion);
-                Helper.LocalSettingsHelper.SaveSettings("TempInjection", true);
-                Helper.LocalSettingsHelper.SaveSettings("AskCapPermission", true);
+                CMDInjectorHelper.Settings.InitialLaunch = Helper.currentVersion;
+                CMDInjectorHelper.Settings.TempInjection = true;
+                CMDInjectorHelper.Settings.AskCapPermission = true;
             }
-            if ((!HomeHelper.IsCMDInjected() && !File.Exists(@"C:\Windows\System32\CMDInjector.dat")) || !File.Exists(@"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"))
+
+            if ((!HomeHelper.IsCMDInjected() && !"CMDInjector.dat".IsAFileInSystem32()) || !"WindowsPowerShell\\v1.0\\powershell.exe".IsAFileInSystem32())
             {
                 var isInjected = await OperationInjection();
                 if (isInjected)
                 {
-                    if (Helper.LocalSettingsHelper.LoadSettings("FirstLaunch", true) && !File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat")/* && build >= 14393*/)
+                    if (CMDInjectorHelper.Settings.FirstLaunch && !"CMDInjectorFirstLaunch.dat".IsAFileInSystem32()/* && build >= 14393*/)
                     {
                         isFirstLaunch = true;
+                        CMDInjectorHelper.Settings.FirstLaunch.Toggle();
+
+                        FilesHelper.CopyFile(Helper.localFolder.Path + "\\CMDInjector.dat", @"C:\Windows\System32\CMDInjectorFirstLaunch.dat");
                         var result = await Helper.MessageBox("A system reboot is required to initialize the App.", Helper.SoundHelper.Sound.Alert, "First Launch", "Cancel", true, "Reboot");
-                        Helper.LocalSettingsHelper.SaveSettings("FirstLaunch", false);
-                        Helper.CopyFile(Helper.localFolder.Path + "\\CMDInjector.dat", @"C:\Windows\System32\CMDInjectorFirstLaunch.dat");
                         if (result == 0)
-                        {
                             Helper.RebootSystem();
-                        }
                     }
                 }
                 else
@@ -90,10 +91,9 @@ namespace CMDInjector
                     }
                     else
                     {
-                        Uri uri = new Uri("https://www.google.com/search?q=How+to+interop+unlock+Windows+10+Mobile%3F");
                         try
                         {
-                            await Launcher.LaunchUriAsync(uri);
+                            await Launcher.LaunchUriAsync(new Uri("https://www.google.com/search?q=How+to+interop+unlock+Windows+10+Mobile%3F"));
                         }
                         catch (Exception ex)
                         {
@@ -106,23 +106,23 @@ namespace CMDInjector
             }
             else
             {
-                Helper.LocalSettingsHelper.SaveSettings("FirstLaunch", false);
+                CMDInjectorHelper.Settings.FirstLaunch = false;
             }
 
-            if (Helper.LocalSettingsHelper.LoadSettings("TempInjection", true))
+            if (CMDInjectorHelper.Settings.TempInjection)
             {
                 _ = OperationInjection();
-                Helper.LocalSettingsHelper.SaveSettings("TempInjection", false);
+                CMDInjectorHelper.Settings.TempInjection.Toggle();
             }
 
-            if (Helper.LocalSettingsHelper.LoadSettings("AskCapPermission", true) && !isFirstLaunch && !File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat"))
+            if (CMDInjectorHelper.Settings.AskCapPermission && !isFirstLaunch && !File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat"))
             {
                 try
                 {
                     if (!await Helper.IsCapabilitiesAllowed())
                     {
                         await Helper.AskCapabilitiesPermission();
-                        Helper.LocalSettingsHelper.SaveSettings("AskCapPermission", false);
+                        CMDInjectorHelper.Settings.AskCapPermission.Toggle();
                     }
                 }
                 catch (Exception ex)
@@ -136,73 +136,95 @@ namespace CMDInjector
         {
             await Task.Run(async () =>
             {
+                #region Files touches and copies
                 await FileIO.WriteTextAsync(
                     await Globals.localFolder.CreateFileAsync("CMDInjector.dat", CreationCollisionOption.ReplaceExisting),
                     Globals.currentBatchVersion.ToString()
                 );
 
-                Helper.CopyFile(Helper.localFolder.Path + "\\CMDInjector.dat", @"C:\Windows\System32\CMDInjectorTempSetup.dat");
-                Helper.CopyFromAppRoot("Contents\\BatchScripts\\MessageDialog.bat", @"C:\Windows\System32\MessageDialog.bat");
+                FilesHelper.CopyFile(Helper.localFolder.Path + "\\CMDInjector.dat", @"C:\Windows\System32\CMDInjectorTempSetup.dat");
+
+                FilesHelper.CurrentFolder = "Contents\\BatchScripts";
+                FilesHelper.CopyToSystem32FromAppRoot("MessageDialog.bat");
 
                 if (!File.Exists(@"C:\Windows\System32\CMDInjector.bat"))
                 {
-                    Helper.CopyFromAppRoot("Contents\\BatchScripts\\NonSystemWide.bat", @"C:\Windows\System32\CMDInjector.bat");
+                    FilesHelper.CopyToSystem32FromAppRoot("NonSystemWide.bat", "CMDInjector.bat");
                 }
 
-                // JESUS CHRIST
-                Helper.CopyFromAppRoot("Contents\\BatchScripts\\Setup.bat", @"C:\Windows\System32\CMDInjectorSetup.bat");
-                Helper.CopyFromAppRoot("Contents\\Bootsh\\bootshsvc.dll", @"C:\Windows\System32\bootshsvc.dll");
-                Helper.CopyFromAppRoot("Contents\\Bootsh\\bootshsvc.dll.mui", @"C:\Windows\System32\en-US\bootshsvc.dll.mui");
-                Helper.CopyFromAppRoot("Contents\\Startup\\startup.bsc", @"C:\Windows\System32\Boot\startup.bsc");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\en-US\\bcdedit.exe.mui", @"C:\Windows\System32\en-US\bcdedit.exe.mui");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\en-US\\CheckNetIsolation.exe.mui", @"C:\Windows\System32\en-US\CheckNetIsolation.exe.mui");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\en-US\\cmd.exe.mui", @"C:\Windows\System32\en-US\cmd.exe.mui");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\en-US\\findstr.exe.mui", @"C:\Windows\System32\en-US\findstr.exe.mui");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\en-US\\ICacls.exe.mui", @"C:\Windows\System32\en-US\ICacls.exe.mui");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\en-US\\reg.exe.mui", @"C:\Windows\System32\en-US\reg.exe.mui");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\en-US\\sort.exe.mui", @"C:\Windows\System32\en-US\sort.exe.mui");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\en-US\\takeown.exe.mui", @"C:\Windows\System32\en-US\takeown.exe.mui");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\AppXTest.Common.Feature.DeployAppx.dll", @"C:\Windows\System32\AppXTest.Common.Feature.DeployAppx.dll");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\bcdedit.exe", @"C:\Windows\System32\bcdedit.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\CheckNetIsolation.exe", @"C:\Windows\System32\CheckNetIsolation.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\cmd.exe", @"C:\Windows\System32\cmd.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\findstr.exe", @"C:\Windows\System32\findstr.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\icacls.exe", @"C:\Windows\System32\icacls.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\InputProcessorClient.dll", @"C:\Windows\System32\InputProcessorClient.dll");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\MinDeployAppX.exe", @"C:\Windows\System32\MinDeployAppX.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\more.com", @"C:\Windows\System32\more.com");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\PowerTool.exe", @"C:\Windows\System32\PowerTool.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\reg.exe", @"C:\Windows\System32\reg.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\ScreenCapture.exe", @"C:\Windows\System32\ScreenCapture.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\SendKeys.exe", @"C:\Windows\System32\SendKeys.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\shutdown.exe", @"C:\Windows\System32\shutdown.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\sleep.exe", @"C:\Windows\System32\sleep.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\sort.exe", @"C:\Windows\System32\sort.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\takeown.exe", @"C:\Windows\System32\takeown.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\telnetd.exe", @"C:\Windows\System32\telnetd.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\TestNavigationApi.exe", @"C:\Windows\System32\TestNavigationApi.exe");
-                Helper.CopyFromAppRoot("Contents\\ConsoleApps\\xcopy.exe", @"C:\Windows\System32\xcopy.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("Setup.bat", "CMDInjectorSetup.bat");
 
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "Type", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000010");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000002");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "ServiceSidType", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "ErrorControl", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
-                Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "ImagePath", Helper.RegistryHelper.RegistryType.REG_EXPAND_SZ, "%SystemRoot%\\system32\\svchost.exe -k Bootshsvc");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "DisplayName", Helper.RegistryHelper.RegistryType.REG_SZ, "@bootshsvc.dll,-1");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "Description", Helper.RegistryHelper.RegistryType.REG_SZ, "@bootshsvc.dll,-2");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "ObjectName", Helper.RegistryHelper.RegistryType.REG_SZ, "LocalSystem");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "DependOnService", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ, "Afd lmhosts keyiso ");
-                Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "FailureActions", Helper.RegistryHelper.RegistryType.REG_BINARY, "80510100000000000000000003000000140000000100000060EA00000100000060EA00000000000000000000");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh", "RequiredPrivileges", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ, "SeAssignPrimaryTokenPrivilege SeAuditPrivilege SeSecurityPrivilege SeChangeNotifyPrivilege SeCreateGlobalPrivilege SeDebugPrivilege SeImpersonatePrivilege SeIncreaseQuotaPrivilege SeTcbPrivilege SeBackupPrivilege SeRestorePrivilege SeShutdownPrivilege SeSystemProfilePrivilege SeSystemtimePrivilege SeManageVolumePrivilege SeCreatePagefilePrivilege SeCreatePermanentPrivilege SeCreateSymbolicLinkPrivilege SeIncreaseBasePriorityPrivilege SeIncreaseWorkingSetPrivilege SeLoadDriverPrivilege SeLockMemoryPrivilege SeProfileSingleProcessPrivilege SeSystemEnvironmentPrivilege SeTakeOwnershipPrivilege SeTimeZonePrivilege ");
-                Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh\\Parameters", "ServiceDll", Helper.RegistryHelper.RegistryType.REG_EXPAND_SZ, "%SystemRoot%\\system32\\bootshsvc.dll");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh\\Parameters", "ServiceDllUnloadOnStop", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
-                /*Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh\\Parameters\\Commands", "Loopback", Helper.RegistryHelper.RegistryType.REG_SZ, "CheckNetIsolation.exe loopbackexempt -a -n=CMDInjector_kqyng60eng17c");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\BootSh\\Parameters\\Commands", "Telnetd", Helper.RegistryHelper.RegistryType.REG_SZ, "start telnetd.exe cmd.exe 9999");*/
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Svchost", "bootshsvc", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ, "bootsh");
+                FilesHelper.CurrentFolder = "Contents\\Bootsh";
+                FilesHelper.CopyToSystem32FromAppRoot("bootshsvc.dll");
+                FilesHelper.CopyToSystem32FromAppRoot("bootshsvc.dll.mui", @"en-US\bootshsvc.dll.mui");
+                FilesHelper.CopyToSystem32FromAppRoot("Contents\\Startup\\", "startup.bsc", "Boot\\startup.bsc");
+
+                FilesHelper.CurrentFolder = "Contents\\ConsoleApps\\";
+                FilesHelper.CopyToSystem32FromAppRoot("AppXTest.Common.Feature.DeployAppx.dll");
+                FilesHelper.CopyToSystem32FromAppRoot("bcdedit.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("CheckNetIsolation.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("cmd.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("findstr.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("icacls.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("InputProcessorClient.dll");
+                FilesHelper.CopyToSystem32FromAppRoot("MinDeployAppX.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("more.com");
+                FilesHelper.CopyToSystem32FromAppRoot("PowerTool.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("reg.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("ScreenCapture.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("SendKeys.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("shutdown.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("sleep.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("sort.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("takeown.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("telnetd.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("TestNavigationApi.exe");
+                FilesHelper.CopyToSystem32FromAppRoot("xcopy.exe");
+
+                FilesHelper.CurrentFolder += "en-US";
+                FilesHelper.CopyToSystem32FromAppRoot("bcdedit.exe.mui", "en-US\\bcdedit.exe.mui");
+                FilesHelper.CopyToSystem32FromAppRoot("CheckNetIsolation.exe.mui", "en-US\\CheckNetIsolation.exe.mui");
+                FilesHelper.CopyToSystem32FromAppRoot("cmd.exe.mui", "en-US\\cmd.exe.mui");
+                FilesHelper.CopyToSystem32FromAppRoot("findstr.exe.mui", "en-US\\findstr.exe.mui");
+                FilesHelper.CopyToSystem32FromAppRoot("ICacls.exe.mui", "en-US\\ICacls.exe.mui");
+                FilesHelper.CopyToSystem32FromAppRoot("reg.exe.mui", "en-US\\reg.exe.mui");
+                FilesHelper.CopyToSystem32FromAppRoot("sort.exe.mui", "en-US\\sort.exe.mui");
+                FilesHelper.CopyToSystem32FromAppRoot("takeown.exe.mui", "en-US\\takeown.exe.mui");
+                #endregion
+
+                #region Modify the registry
+                RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD, "00000001");
+                RegEdit.SetHKLMValue("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Svchost", "bootshsvc", RegistryType.REG_MULTI_SZ, "bootsh");
+
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrrentControlSet\\services\\BootSh");
+                RegEdit.SetRegValue("Type", RegistryType.REG_DWORD, "00000010");
+                RegEdit.SetRegValue("Start", RegistryType.REG_DWORD, "00000002");
+                RegEdit.SetRegValue("ServiceSidType", RegistryType.REG_DWORD, "00000001");
+                RegEdit.SetRegValue("ErrorControl", RegistryType.REG_DWORD, "00000001");
+                RegEdit.SetRegValue("DisplayName", RegistryType.REG_SZ, "@bootshsvc.dll,-1");
+                RegEdit.SetRegValue("Description", RegistryType.REG_SZ, "@bootshsvc.dll,-2");
+                RegEdit.SetRegValue("ObjectName", RegistryType.REG_SZ, "LocalSystem");
+                RegEdit.SetRegValue("DependOnService", RegistryType.REG_MULTI_SZ, "Afd lmhosts keyiso ");
+                RegEdit.SetRegValue("RequiredPrivileges", RegistryType.REG_MULTI_SZ, "SeAssignPrimaryTokenPrivilege SeAuditPrivilege SeSecurityPrivilege SeChangeNotifyPrivilege SeCreateGlobalPrivilege SeDebugPrivilege SeImpersonatePrivilege SeIncreaseQuotaPrivilege SeTcbPrivilege SeBackupPrivilege SeRestorePrivilege SeShutdownPrivilege SeSystemProfilePrivilege SeSystemtimePrivilege SeManageVolumePrivilege SeCreatePagefilePrivilege SeCreatePermanentPrivilege SeCreateSymbolicLinkPrivilege SeIncreaseBasePriorityPrivilege SeIncreaseWorkingSetPrivilege SeLoadDriverPrivilege SeLockMemoryPrivilege SeProfileSingleProcessPrivilege SeSystemEnvironmentPrivilege SeTakeOwnershipPrivilege SeTimeZonePrivilege ");
+                RegEdit.SetRegValueEx("ImagePath", RegistryType.REG_EXPAND_SZ, "%SystemRoot%\\system32\\svchost.exe -k Bootshsvc");
+                RegEdit.SetRegValueEx("FailureActions", RegistryType.REG_BINARY, "80510100000000000000000003000000140000000100000060EA00000100000060EA00000000000000000000");
+
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrrentControlSet\\services\\BootSh\\Parameters");
+                RegEdit.SetRegValueEx("ServiceDll", RegistryType.REG_EXPAND_SZ, "%SystemRoot%\\system32\\bootshsvc.dll");
+                RegEdit.SetRegValue("ServiceDllUnloadOnStop", RegistryType.REG_DWORD, "00000001");
+                /*RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\BootSh\\Parameters\\Commands", "Loopback", RegistryType.REG_SZ, "CheckNetIsolation.exe loopbackexempt -a -n=CMDInjector_kqyng60eng17c");
+                RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\BootSh\\Parameters\\Commands", "Telnetd", RegistryType.REG_SZ, "start telnetd.exe cmd.exe 9999");*/
+                #endregion
             });
             return HomeHelper.IsCMDInjected();
         }
+
+        private Dictionary<string, int> NavigationIndexes = new Dictionary<string, int>
+        {
+            ["Home"] = 1, ["Terminal"] = 2, ["Startup"] = 3, ["PacMan"] = 4,
+            ["Snapper"] = 5, ["BootConfig"] = 6, ["TweakBox"] = 7,
+            ["Settings"] = 8, ["Help"] = 9, ["About"] = 10
+        };
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -218,68 +240,7 @@ namespace CMDInjector
             var image = stackPanel.Children[0] as Image;
             var bitmapImage = image.Source as BitmapImage;
 
-            switch (textBlock.Text)
-            {
-                case "Home":
-                    {
-                        Helper.pageNavigation.Invoke(1, null);
-                        break;
-                    }
-
-                case "Terminal":
-                    {
-                        Helper.pageNavigation.Invoke(2, null);
-                        break;
-                    }
-
-                case "Startup":
-                    {
-                        Helper.pageNavigation.Invoke(3, null);
-                        break;
-                    }
-
-                case "PacMan":
-                    {
-                        Helper.pageNavigation.Invoke(4, null);
-                        break;
-                    }
-
-                case "Snapper":
-                    {
-                        Helper.pageNavigation.Invoke(5, null);
-                        break;
-                    }
-
-                case "BootConfig":
-                    {
-                        Helper.pageNavigation.Invoke(6, null);
-                        break;
-                    }
-
-                case "TweakBox":
-                    {
-                        Helper.pageNavigation.Invoke(7, null);
-                        break;
-                    }
-
-                case "Settings":
-                    {
-                        Helper.pageNavigation.Invoke(8, null);
-                        break;
-                    }
-
-                case "Help":
-                    {
-                        Helper.pageNavigation.Invoke(9, null);
-                        break;
-                    }
-
-                case "About":
-                    {
-                        Helper.pageNavigation.Invoke(10, null);
-                        break;
-                    }
-            }
+            Helper.pageNavigation.Invoke(NavigationIndexes[textBlock.Text], null);
 
             if (Helper.LocalSettingsHelper.LoadSettings("MenuTransition", true) && Globals.build >= 10572)
             {
@@ -299,6 +260,7 @@ namespace CMDInjector
             var stackPanel = button.Content as StackPanel;
             var textBlock = stackPanel.Children[1] as TextBlock;
             SecondaryTile CMDInjectorTile = null;
+            var logoPath = new Uri($"ms-appx:///Assets/Icons/Menus/{textBlock.Text}MenuTileLogo.png");
 
             switch (textBlock.Text)
             {
@@ -335,26 +297,25 @@ namespace CMDInjector
                             Helper.SoundHelper.PlaySound(Helper.SoundHelper.Sound.Alert);
                             if (await argumentTerm.ShowAsync() == ContentDialogResult.Primary)
                             {
-
-                                if (terminalTextBox.Text == string.Empty)
+                                if (string.IsNullOrEmpty(terminalTextBox.Text))
                                 {
-                                    CMDInjectorTile = new SecondaryTile(textBlock.Text + "PageID", textBlock.Text, textBlock.Text + "Page", new Uri("ms-appx:///Assets/Icons/Menus/" + textBlock.Text + "MenuTileLogo.png"), TileSize.Default);
+                                    CMDInjectorTile = new SecondaryTile(textBlock.Text + "PageID", textBlock.Text, textBlock.Text + "Page", logoPath, TileSize.Default);
                                 }
                                 else
                                 {
                                     var cmd = TerminalHelper.EscapeSymbols(terminalTextBox.Text, false);
-                                    CMDInjectorTile = new SecondaryTile(textBlock.Text + "PageID" + cmd.Replace(" ", "_"), textBlock.Text + $" ({terminalTextBox.Text})", textBlock.Text + "Page" + $" {cmd}", new Uri("ms-appx:///Assets/Icons/Menus/" + textBlock.Text + "MenuTileLogo.png"), TileSize.Default);
+                                    CMDInjectorTile = new SecondaryTile(
+                                        textBlock.Text + "PageID" + cmd.Replace(" ", "_"),
+                                        textBlock.Text + $" ({terminalTextBox.Text})",
+                                        textBlock.Text + "Page" + $" {cmd}",
+                                        logoPath,
+                                        TileSize.Default);
                                 }
-
-                                CMDInjectorTile.VisualElements.ShowNameOnSquare150x150Logo = true;
-                                CMDInjectorTile.VisualElements.ShowNameOnWide310x150Logo = true;
-                                CMDInjectorTile.VisualElements.ShowNameOnSquare310x310Logo = true;
-                                await CMDInjectorTile.RequestCreateAsync();
                             }
                         }
                         catch (Exception ex)
                         {
-                            //Helper.ThrowException(ex);
+                            Helper.ThrowException(ex);
                         }
                         break;
                     }
@@ -364,13 +325,13 @@ namespace CMDInjector
                 case "Help":
                 case "About":
                     {
-                        CMDInjectorTile = new SecondaryTile(textBlock.Text + "PageID", textBlock.Text + " (CMD Injector)", textBlock.Text + "Page", new Uri("ms-appx:///Assets/Icons/Menus/" + textBlock.Text + "MenuTileLogo.png"), TileSize.Default);
+                        CMDInjectorTile = new SecondaryTile(textBlock.Text + "PageID", textBlock.Text + " (CMD Injector)", textBlock.Text + "Page", logoPath, TileSize.Default);
                         break;
                     }
 
                 default:
                     {
-                        CMDInjectorTile = new SecondaryTile(textBlock.Text + "PageID", textBlock.Text, textBlock.Text + "Page", new Uri("ms-appx:///Assets/Icons/Menus/" + textBlock.Text + "MenuTileLogo.png"), TileSize.Default);
+                        CMDInjectorTile = new SecondaryTile(textBlock.Text + "PageID", textBlock.Text, textBlock.Text + "Page", logoPath, TileSize.Default);
                         break;
                     }
             };

@@ -35,12 +35,7 @@ namespace CMDInjectorHelper
 
             // Cleanup the target version: it follows v{Major}.{Minor}.{Build}.{Revision} format.
             latestReleaseVersion = latestReleaseVersion.Remove(0, 1);
-
-            if (Helper.IsStrAGraterThanStrB(latestReleaseVersion, current, '.'))
-            {
-                return latestRelease;
-            }
-            return null;
+            return latestReleaseVersion.IsGreaterThan(current, '.') ? latestRelease : null;
         }
 
         public async static Task<string> GetLatestReleaseNote()

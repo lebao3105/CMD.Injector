@@ -18,7 +18,6 @@ using Windows.UI.Popups;
 using ndtklib;
 using CMDInjectorHelper;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace CMDInjector
 {
@@ -36,7 +35,7 @@ namespace CMDInjector
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             Initialize();
-            CommandBox.TextWrapping = Helper.LocalSettingsHelper.LoadSettings("CommandsTextWrap", false) ? TextWrapping.Wrap : TextWrapping.NoWrap;
+            CommandBox.TextWrapping = CMDInjectorHelper.Settings.CommandsTextWrap;
         }
 
         private async void Initialize()
@@ -47,16 +46,14 @@ namespace CMDInjector
                 {
                     if (File.Exists(@"C:\Windows\System32\Startup.bat"))
                     {
-                        Helper.CopyFile(@"C:\Windows\System32\Startup.bat", Helper.localFolder.Path + "\\Startup.bat");
+                        FilesHelper.CopyFile(@"C:\Windows\System32\Startup.bat", Helper.localFolder.Path + "\\Startup.bat");
                     }
                     else
                     {
-                        Helper.CopyFromAppRoot("\\BatchScripts\\Startup.bat", Helper.localFolder.Path + "\\Startup.bat");
+                        FilesHelper.CopyFromAppRoot("\\BatchScripts\\Startup.bat", Helper.localFolder.Path + "\\Startup.bat");
                     }
                     var text = await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Startup.bat"), Windows.Storage.Streams.UnicodeEncoding.Utf8);
-                    CommandBox.Text = text;
-                    CommandBox.Text += "\r";
-                    CommandBox.Text = CommandBox.Text.Remove(CommandBox.Text.LastIndexOf("\r"));
+                    CommandBox.Text = CommandBox.Text.Remove($"{text}\r".LastIndexOf("\r"));
                 }
                 else
                 {
@@ -76,7 +73,7 @@ namespace CMDInjector
             try
             {
                 await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Startup.bat"), CommandBox.Text.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n"));
-                Helper.CopyFile(Helper.localFolder.Path + "\\Startup.bat", @"C:\Windows\System32\Startup.bat");
+                FilesHelper.CopyFile(Helper.localFolder.Path + "\\Startup.bat", @"C:\Windows\System32\Startup.bat");
                 _ = Helper.MessageBox("The changes applied successfully.", Helper.SoundHelper.Sound.Alert, "Completed");
             }
             catch (Exception ex)

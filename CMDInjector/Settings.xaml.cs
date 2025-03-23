@@ -1,30 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
-using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using ndtklib;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.System.Profile;
-using Windows.UI.StartScreen;
-using Windows.Networking.BackgroundTransfer;
-using Windows.ApplicationModel.Core;
 using System.Threading;
 using Windows.Foundation.Metadata;
 using Windows.UI.ViewManagement;
-using Windows.ApplicationModel;
 using Windows.UI;
 using Windows.UI.Xaml.Shapes;
 using System.Reflection;
@@ -32,21 +15,11 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using CMDInjectorHelper;
 using WinUniversalTool;
-using System.Collections.ObjectModel;
-using System.Xml.Linq;
-using Registry;
-using Windows.Management.Deployment;
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace CMDInjector
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class Settings : Page
     {
-        NativeRegistry reg = new NativeRegistry();
         static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         TelnetClient tClient = new TelnetClient(TimeSpan.FromSeconds(1), cancellationTokenSource.Token);
         bool flag = false;
@@ -108,7 +81,7 @@ namespace CMDInjector
                 BackupFoldBtn.IsEnabled = false;
             }
 
-            if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DefaultApplications", ".xap", Helper.RegistryHelper.RegistryType.REG_SZ) == "CMDInjector_kqyng60eng17c")
+            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DefaultApplications", ".xap", RegistryType.REG_SZ) == "CMDInjector_kqyng60eng17c")
             {
                 DefaultTog.IsOn = true;
             }
@@ -155,7 +128,7 @@ namespace CMDInjector
                 CustomTheme.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("Theme", 0);
             }
 
-            if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000001")
+            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD) == "00000001")
             {
                 UMCIToggle.IsOn = true;
             }
@@ -164,7 +137,7 @@ namespace CMDInjector
                 UMCIToggle.IsOn = false;
             }
 
-            if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000004")
+            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD) == "00000004")
             {
                 WifiServiceToggle.IsOn = false;
             }
@@ -173,7 +146,7 @@ namespace CMDInjector
                 WifiServiceToggle.IsOn = true;
             }
 
-            if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000004")
+            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD) == "00000004")
             {
                 BootshToggle.IsOn = false;
             }
@@ -240,7 +213,7 @@ namespace CMDInjector
             {
                 CustomTheme.Visibility = Visibility.Collapsed;
                 ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Default;
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000000")
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD) == "00000000")
                 {
                     Helper.color = Colors.White;
                 }
@@ -396,11 +369,11 @@ namespace CMDInjector
         {
             if (BootshToggle.IsOn)
             {
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000002");
+                RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD, "00000002");
             }
             else
             {
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000004");
+                RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD, "00000004");
             }
             if (flag == true)
             {
@@ -414,11 +387,11 @@ namespace CMDInjector
             {
                 if (UMCIToggle.IsOn)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
+                    RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD, "00000001");
                 }
                 else
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000000");
+                    RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD, "00000000");
                 }
             }
             catch (Exception ex) { Helper.ThrowException(ex); }
@@ -434,11 +407,11 @@ namespace CMDInjector
             {
                 if (WifiServiceToggle.IsOn)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000002");
+                    RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD, "00000002");
                 }
                 else
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000004");
+                    RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD, "00000004");
                 }
             }
             catch (Exception ex) { Helper.ThrowException(ex); }
@@ -466,9 +439,9 @@ namespace CMDInjector
             {
                 try
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DefaultApplications", ".xap", Helper.RegistryHelper.RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DefaultApplications", ".appx", Helper.RegistryHelper.RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DefaultApplications", ".appxbundle", Helper.RegistryHelper.RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
+                    RegEdit.SetHKLMValue("Software\\Microsoft\\DefaultApplications", ".xap", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
+                    RegEdit.SetHKLMValue("Software\\Microsoft\\DefaultApplications", ".appx", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
+                    RegEdit.SetHKLMValue("Software\\Microsoft\\DefaultApplications", ".appxbundle", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
                 }
                 catch (Exception ex) { Helper.ThrowException(ex); }
             }
@@ -566,7 +539,7 @@ namespace CMDInjector
             var result = await Helper.MessageBox("Are you sure you want to reset the Startup commands?", Helper.SoundHelper.Sound.Alert, "", "No", true, "Yes");
             if (result == 0)
             {
-                Helper.CopyFromAppRoot("\\BatchScripts\\Startup.bat", @"C:\Windows\System32\Startup.bat");
+                FilesHelper.CopyFromAppRoot("\\BatchScripts\\Startup.bat", @"C:\Windows\System32\Startup.bat");
             }
         }
 

@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using Windows.UI.Popups;
-using Windows.System.Profile;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage.Pickers;
@@ -28,24 +23,19 @@ using Windows.UI;
 using System.Reflection;
 using Windows.UI.Xaml.Shapes;
 using System.Threading;
-using SharpDX.DirectWrite;
 using System.Collections.ObjectModel;
 using System.IO.Compression;
 using Windows.UI.ViewManagement;
-using Windows.Graphics.Display;
 using CMDInjectorHelper;
 using WinUniversalTool;
 using Windows.System.UserProfile;
 using System.Xml.Linq;
 using Windows.Management.Deployment;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
+using RegistryHive = CMDInjectorHelper.RegistryHive;
 
 namespace CMDInjector
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class TweakBox : Page
     {
         NRPC rpc = new NRPC();
@@ -149,7 +139,7 @@ namespace CMDInjector
                 FCUBtn.IsEnabled = false;
             }
 
-            if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", Helper.RegistryHelper.RegistryType.REG_SZ).ToLower() == "c:\\windows\\system32\\ndtksvc.dll")
+            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", RegistryType.REG_SZ).ToLower() == "c:\\windows\\system32\\ndtksvc.dll")
             {
                 RestoreNDTKTog.IsOn = true;
             }
@@ -203,7 +193,7 @@ namespace CMDInjector
                 }
             }
 
-            reg.ReadDWORD(RegistryHive.HKLM, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionBlackReplacementColor", out uint BurnInProtectionBlackReplacementColor);
+            reg.ReadDWORD(Registry.RegistryHive.HKLM, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionBlackReplacementColor", out uint BurnInProtectionBlackReplacementColor);
             foreach (var color in typeof(Colors).GetRuntimeProperties())
             {
                 if (color.Name != "AliceBlue" && color.Name != "AntiqueWhite" && color.Name != "Azure" && color.Name != "Beige" && color.Name != "Bisque" && color.Name != "Black" && color.Name != "BlanchedAlmond" && color.Name != "Cornsilk" && color.Name != "FloralWhite" && color.Name != "Gainsboro" && color.Name != "GhostWhite" && color.Name != "Honeydew" && color.Name != "Ivory" && color.Name != "Lavender" && color.Name != "LavenderBlush" && color.Name != "LemonChiffon"
@@ -245,8 +235,8 @@ namespace CMDInjector
                     var manifest = await Package.InstalledLocation.GetFileAsync("AppxManifest.xml");
                     var tags = XElement.Load(manifest.Path).Elements().Where(i => i.Name.LocalName == "PhoneIdentity");
                     var attributes = tags.Attributes().Where(i => i.Name.LocalName == "PhoneProductId");
-                    var press = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", Helper.RegistryHelper.RegistryType.REG_SZ);
-                    var hold = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", Helper.RegistryHelper.RegistryType.REG_SZ);
+                    var press = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", RegistryType.REG_SZ);
+                    var hold = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", RegistryType.REG_SZ);
                     try
                     {
                         if (pressFound == false)
@@ -313,50 +303,73 @@ namespace CMDInjector
                     //Helper.ThrowException(ex);
                 }
             }
+
             SearchPressAppsCombo.IsEnabled = true;
             SearchPressParaCombo.IsEnabled = true;
             SearchHoldAppsCombo.IsEnabled = true;
             SearchHoldParaCombo.IsEnabled = true;
             SearchAppLoadStack.Visibility = Visibility.Collapsed;
-            var pressParam = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppParam", Helper.RegistryHelper.RegistryType.REG_SZ);
-            var HoldParam = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppParam", Helper.RegistryHelper.RegistryType.REG_SZ);
-            if (pressParam == "") SearchPressParaCombo.SelectedIndex = 1;
-            else if (pressParam == "HomePage") SearchPressParaCombo.SelectedIndex = 4;
-            else if (pressParam == "TerminalPage") SearchPressParaCombo.SelectedIndex = 5;
-            else if (pressParam == "StartupPage") SearchPressParaCombo.SelectedIndex = 6;
-            else if (pressParam == "PacManPage") SearchPressParaCombo.SelectedIndex = 7;
-            else if (pressParam == "SnapperPage") SearchPressParaCombo.SelectedIndex = 8;
-            else if (pressParam == "BootConfigPage") SearchPressParaCombo.SelectedIndex = 9;
-            else if (pressParam == "TweakBoxPage") SearchPressParaCombo.SelectedIndex = 10;
-            else if (pressParam == "SettingsPage") SearchPressParaCombo.SelectedIndex = 11;
-            else if (pressParam == "HelpPage") SearchPressParaCombo.SelectedIndex = 12;
-            else if (pressParam == "AboutPage") SearchPressParaCombo.SelectedIndex = 13;
-            else if (pressParam == "Shutdown") SearchPressParaCombo.SelectedIndex = 16;
-            else if (pressParam == "Restart") SearchPressParaCombo.SelectedIndex = 17;
-            else if (pressParam == "Lockscreen") SearchPressParaCombo.SelectedIndex = 18;
-            else if (pressParam == "FFULoader") SearchPressParaCombo.SelectedIndex = 19;
-            else if (pressParam == "VolUp") SearchPressParaCombo.SelectedIndex = 22;
-            else if (pressParam == "VolDown") SearchPressParaCombo.SelectedIndex = 23;
-            else if (pressParam == "VolMute") SearchPressParaCombo.SelectedIndex = 24;
-            if (HoldParam == "") SearchHoldParaCombo.SelectedIndex = 1;
-            else if (HoldParam == "HomePage") SearchHoldParaCombo.SelectedIndex = 4;
-            else if (HoldParam == "TerminalPage") SearchHoldParaCombo.SelectedIndex = 5;
-            else if (HoldParam == "StartupPage") SearchHoldParaCombo.SelectedIndex = 6;
-            else if (HoldParam == "PacManPage") SearchHoldParaCombo.SelectedIndex = 7;
-            else if (HoldParam == "SnapperPage") SearchHoldParaCombo.SelectedIndex = 8;
-            else if (HoldParam == "BootConfigPage") SearchHoldParaCombo.SelectedIndex = 9;
-            else if (HoldParam == "TweakBoxPage") SearchHoldParaCombo.SelectedIndex = 10;
-            else if (HoldParam == "SettingsPage") SearchHoldParaCombo.SelectedIndex = 11;
-            else if (HoldParam == "HelpPage") SearchHoldParaCombo.SelectedIndex = 12;
-            else if (HoldParam == "AboutPage") SearchHoldParaCombo.SelectedIndex = 13;
-            else if (HoldParam == "Shutdown") SearchHoldParaCombo.SelectedIndex = 16;
-            else if (HoldParam == "Restart") SearchHoldParaCombo.SelectedIndex = 17;
-            else if (HoldParam == "Lockscreen") SearchHoldParaCombo.SelectedIndex = 18;
-            else if (HoldParam == "FFULoader") SearchHoldParaCombo.SelectedIndex = 19;
-            else if (HoldParam == "VolUp") SearchHoldParaCombo.SelectedIndex = 22;
-            else if (HoldParam == "VolDown") SearchHoldParaCombo.SelectedIndex = 23;
-            else if (HoldParam == "VolMute") SearchHoldParaCombo.SelectedIndex = 24;
 
+            #region Set selected choices
+            var pressParam = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppParam", RegistryType.REG_SZ);
+            var HoldParam = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppParam", RegistryType.REG_SZ);
+
+            if (string.IsNullOrEmpty(pressParam))
+                SearchPressParaCombo.SelectedIndex = 1;
+
+            // According to the old code:
+            // There are VolUp, VolDown, VolMute params.
+            else if (pressParam.StartsWith("Vol"))
+            {
+                if (pressParam == "VolMute")
+                    SearchPressParaCombo.SelectedItem = "Volume Mute/Unmute";
+                else
+                    SearchPressParaCombo.SelectedItem = pressParam.Replace("Vol", "Volume ");
+            }
+
+            else if (pressParam == "FFULoader")
+            {
+                SearchPressParaCombo.SelectedItem = "FFU Loader";
+            }
+
+            // CMD Injector pages
+            else if (pressParam.EndsWith("Page"))
+            {
+                SearchPressParaCombo.SelectedItem = pressParam.Replace("Page", "");
+            }
+
+            else
+            {
+                SearchPressParaCombo.SelectedItem = pressParam;
+            }
+
+            // The same with pressParam.
+            if (HoldParam == "") SearchHoldParaCombo.SelectedIndex = 1;
+
+            else if (HoldParam.StartsWith("Vol"))
+            {
+                if (HoldParam == "VolMute")
+                    SearchHoldParaCombo.SelectedItem = "Volume Mute/Unmute";
+                else
+                    SearchHoldParaCombo.SelectedItem = HoldParam.Replace("Vol", "Volume ");
+            }
+
+            else if (HoldParam == "FFULoader")
+            {
+                SearchHoldParaCombo.SelectedItem = "FFU Loader";
+            }
+
+            // CMD Injector pages
+            else if (HoldParam.EndsWith("Page"))
+            {
+                SearchHoldParaCombo.SelectedItem = HoldParam.Replace("Page", "");
+            }
+
+            else
+            {
+                SearchHoldParaCombo.SelectedItem = HoldParam;
+            }
+            #endregion
             secondFlag = true;
         }
 
@@ -365,9 +378,9 @@ namespace CMDInjector
             try
             {
                 DisplayOrient.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("OrientSet", 0);
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight", "UserSettingNoBrightnessSettings", Helper.RegistryHelper.RegistryType.REG_DWORD) != string.Empty) BrightTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight", "UserSettingNoBrightnessSettings", RegistryType.REG_DWORD) != string.Empty) BrightTog.IsOn = true;
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000000")
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD) == "00000000")
                 {
                     BackgModeCombo.SelectedIndex = 1;
                 }
@@ -379,26 +392,26 @@ namespace CMDInjector
                 BackgStartTime.Time = new TimeSpan(Convert.ToInt32(Helper.LocalSettingsHelper.LoadSettings("AutoThemeLight", "06:00").Split(':')[0]), Convert.ToInt32(Helper.LocalSettingsHelper.LoadSettings("AutoThemeLight", "06:00").Split(':')[1]), 00);
                 BackgStopTime.Time = new TimeSpan(Convert.ToInt32(Helper.LocalSettingsHelper.LoadSettings("AutoThemeDark", "18:00").Split(':')[0]), Convert.ToInt32(Helper.LocalSettingsHelper.LoadSettings("AutoThemeDark", "18:00").Split(':')[1]), 00);
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\DeviceUpdate\\Agent\\Settings", "GuidOfCategoryToScan", Helper.RegistryHelper.RegistryType.REG_SZ) == "F1E8E1CD-9819-4AC5-B0A7-2AFF3D29B46E") UptTog.IsOn = false;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\DeviceUpdate\\Agent\\Settings", "GuidOfCategoryToScan", RegistryType.REG_SZ) == "F1E8E1CD-9819-4AC5-B0A7-2AFF3D29B46E") UptTog.IsOn = false;
                 else UptTog.IsOn = true;
 
                 if (await Helper.IsCapabilitiesAllowed()){
-                    if (File.Exists("C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll") && reg.ReadString(RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", out string FontFile) && reg.ReadDWORD(RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "Enabled", out uint GlanceEnabled)) GlanceTog.IsOn = true;
+                    if (File.Exists("C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll") && reg.ReadString(Registry.RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", out string FontFile) && reg.ReadDWORD(Registry.RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "Enabled", out uint GlanceEnabled)) GlanceTog.IsOn = true;
                     else GlanceTog.IsOn = false;
                 }
                 else
                 {
                     GlanceTog.IsOn = false;
                 }
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ).IndexOf("lpmFont_WVGA.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 1;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ).IndexOf("lpmFont_720P.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 2;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ).IndexOf("lpmFont_720P_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 3;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ).IndexOf("lpmFont_WXGA.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 4;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ).IndexOf("lpmFont_FHD.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 5;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ).IndexOf("lpmFont_FHD_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 6;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ).IndexOf("lpmFont_WQHD.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 7;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ).IndexOf("lpmFont_WQHD_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 8;
-                if (reg.ReadDWORD(RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", out uint ClockAndIndicatorsCustomColor) && ClockAndIndicatorsCustomColor != 0)
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_WVGA.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 1;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_720P.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 2;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_720P_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 3;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_WXGA.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 4;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_FHD.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 5;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_FHD_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 6;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_WQHD.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 7;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_WQHD_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 8;
+                if (reg.ReadDWORD(Registry.RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", out uint ClockAndIndicatorsCustomColor) && ClockAndIndicatorsCustomColor != 0)
                 {
                     FontColorTog.IsOn = true;
                     RedRadio.IsChecked = false;
@@ -421,13 +434,13 @@ namespace CMDInjector
                     GlanceColorStack.Visibility = Visibility.Collapsed;
                 }
                 GlanceAutoColor.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("GlanceAutoColorEnabled", 0);
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", Helper.RegistryHelper.RegistryType.REG_DWORD).IndexOf("00ff0000", StringComparison.OrdinalIgnoreCase) >= 0) RedRadio.IsChecked = true;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", Helper.RegistryHelper.RegistryType.REG_DWORD).IndexOf("0000ff00", StringComparison.OrdinalIgnoreCase) >= 0) GreenRadio.IsChecked = true;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", Helper.RegistryHelper.RegistryType.REG_DWORD).IndexOf("000000ff", StringComparison.OrdinalIgnoreCase) >= 0) BlueRadio.IsChecked = true;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", Helper.RegistryHelper.RegistryType.REG_DWORD).IndexOf("0000ffff", StringComparison.OrdinalIgnoreCase) >= 0) CyanRadio.IsChecked = true;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", Helper.RegistryHelper.RegistryType.REG_DWORD).IndexOf("00ff00ff", StringComparison.OrdinalIgnoreCase) >= 0) MagentaRadio.IsChecked = true;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", Helper.RegistryHelper.RegistryType.REG_DWORD).IndexOf("00ffff00", StringComparison.OrdinalIgnoreCase) >= 0) YellowRadio.IsChecked = true;
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000001") MoveClockTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("00ff0000", StringComparison.OrdinalIgnoreCase) >= 0) RedRadio.IsChecked = true;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("0000ff00", StringComparison.OrdinalIgnoreCase) >= 0) GreenRadio.IsChecked = true;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("000000ff", StringComparison.OrdinalIgnoreCase) >= 0) BlueRadio.IsChecked = true;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("0000ffff", StringComparison.OrdinalIgnoreCase) >= 0) CyanRadio.IsChecked = true;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("00ff00ff", StringComparison.OrdinalIgnoreCase) >= 0) MagentaRadio.IsChecked = true;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("00ffff00", StringComparison.OrdinalIgnoreCase) >= 0) YellowRadio.IsChecked = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", RegistryType.REG_DWORD) == "00000001") MoveClockTog.IsOn = true;
                 else MoveClockTog.IsOn = false;
 
                 if (File.Exists(Helper.localFolder.Path + "\\LiveLockscreen.bat"))
@@ -504,7 +517,7 @@ namespace CMDInjector
                     WallDisBatSavTog.IsOn = true;
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01") && Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY).Contains("01"))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", RegistryType.REG_BINARY).Contains("01") && RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", RegistryType.REG_BINARY).Contains("01"))
                 {
                     BootAnimTog.IsOn = false;
                 }
@@ -513,7 +526,7 @@ namespace CMDInjector
                     BootAnimTog.IsOn = true;
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ) == string.Empty)
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ) == string.Empty)
                 {
                     BootImageTog.IsOn = false;
                 }
@@ -521,7 +534,7 @@ namespace CMDInjector
                 {
                     BootImageTog.IsOn = true;
                 }
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ) == string.Empty)
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ) == string.Empty)
                 {
                     ShutdownImageTog.IsOn = false;
                 }
@@ -530,34 +543,34 @@ namespace CMDInjector
                     ShutdownImageTog.IsOn = true;
                 }
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000001") SoftNavTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", RegistryType.REG_DWORD) == "00000001") SoftNavTog.IsOn = true;
                 else SoftNavTog.IsOn = false;
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000001") DoubleTapTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", RegistryType.REG_DWORD) == "00000001") DoubleTapTog.IsOn = true;
                 else DoubleTapTog.IsOn = false;
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000001") AutoHideTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", RegistryType.REG_DWORD) == "00000001") AutoHideTog.IsOn = true;
                 else AutoHideTog.IsOn = false;
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000001") SwipeUpTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", RegistryType.REG_DWORD) == "00000001") SwipeUpTog.IsOn = true;
                 else SwipeUpTog.IsOn = false;
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000001") UserManagedTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", RegistryType.REG_DWORD) == "00000001") UserManagedTog.IsOn = true;
                 else UserManagedTog.IsOn = false;
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000001") BurninProtTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", RegistryType.REG_DWORD) == "00000001") BurninProtTog.IsOn = true;
                 else BurninProtTog.IsOn = false;
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", Helper.RegistryHelper.RegistryType.REG_DWORD) != string.Empty)
-                    BurninTimeoutBox.Text = Convert.ToInt32(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", Helper.RegistryHelper.RegistryType.REG_DWORD), 16).ToString();
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", Helper.RegistryHelper.RegistryType.REG_DWORD) != string.Empty)
-                    OpacitySlide.Value = Convert.ToInt32(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", Helper.RegistryHelper.RegistryType.REG_DWORD), 16);
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", RegistryType.REG_DWORD) != string.Empty)
+                    BurninTimeoutBox.Text = Convert.ToInt32(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", RegistryType.REG_DWORD), 16).ToString();
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", RegistryType.REG_DWORD) != string.Empty)
+                    OpacitySlide.Value = Convert.ToInt32(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", RegistryType.REG_DWORD), 16);
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000004") TileCombo.SelectedIndex = 0;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000006") TileCombo.SelectedIndex = 1;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000008") TileCombo.SelectedIndex = 2;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", Helper.RegistryHelper.RegistryType.REG_DWORD) == "0000000a") TileCombo.SelectedIndex = 3;
-                else if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", Helper.RegistryHelper.RegistryType.REG_DWORD) == "0000000c") TileCombo.SelectedIndex = 4;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "00000004") TileCombo.SelectedIndex = 0;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "00000006") TileCombo.SelectedIndex = 1;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "00000008") TileCombo.SelectedIndex = 2;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "0000000a") TileCombo.SelectedIndex = 3;
+                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "0000000c") TileCombo.SelectedIndex = 4;
 
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Camera\\Barc", "DNGDisabled", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000000") DngTog.IsOn = true;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Camera\\Barc", "DNGDisabled", RegistryType.REG_DWORD) == "00000000") DngTog.IsOn = true;
 
-                VirtualMemBox.Text = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Control\\Session Manager\\Memory Management", "PagingFiles", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ);
+                VirtualMemBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Control\\Session Manager\\Memory Management", "PagingFiles", RegistryType.REG_MULTI_SZ);
 
-                switch (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpType", Helper.RegistryHelper.RegistryType.REG_DWORD))
+                switch (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpType", RegistryType.REG_DWORD))
                 {
                     case "00000000":
                         DumpTypeCombo.SelectedIndex = 0;
@@ -572,7 +585,7 @@ namespace CMDInjector
                         DumpTypeCombo.SelectedIndex = 0;
                         break;
                 }
-                switch (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", Helper.RegistryHelper.RegistryType.REG_DWORD))
+                switch (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", RegistryType.REG_DWORD))
                 {
                     case "":
                         DumpCountCombo.SelectedIndex = 0;
@@ -608,11 +621,11 @@ namespace CMDInjector
                         DumpCountCombo.SelectedIndex = 9;
                         break;
                     default:
-                        //DumpCountCombo.Items.Add(Regex.Replace(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", Helper.RegistryHelper.RegistryType.REG_DWORD), @"\s+", ""));
+                        //DumpCountCombo.Items.Add(Regex.Replace(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", RegistryType.REG_DWORD), @"\s+", ""));
                         DumpCountCombo.SelectedIndex = 9;
                         break;
                 }
-                DumpFolderBox.Text = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ);
+                DumpFolderBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", RegistryType.REG_MULTI_SZ);
 
                 flag = true;
             }
@@ -628,28 +641,28 @@ namespace CMDInjector
             CustomPath.Click += Items_Click;
             CustomPath.Text = "Custom Location";
             AddFlyMenu.Items.Add(CustomPath);
-            if (!Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", Helper.RegistryHelper.RegistryType.REG_SZ).Contains("shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}"))
+            if (!RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ).Contains("shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}"))
             {
                 MenuFlyoutItem Recent = new MenuFlyoutItem();
                 Recent.Click += Items_Click;
                 Recent.Text = "Recent";
                 AddFlyMenu.Items.Add(Recent);
             }
-            if (!Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", Helper.RegistryHelper.RegistryType.REG_SZ).Contains("knownfolder:{1C2AC1DC-4358-4B6C-9733-AF21156576F0}"))
+            if (!RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ).Contains("knownfolder:{1C2AC1DC-4358-4B6C-9733-AF21156576F0}"))
             {
                 MenuFlyoutItem ThisDevice = new MenuFlyoutItem();
                 ThisDevice.Click += Items_Click;
                 ThisDevice.Text = "This Device";
                 AddFlyMenu.Items.Add(ThisDevice);
             }
-            if (!Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", Helper.RegistryHelper.RegistryType.REG_SZ).Contains("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}"))
+            if (!RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ).Contains("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}"))
             {
                 MenuFlyoutItem ThisPC = new MenuFlyoutItem();
                 ThisPC.Click += Items_Click;
                 ThisPC.Text = "This PC";
                 AddFlyMenu.Items.Add(ThisPC);
             }
-            string[] NavigationRoots = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", Helper.RegistryHelper.RegistryType.REG_SZ).Split(';');
+            string[] NavigationRoots = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ).Split(';');
             if (NavigationRoots.Length <= 1)
             {
                 RemoveBtn.IsEnabled = false;
@@ -673,13 +686,13 @@ namespace CMDInjector
                 FolderBox.Items.Add(NavigationRoots[i]);
                 RootOrderList.Items.Add(NavigationRoots[i]);
                 FolderPathCombo.Items.Add(NavigationRoots[i]);
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "DefaultFolder", Helper.RegistryHelper.RegistryType.REG_SZ) == Paths[i]) FolderBox.SelectedIndex = i;
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "DefaultFolder", RegistryType.REG_SZ) == Paths[i]) FolderBox.SelectedIndex = i;
             }
             if (FolderBox.SelectedIndex == -1)
             {
                 try
                 {
-                    string DefaultPath = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "DefaultFolder", Helper.RegistryHelper.RegistryType.REG_SZ);
+                    string DefaultPath = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "DefaultFolder", RegistryType.REG_SZ);
                     if (DefaultPath.Equals("shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}", StringComparison.CurrentCultureIgnoreCase)) DefaultPath = "Recent";
                     else if (DefaultPath.Equals("knownfolder:{1C2AC1DC-4358-4B6C-9733-AF21156576F0}", StringComparison.CurrentCultureIgnoreCase)) DefaultPath = "This Device";
                     else if (DefaultPath.Equals("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", StringComparison.CurrentCultureIgnoreCase)) DefaultPath = "This PC";
@@ -703,7 +716,7 @@ namespace CMDInjector
 
         private void FolderBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "DefaultFolder", Helper.RegistryHelper.RegistryType.REG_SZ, Paths[FolderBox.SelectedIndex]);
+            RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "DefaultFolder", RegistryType.REG_SZ, Paths[FolderBox.SelectedIndex]);
         }
 
         private void Items_Click(object sender, RoutedEventArgs e)
@@ -855,7 +868,7 @@ namespace CMDInjector
                     else if (RootOrderList.Items[i].ToString().Equals("SD Card (D:)", StringComparison.CurrentCultureIgnoreCase)) RootOrderList.Items[i] = "D:";
                     folderRoots += RootOrderList.Items[i] + ";";
                 }
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", Helper.RegistryHelper.RegistryType.REG_SZ, folderRoots.Remove(folderRoots.Length - 1, 1));
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ, folderRoots.Remove(folderRoots.Length - 1, 1));
                 FolderBox.Items.Clear();
                 RootOrderList.Items.Clear();
                 FolderPathCombo.Items.Clear();
@@ -892,7 +905,7 @@ namespace CMDInjector
                 else if (SelFoldUri.Equals("SD Card (D:)", StringComparison.CurrentCultureIgnoreCase)) SelFoldUri = "D:";
                 for (int i = 0; i < glyphUnicodes.Count; i++)
                 {
-                    if (glyphUnicodes[i] == Convert.ToInt32(Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, Helper.RegistryHelper.RegistryType.REG_DWORD), 16))
+                    if (glyphUnicodes[i] == Convert.ToInt32(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, RegistryType.REG_DWORD), 16))
                     {
                         FolderIconCombo.SelectedIndex = i;
                         rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[i].ToString())));
@@ -1030,11 +1043,11 @@ namespace CMDInjector
         {
             if (UptTog.IsOn)
             {
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\DeviceUpdate\\Agent\\Settings", "GuidOfCategoryToScan", Helper.RegistryHelper.RegistryType.REG_SZ, "00000000-0000-0000-0000-000000000000");
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\DeviceUpdate\\Agent\\Settings", "GuidOfCategoryToScan", RegistryType.REG_SZ, "00000000-0000-0000-0000-000000000000");
             }
             else
             {
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\DeviceUpdate\\Agent\\Settings", "GuidOfCategoryToScan", Helper.RegistryHelper.RegistryType.REG_SZ, "F1E8E1CD-9819-4AC5-B0A7-2AFF3D29B46E");
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\DeviceUpdate\\Agent\\Settings", "GuidOfCategoryToScan", RegistryType.REG_SZ, "F1E8E1CD-9819-4AC5-B0A7-2AFF3D29B46E");
             }
         }
 
@@ -1050,21 +1063,21 @@ namespace CMDInjector
                 Button button = sender as Button;
                 if (button.Content as string == "Anniversary Update")
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneManufacturer", Helper.RegistryHelper.RegistryType.REG_SZ, "NOKIA");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneManufacturerModelName", Helper.RegistryHelper.RegistryType.REG_SZ, "RM-1045_1083");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneModelName", Helper.RegistryHelper.RegistryType.REG_SZ, "Lumia 930");
+                    RegEdit.SetHKLMValue(path, "PhoneManufacturer", RegistryType.REG_SZ, "NOKIA");
+                    RegEdit.SetHKLMValue(path, "PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1045_1083");
+                    RegEdit.SetHKLMValue(path, "PhoneModelName", RegistryType.REG_SZ, "Lumia 930");
                 }
                 else if (button.Content as string == "Creator Update")
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneManufacturer", Helper.RegistryHelper.RegistryType.REG_SZ, "NOKIA");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneManufacturerModelName", Helper.RegistryHelper.RegistryType.REG_SZ, "RM-1096_1002");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneModelName", Helper.RegistryHelper.RegistryType.REG_SZ, "RM-1096");
+                    RegEdit.SetHKLMValue(path, "PhoneManufacturer", RegistryType.REG_SZ, "NOKIA");
+                    RegEdit.SetHKLMValue(path, "PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1096_1002");
+                    RegEdit.SetHKLMValue(path, "PhoneModelName", RegistryType.REG_SZ, "RM-1096");
                 }
                 else if (button.Content as string == "Fall Creator Update")
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneManufacturer", Helper.RegistryHelper.RegistryType.REG_SZ, "MicrosoftMDG");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneManufacturerModelName", Helper.RegistryHelper.RegistryType.REG_SZ, "RM-1116_11258");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, path, "PhoneModelName", Helper.RegistryHelper.RegistryType.REG_SZ, "Lumia 950 XL");
+                    RegEdit.SetHKLMValue(path, "PhoneManufacturer", RegistryType.REG_SZ, "MicrosoftMDG");
+                    RegEdit.SetHKLMValue(path, "PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1116_11258");
+                    RegEdit.SetHKLMValue(path, "PhoneModelName", RegistryType.REG_SZ, "Lumia 950 XL");
                 }
                 await Helper.MessageBox($"Now you can able to update to {button.Content as string} from the Windows Update settings.", Helper.SoundHelper.Sound.Alert, "Success");
             }
@@ -1086,16 +1099,16 @@ namespace CMDInjector
                         }
                     }
                     Directory.CreateDirectory("C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\NsgGlance_NlpmService_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P.bin");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin");
-                    Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\NsgGlance_NlpmService_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P.bin");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin");
+                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin");
                     rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "PluginPath", 1, Encoding.Unicode.GetBytes("\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll" + '\0'));
                     rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Path", 1, Encoding.Unicode.GetBytes("C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll" + '\0'));
                     rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Version", 1, Encoding.Unicode.GetBytes("4.1.12.4" + '\0'));
@@ -1141,18 +1154,18 @@ namespace CMDInjector
 
         private void FontFileBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (FontFileBox.SelectedIndex == 1) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin");
-            else if (FontFileBox.SelectedIndex == 2) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P.bin");
-            else if (FontFileBox.SelectedIndex == 3) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin");
-            else if (FontFileBox.SelectedIndex == 4) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin");
-            else if (FontFileBox.SelectedIndex == 5) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
+            if (FontFileBox.SelectedIndex == 1) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin");
+            else if (FontFileBox.SelectedIndex == 2) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P.bin");
+            else if (FontFileBox.SelectedIndex == 3) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin");
+            else if (FontFileBox.SelectedIndex == 4) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin");
+            else if (FontFileBox.SelectedIndex == 5) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
             else if (FontFileBox.SelectedIndex == 6)
             {
-                Helper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
+                FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
+                RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
             }
-            else if (FontFileBox.SelectedIndex == 7) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
-            else if (FontFileBox.SelectedIndex == 8) Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", Helper.RegistryHelper.RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin");
+            else if (FontFileBox.SelectedIndex == 7) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
+            else if (FontFileBox.SelectedIndex == 8) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin");
         }
 
         private void FontColorTog_Toggled(object sender, RoutedEventArgs e)
@@ -1214,9 +1227,9 @@ namespace CMDInjector
                 {
                     if (flag == true)
                     {
-                        Helper.LocalSettingsHelper.SaveSettings("BackupCurrentWall", Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Wallpaper", "CurrentWallpaper", Helper.RegistryHelper.RegistryType.REG_SZ));
+                        Helper.LocalSettingsHelper.SaveSettings("BackupCurrentWall", RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Wallpaper", "CurrentWallpaper", RegistryType.REG_SZ));
                         var currentLibrary = await StorageFolder.GetFolderFromPathAsync((await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[0]);
-                        Helper.CopyFile((await currentLibrary.GetFilesAsync())[0].Path, $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName((await currentLibrary.GetFilesAsync())[0].Path)}");
+                        FilesHelper.CopyFile((await currentLibrary.GetFilesAsync())[0].Path, $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName((await currentLibrary.GetFilesAsync())[0].Path)}");
                         UserProfilePersonalizationSettings profileSettings = UserProfilePersonalizationSettings.Current;
                         await profileSettings.TrySetLockScreenImageAsync(await Helper.localFolder.GetFileAsync($"{System.IO.Path.GetFileName((await currentLibrary.GetFilesAsync())[0].Path)}"));
                         rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\BatchScripts\\LiveLockscreen.bat", Helper.localFolder.Path + "\\LiveLockscreen.bat", 0);
@@ -1233,10 +1246,10 @@ namespace CMDInjector
                     {
                         if (Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null) != null)
                         {
-                            Helper.CopyFile(Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null), $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName(Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null))}");
+                            FilesHelper.CopyFile(Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null), $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName(Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null))}");
                             UserProfilePersonalizationSettings profileSettings = UserProfilePersonalizationSettings.Current;
                             await profileSettings.TrySetLockScreenImageAsync(await Helper.localFolder.GetFileAsync($"{System.IO.Path.GetFileName(Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null))}"));
-                            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Wallpaper", "CurrentWallpaper", Helper.RegistryHelper.RegistryType.REG_SZ, Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null));
+                            RegEdit.SetHKLMValue("Software\\Microsoft\\Shell\\Wallpaper", "CurrentWallpaper", RegistryType.REG_SZ, Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null));
                         }
                     }
                 }
@@ -1295,7 +1308,7 @@ namespace CMDInjector
                     if (AutoWallTog.IsOn)
                     {
                         var currentLibrary = await StorageFolder.GetFolderFromPathAsync((await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[0]);
-                        Helper.CopyFile((await currentLibrary.GetFilesAsync())[0].Path, $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName((await currentLibrary.GetFilesAsync())[0].Path)}");
+                        FilesHelper.CopyFile((await currentLibrary.GetFilesAsync())[0].Path, $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName((await currentLibrary.GetFilesAsync())[0].Path)}");
                         UserProfilePersonalizationSettings profileSettings = UserProfilePersonalizationSettings.Current;
                         await profileSettings.TrySetLockScreenImageAsync(await Helper.localFolder.GetFileAsync($"{System.IO.Path.GetFileName((await currentLibrary.GetFilesAsync())[0].Path)}"));
                         await Helper.localFolder.CreateFileAsync("LockscreenBreak.txt", CreationCollisionOption.OpenIfExists);
@@ -1515,21 +1528,21 @@ namespace CMDInjector
                 BootImageStack.Visibility = Visibility.Visible;
                 if (flag == true)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ, Helper.installedLocation.Path + "\\Assets\\Images\\Bootscreens\\BootupImage.png");
+                    RegEdit.SetHKLMValue("System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ, Helper.installedLocation.Path + "\\Assets\\Images\\Bootscreens\\BootupImage.png");
                 }
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ).Contains(Helper.installedLocation.Path))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ).Contains(Helper.installedLocation.Path))
                 {
                     BootImageBox.Text = $"CMDInjector:\\Assets\\Images\\Bootscreens\\BootupImage.png";
                 }
                 else
                 {
-                    BootImageBox.Text = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ);
+                    BootImageBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ);
                 }
             }
             else
             {
                 BootImageStack.Visibility = Visibility.Collapsed;
-                reg.DeleteValue(RegistryHive.HKLM, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride");
+                reg.DeleteValue(Registry.RegistryHive.HKLM, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride");
             }
         }
 
@@ -1547,7 +1560,7 @@ namespace CMDInjector
                 return;
             }
             BootImageBox.Text = bootImage.Path;
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ, bootImage.Path);
+            RegEdit.SetHKLMValue("System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ, bootImage.Path);
         }
 
         private void ShutdownImageTog_Toggled(object sender, RoutedEventArgs e)
@@ -1557,21 +1570,21 @@ namespace CMDInjector
                 ShutdownImageStack.Visibility = Visibility.Visible;
                 if (flag == true)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ, Helper.installedLocation.Path + "\\Assets\\Images\\Bootscreens\\ShutdownImage.png");
+                    RegEdit.SetHKLMValue("System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ, Helper.installedLocation.Path + "\\Assets\\Images\\Bootscreens\\ShutdownImage.png");
                 }
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ).Contains(Helper.installedLocation.Path))
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ).Contains(Helper.installedLocation.Path))
                 {
                     ShutdownImageBox.Text = $"CMDInjector:\\Assets\\Images\\Bootscreens\\ShutdownImage.png";
                 }
                 else
                 {
-                    ShutdownImageBox.Text = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ);
+                    ShutdownImageBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ);
                 }
             }
             else
             {
                 ShutdownImageStack.Visibility = Visibility.Collapsed;
-                reg.DeleteValue(RegistryHive.HKLM, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride");
+                reg.DeleteValue(Registry.RegistryHive.HKLM, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride");
             }
         }
 
@@ -1589,7 +1602,7 @@ namespace CMDInjector
                 return;
             }
             ShutdownImageBox.Text = shutdownImage.Path;
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", Helper.RegistryHelper.RegistryType.REG_SZ, shutdownImage.Path);
+            RegEdit.SetHKLMValue("System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ, shutdownImage.Path);
         }
 
         private void SoftNavTog_Toggled(object sender, RoutedEventArgs e)
@@ -1741,7 +1754,7 @@ namespace CMDInjector
 
         private void DumpTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpType", Helper.RegistryHelper.RegistryType.REG_DWORD, "0000000" + DumpTypeCombo.SelectedIndex);
+            RegEdit.SetHKLMValue("SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpType", RegistryType.REG_DWORD, "0000000" + DumpTypeCombo.SelectedIndex);
         }
 
         private void DumpCountCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1760,7 +1773,7 @@ namespace CMDInjector
             if (dumpFolder != null)
             {
                 rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", 7, Encoding.Unicode.GetBytes(dumpFolder.Path + '\0'));
-                DumpFolderBox.Text = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", Helper.RegistryHelper.RegistryType.REG_MULTI_SZ);
+                DumpFolderBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", RegistryType.REG_MULTI_SZ);
             }
         }
 
@@ -1793,11 +1806,11 @@ namespace CMDInjector
         {
             if (DngTog.IsOn)
             {
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Camera\\Barc", "DNGDisabled", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000000");
+                RegEdit.SetHKLMValue("SOFTWARE\\OEM\\NOKIA\\Camera\\Barc", "DNGDisabled", RegistryType.REG_DWORD, "00000000");
             }
             else
             {
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Camera\\Barc", "DNGDisabled", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
+                RegEdit.SetHKLMValue("SOFTWARE\\OEM\\NOKIA\\Camera\\Barc", "DNGDisabled", RegistryType.REG_DWORD, "00000001");
             }
         }
 
@@ -1823,9 +1836,9 @@ namespace CMDInjector
                 /*_ = tClient.Send("reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v SystemUsesLightTheme /t REG_DWORD /d 0 /f" +
                     "&reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v AppsUseLightTheme /t REG_DWORD /d 0 /f" +
                     "&reg add \"HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Control Panel\\Theme\" /v CurrentTheme /t REG_DWORD /d 1 /f");*/
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000000");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "AppsUseLightTheme", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000000");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", RegistryType.REG_DWORD, "00000000");
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "AppsUseLightTheme", RegistryType.REG_DWORD, "00000000");
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD, "00000001");
                 if (AutoBackgCombo.SelectedIndex == 1)
                 {
                     AutoBackgCombo.SelectedIndex = -1;
@@ -1842,9 +1855,9 @@ namespace CMDInjector
                 /*_ = tClient.Send("reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v SystemUsesLightTheme /t REG_DWORD /d 1 /f" +
                     "&reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v AppsUseLightTheme /t REG_DWORD /d 1 /f" +
                     "&reg add \"HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Control Panel\\Theme\" /v CurrentTheme /t REG_DWORD /d 0 /f");*/
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "AppsUseLightTheme", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000001");
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", Helper.RegistryHelper.RegistryType.REG_DWORD, "00000000");
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", RegistryType.REG_DWORD, "00000001");
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "AppsUseLightTheme", RegistryType.REG_DWORD, "00000001");
+                RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD, "00000000");
                 if (AutoBackgCombo.SelectedIndex == 1)
                 {
                     AutoBackgCombo.SelectedIndex = -1;
@@ -1858,7 +1871,7 @@ namespace CMDInjector
             }
             if (!Helper.LocalSettingsHelper.LoadSettings("ThemeSettings", false))
             {
-                if (Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", Helper.RegistryHelper.RegistryType.REG_DWORD) == "00000000")
+                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD) == "00000000")
                 {
                     Helper.color = Colors.White;
                 }
@@ -1910,15 +1923,15 @@ namespace CMDInjector
                     var selectedColor = (stackPanel.Children[0] as Rectangle).Fill;
                     var solidColor = (SolidColorBrush)selectedColor;
                     var col = Color.FromArgb(255, solidColor.Color.R, solidColor.Color.G, solidColor.Color.B);
-                    var CurrentAccentHex = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "CurrentAccent", Helper.RegistryHelper.RegistryType.REG_DWORD);
+                    var CurrentAccentHex = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "CurrentAccent", RegistryType.REG_DWORD);
                     var CurrentAccent = int.Parse(CurrentAccentHex, System.Globalization.NumberStyles.HexNumber);
                     for (int i = 0; i <= 1; i++)
                     {
-                        Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, $@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes\{i}\Accents\{CurrentAccent.ToString()}", "Color", Helper.RegistryHelper.RegistryType.REG_DWORD, col.ToString().Replace("#", string.Empty));
-                        Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, $@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes\{i}\Accents\{CurrentAccent.ToString()}", "ComplementaryColor", Helper.RegistryHelper.RegistryType.REG_DWORD, col.ToString().Replace("#", string.Empty));
-                        //Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes", "SpecialColor", Helper.RegistryHelper.RegistryType.REG_DWORD, Convert.ToInt32(col.R.ToString("X2") + col.G.ToString("X2") + col.B.ToString("X2"), 16).ToString());
+                        RegEdit.SetHKLMValue($@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes\{i}\Accents\{CurrentAccent.ToString()}", "Color", RegistryType.REG_DWORD, col.ToString().Replace("#", string.Empty));
+                        RegEdit.SetHKLMValue($@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes\{i}\Accents\{CurrentAccent.ToString()}", "ComplementaryColor", RegistryType.REG_DWORD, col.ToString().Replace("#", string.Empty));
+                        //RegEdit.SetHKLMValue($@"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes", "SpecialColor", RegistryType.REG_DWORD, Convert.ToInt32(col.R.ToString("X2") + col.G.ToString("X2") + col.B.ToString("X2"), 16).ToString());
                     }
-                    var regvalue = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", Helper.RegistryHelper.RegistryType.REG_BINARY);
+                    var regvalue = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", RegistryType.REG_BINARY);
                     var array = regvalue.ToCharArray();
 
                     array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(0), 24);
@@ -1929,7 +1942,7 @@ namespace CMDInjector
                     array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(5), 29);
 
                     var newpalette = string.Join("", array);
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", Helper.RegistryHelper.RegistryType.REG_BINARY, newpalette);
+                    RegEdit.SetHKLMValue(@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", RegistryType.REG_BINARY, newpalette);
                     await Task.Delay(200);
                     Color accentColor = new UISettings().GetColorValue(UIColorType.Accent);
                     (Application.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
@@ -1970,15 +1983,15 @@ namespace CMDInjector
                 var selectedColor = (stackPanel.Children[0] as Rectangle).Fill;
                 var solidColor = (SolidColorBrush)selectedColor;
                 var col = Color.FromArgb(255, solidColor.Color.R, solidColor.Color.G, solidColor.Color.B);
-                var CurrentAccentHex = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "CurrentAccent", Helper.RegistryHelper.RegistryType.REG_DWORD);
+                var CurrentAccentHex = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "CurrentAccent", RegistryType.REG_DWORD);
                 var CurrentAccent = int.Parse(CurrentAccentHex, System.Globalization.NumberStyles.HexNumber);
                 for (int i = 0; i <= 1; i++)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, $@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes\{i}\Accents\{CurrentAccent.ToString()}", "Color", Helper.RegistryHelper.RegistryType.REG_DWORD, col.ToString().Replace("#", string.Empty));
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, $@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes\{i}\Accents\{CurrentAccent.ToString()}", "ComplementaryColor", Helper.RegistryHelper.RegistryType.REG_DWORD, col.ToString().Replace("#", string.Empty));
-                    //Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes", "SpecialColor", 4, Convert.ToInt32(col.R.ToString("X2") + col.G.ToString("X2") + col.B.ToString("X2"), 16).ToString(), 0);
+                    RegEdit.SetHKLMValue($@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes\{i}\Accents\{CurrentAccent.ToString()}", "Color", RegistryType.REG_DWORD, col.ToString().Replace("#", string.Empty));
+                    RegEdit.SetHKLMValue($@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes\{i}\Accents\{CurrentAccent.ToString()}", "ComplementaryColor", RegistryType.REG_DWORD, col.ToString().Replace("#", string.Empty));
+                    //RegEdit.SetHKLMValue($@"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Theme\Themes", "SpecialColor", 4, Convert.ToInt32(col.R.ToString("X2") + col.G.ToString("X2") + col.B.ToString("X2"), 16).ToString(), 0);
                 }
-                var regvalue = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", Helper.RegistryHelper.RegistryType.REG_BINARY);
+                var regvalue = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", RegistryType.REG_BINARY);
                 var array = regvalue.ToCharArray();
 
                 array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(0), 24);
@@ -1989,7 +2002,7 @@ namespace CMDInjector
                 array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(5), 29);
 
                 var newpalette = string.Join("", array);
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", Helper.RegistryHelper.RegistryType.REG_BINARY, newpalette);
+                RegEdit.SetHKLMValue(@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", RegistryType.REG_BINARY, newpalette);
             }
             catch (Exception ex)
             {
@@ -2284,12 +2297,12 @@ namespace CMDInjector
             if (secondFlag == false) return;
             if (RestoreNDTKTog.IsOn)
             {
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", Helper.RegistryHelper.RegistryType.REG_SZ, "C:\\Windows\\System32\\NdtkSvc.dll");
+                RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", RegistryType.REG_SZ, "C:\\Windows\\System32\\NdtkSvc.dll");
                 NDTKIndicator.Visibility = Visibility.Visible;
             }
             else
             {
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", Helper.RegistryHelper.RegistryType.REG_SZ, "NdtkSvc.dll");
+                RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", RegistryType.REG_SZ, "NdtkSvc.dll");
                 NDTKIndicator.Visibility = Visibility.Visible;
             }
         }
@@ -2299,7 +2312,7 @@ namespace CMDInjector
             var result = await Helper.MessageBox("Are you sure you want to patch the driver?", Helper.SoundHelper.Sound.Alert, "", "No", true, "Yes");
             if (result == 0)
             {
-                Helper.CopyFromAppRoot("\\Drivers\\PatchedSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
+                FilesHelper.CopyFromAppRoot("\\Drivers\\PatchedSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
                 SecMgrIndicator.Visibility = Visibility.Visible;
             }
         }
@@ -2309,16 +2322,16 @@ namespace CMDInjector
             var result = await Helper.MessageBox("Are you sure you want to restore the driver?", Helper.SoundHelper.Sound.Alert, "", "No", true, "Yes");
             if (result == 0)
             {
-                Helper.CopyFromAppRoot("\\Drivers\\OriginalSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
+                FilesHelper.CopyFromAppRoot("\\Drivers\\OriginalSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
                 SecMgrIndicator.Visibility = Visibility.Visible;
             }
         }
         private void UfpEnableBtn_Click(object sender, RoutedEventArgs e)
         {
-            Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{01de5a27-8705-40db-bad6-96fa5187d4a6}\\Elements\\25000209", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY, "0100000000000000");
-            Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{01de5a27-8705-40db-bad6-96fa5187d4a6}\\Elements\\26000207", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY, "01");
-            Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{0ff5f24a-3785-4aeb-b8fe-4226215b88c4}\\Elements\\25000209", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY, "0100000000000000");
-            Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{0ff5f24a-3785-4aeb-b8fe-4226215b88c4}\\Elements\\26000207", "Element", Helper.RegistryHelper.RegistryType.REG_BINARY, "01");
+            RegEdit.SetHKLMValueEx("BCD00000001\\Objects\\{01de5a27-8705-40db-bad6-96fa5187d4a6}\\Elements\\25000209", "Element", RegistryType.REG_BINARY, "0100000000000000");
+            RegEdit.SetHKLMValueEx("BCD00000001\\Objects\\{01de5a27-8705-40db-bad6-96fa5187d4a6}\\Elements\\26000207", "Element", RegistryType.REG_BINARY, "01");
+            RegEdit.SetHKLMValueEx("BCD00000001\\Objects\\{0ff5f24a-3785-4aeb-b8fe-4226215b88c4}\\Elements\\25000209", "Element", RegistryType.REG_BINARY, "0100000000000000");
+            RegEdit.SetHKLMValueEx("BCD00000001\\Objects\\{0ff5f24a-3785-4aeb-b8fe-4226215b88c4}\\Elements\\26000207", "Element", RegistryType.REG_BINARY, "01");
         }
 
         private void UfpDisableBtn_Click(object sender, RoutedEventArgs e)
@@ -2352,11 +2365,11 @@ namespace CMDInjector
                 }
                 if (SearchPressAppsCombo.SelectedIndex == 1)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", Helper.RegistryHelper.RegistryType.REG_SZ, "");
+                    RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", RegistryType.REG_SZ, "");
                 }
                 else if (SearchPressAppsCombo.SelectedIndex == 2)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", Helper.RegistryHelper.RegistryType.REG_SZ, "{None}");
+                    RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", RegistryType.REG_SZ, "{None}");
                 }
                 else
                 {
@@ -2366,11 +2379,11 @@ namespace CMDInjector
                     var manifest = await Packages[SearchPressAppsCombo.SelectedIndex - 3].InstalledLocation.GetFileAsync("AppxManifest.xml");
                     var tags = XElement.Load(manifest.Path).Elements().Where(i => i.Name.LocalName == "PhoneIdentity");
                     var attributes = tags.Attributes().Where(i => i.Name.LocalName == "PhoneProductId");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", Helper.RegistryHelper.RegistryType.REG_SZ, $"{{{attributes.First().Value}}}");
+                    RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", RegistryType.REG_SZ, $"{{{attributes.First().Value}}}");
                 }
-                var isRemapped = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Features", "ButtonRemapping", Helper.RegistryHelper.RegistryType.REG_SZ);
+                var isRemapped = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Features", "ButtonRemapping", RegistryType.REG_SZ);
                 if (isRemapped != "WEHButtonRouter.dll") SearchOptIndicator.Visibility = Visibility.Visible;
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Features", "ButtonRemapping", Helper.RegistryHelper.RegistryType.REG_SZ, "WEHButtonRouter.dll");
+                RegEdit.SetHKLMValue("SYSTEM\\Features", "ButtonRemapping", RegistryType.REG_SZ, "WEHButtonRouter.dll");
             }
             catch (Exception ex)
             {
@@ -2394,11 +2407,11 @@ namespace CMDInjector
                 }
                 if (SearchHoldAppsCombo.SelectedIndex == 1)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", Helper.RegistryHelper.RegistryType.REG_SZ, "");
+                    RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", RegistryType.REG_SZ, "");
                 }
                 else if (SearchHoldAppsCombo.SelectedIndex == 2)
                 {
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", Helper.RegistryHelper.RegistryType.REG_SZ, "{None}");
+                    RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", RegistryType.REG_SZ, "{None}");
                 }
                 else
                 {
@@ -2408,11 +2421,11 @@ namespace CMDInjector
                     var manifest = await Packages[SearchHoldAppsCombo.SelectedIndex - 3].InstalledLocation.GetFileAsync("AppxManifest.xml");
                     var tags = XElement.Load(manifest.Path).Elements().Where(i => i.Name.LocalName == "PhoneIdentity");
                     var attributes = tags.Attributes().Where(i => i.Name.LocalName == "PhoneProductId");
-                    Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", Helper.RegistryHelper.RegistryType.REG_SZ, $"{{{attributes.First().Value}}}");
+                    RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", RegistryType.REG_SZ, $"{{{attributes.First().Value}}}");
                 }
-                var isRemapped = Helper.RegistryHelper.GetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Features", "ButtonRemapping", Helper.RegistryHelper.RegistryType.REG_SZ);
+                var isRemapped = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Features", "ButtonRemapping", RegistryType.REG_SZ);
                 if (isRemapped != "WEHButtonRouter.dll") SearchOptIndicator.Visibility = Visibility.Visible;
-                Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Features", "ButtonRemapping", Helper.RegistryHelper.RegistryType.REG_SZ, "WEHButtonRouter.dll");
+                RegEdit.SetHKLMValue("SYSTEM\\Features", "ButtonRemapping", RegistryType.REG_SZ, "WEHButtonRouter.dll");
             }
             catch (Exception ex)
             {
@@ -2553,7 +2566,7 @@ namespace CMDInjector
             else if (SearchPressParaCombo.SelectedIndex == 23) value = "VolUp";
             else if (SearchPressParaCombo.SelectedIndex == 24) value = "VolMute";
             else value = "";
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppParam", Helper.RegistryHelper.RegistryType.REG_SZ, value);
+            RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppParam", RegistryType.REG_SZ, value);
         }
 
         private void SearchHoldParaCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -2578,7 +2591,7 @@ namespace CMDInjector
             else if (SearchHoldParaCombo.SelectedIndex == 23) value = "VolUp";
             else if (SearchHoldParaCombo.SelectedIndex == 24) value = "VolMute";
             else value = "";
-            Helper.RegistryHelper.SetRegValue(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppParam", Helper.RegistryHelper.RegistryType.REG_SZ, value);
+            RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppParam", RegistryType.REG_SZ, value);
         }
 
         private void StartWallInterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

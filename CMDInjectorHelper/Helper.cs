@@ -24,24 +24,9 @@ using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Popups;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using WinUniversalTool;
-
-public static class BoolExtension
-{
-    public static int ToInt(this bool value)
-    {
-        return value ? 1 : 0;
-    }
-}
-
-public static class StringExtension
-{
-    public static int ToInt32(this string value)
-    {
-        return Convert.ToInt32(value);
-    }
-}
 
 namespace CMDInjectorHelper
 {
@@ -90,6 +75,17 @@ namespace CMDInjectorHelper
         public static Color color = Colors.Black;
         public static EventHandler pageNavigation;
         public static Rect rect;
+
+        /// <summary>
+        /// An instance of ndtklib's NRPC.
+        /// Gets fully initialized by <see cref="Helper.Init"/>.
+        /// </summary>
+        public static NRPC rpc = new NRPC();
+
+        /// <summary>
+        /// An instance of COEMSharedFolder. Gets fully initialized by <see cref="Helper.Init"/>.
+        /// </summary>
+        public static COEMSharedFolder oem = new COEMSharedFolder();
     }
 
     public static class Helper
@@ -126,9 +122,7 @@ namespace CMDInjectorHelper
         public static Color color = Colors.Black;
         public static EventHandler pageNavigation;
         public static Rect rect;
-
-        private static COEMSharedFolder oem = new COEMSharedFolder();
-        private static NRPC rpc = new NRPC();
+        
         private static PolicyProvisionNative sbp = new PolicyProvisionNative();
 
         private static async void Connect()
@@ -148,8 +142,8 @@ namespace CMDInjectorHelper
 
         public static void Init()
         {
-            oem.RPC_Init();
-            rpc.Initialize();
+            Globals.oem.RPC_Init();
+            Globals.rpc.Initialize();
             Connect();
         }
 
@@ -194,11 +188,11 @@ namespace CMDInjectorHelper
         {
             var manifest = await installedLocation.GetFileAsync("AppxManifest.xml");
             var manifestText = await FileIO.ReadTextAsync(manifest);
-            var reqCaps = RegistryHelper.GetRegValue(
-                RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE,
+            var reqCaps = RegEdit.GetRegValue(
+                RegistryHive.HKEY_LOCAL_MACHINE,
                 "Software\\Microsoft\\SecurityManager\\Applications\\CMDINJECTOR_KQYNG60ENG17C",
                 "RequiredCapabilities",
-                RegistryHelper.RegistryType.REG_MULTI_SZ
+                RegistryType.REG_MULTI_SZ
             );
 
             oemPublicDir_Allowed = manifestText.Contains("oemPublicDirectory");
@@ -269,46 +263,39 @@ namespace CMDInjectorHelper
                     // The code will be much cleaner. But as we've already stored the
                     // check results we don't do that. At least for now.
 
+                    var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                     if (!extendedBackgroundTaskTime_Allowed)
                     {
-                        var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "extendedBackgroundTaskTime");
-                        caps[0].AppendChild(newNode);
                     }
 
                     if (!extendedExecutionUnconstrained_Allowed)
                     {
-                        var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "extendedExecutionUnconstrained");
-                        caps[0].AppendChild(newNode);
                     }
 
                     if (!oemPublicDir_Allowed)
                     {
-                        var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "oemPublicDirectory");
-                        caps[0].AppendChild(newNode);
                     }
+
                     if (!chamberPfpCodeReadWrite)
                     {
-                        var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "id_cap_chamber_profile_code_rw");
-                        caps[0].AppendChild(newNode);
                     }
 
                     if (!chamberPfpDataReadWrite)
                     {
-                        var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "id_cap_chamber_profile_data_rw");
-                        caps[0].AppendChild(newNode);
                     }
 
                     if (!fullPublicFolderCap)
                     {
-                        var newNode = xml.CreateElement("rescap", "Capability", nsUri);
                         newNode.SetAttribute("Name", "id_cap_public_folder_full");
-                        caps[0].AppendChild(newNode);
                     }
+
+                    if (!string.IsNullOrEmpty(newNode.GetAttribute("Name")))
+                        caps[0].AppendChild(newNode);
 
                     stream.SetLength(0);
                     xml.Save(stream);
@@ -320,9 +307,10 @@ namespace CMDInjectorHelper
             File.Delete($"{cacheFolder.Path}\\UnlockEnd.txt");
             File.Delete($"{cacheFolder.Path}\\UnlockResult.txt");
 
-            RegistryHelper.SetRegValue(RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\SecurityManager\\CapabilityClasses", "ID_CAP_CHAMBER_PROFILE_CODE_RW", RegistryHelper.RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
-            RegistryHelper.SetRegValue(RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\SecurityManager\\CapabilityClasses", "ID_CAP_CHAMBER_PROFILE_DATA_RW", RegistryHelper.RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
-            RegistryHelper.SetRegValue(RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\SecurityManager\\CapabilityClasses", "ID_CAP_PUBLIC_FOLDER_FULL", RegistryHelper.RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
+            RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\SecurityManager\\CapabilityClasses");
+            RegEdit.SetRegValue("ID_CAP_CHAMBER_PROFILE_CODE_RW", RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
+            RegEdit.SetRegValue("ID_CAP_CHAMBER_PROFILE_DATA_RW", RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
+            RegEdit.SetRegValue("ID_CAP_PUBLIC_FOLDER_FULL", RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
 
             if (tClient.IsConnected && HomeHelper.IsConnected())
             {
@@ -380,41 +368,9 @@ namespace CMDInjectorHelper
             throw ex; // Hmm...
         }
 
-        public static bool IsStrAGraterThanStrB(string strA, string strB, char separator)
-        {
-            var result = false;
-            var stringA = strA.Trim().Split(separator);
-            var stringB = strB.Trim().Split(separator);
-
-            int length = Math.Max(stringA.Length, stringB.Length);
-
-            for (int i = 0; i < length; i++)
-            {
-                var partOfA = int.Parse(stringA[i]);
-                var partOfB = int.Parse(stringB[i]);
-
-                if (partOfA != partOfB)
-                {
-                    result = partOfA > partOfB;
-                    break;
-                }
-            }
-            return result;
-        }
-
-        public static uint CopyFile(string source, string destination)
-        {
-            return rpc.FileCopy(source, destination, 0);
-        }
-        
-        public static uint CopyFromAppRoot(string path, string destination)
-        {
-            return CopyFile($"{installedLocation.Path}\\{path}", destination);
-        }
-
         public static uint RebootSystem()
         {
-            return rpc.SystemReboot();
+            return Globals.rpc.SystemReboot();
         }
 
         public static bool IsSecureBootPolicyInstalled()
@@ -559,103 +515,6 @@ namespace CMDInjectorHelper
             public static string LoadSettings(string key, string defaultValue, string fileName = null)
             {
                 return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-        }
-
-        public static class RegistryHelper
-        {
-            public enum RegistryHive
-            {
-                HKEY_CLASSES_ROOT = 0,
-                HKEY_LOCAL_MACHINE = 1,
-                HKEY_CURRENT_USER = 2,
-                HKEY_CURRENT_CONFIG = 3,
-                HKEY_USERS = 4,
-                HKEY_PERFORMANCE_DATA = 5,
-                HKEY_DYN_DATA = 6,
-                HKEY_CURRENT_USER_LOCAL_SETTINGS = 7
-            }
-
-            public enum RegistryType
-            {
-                REG_SZ = 1,
-                REG_EXPAND_SZ = 2,
-                REG_BINARY = 3,
-                REG_DWORD = 4,
-                REG_DWORD_BIG_ENDIAN = 5,
-                REG_LINK = 6,
-                REG_MULTI_SZ = 7,
-                REG_RESOURCE_LIST = 8,
-                REG_FULL_RESOURCE_DESCRIPTOR = 9,
-                REG_RESOURCE_REQUIREMENTS_LIST = 10,
-                REG_QWORD = 11,
-            }
-
-            public static string GetRegValue(RegistryHive hKey, string subKey, string value, RegistryType type)
-            {
-                return oem.rget((uint)hKey, subKey, value, (uint)type);
-            }
-
-            public static void SetRegValue(RegistryHive hKey, string subKey, string value, RegistryType type, string buffer)
-            {
-                oem.rset((uint)hKey, subKey, value, (uint)type, buffer, 0);
-            }
-
-            public static uint SetRegValueEx(RegistryHive hKey, string subKey, string value, RegistryType type, string buffer)
-            {
-                byte[] byteArr = null;
-                switch (type)
-                {
-                    case RegistryType.REG_SZ:
-                        byteArr = Encoding.Unicode.GetBytes(buffer + '\0');
-                        break;
-                    case RegistryType.REG_EXPAND_SZ:
-                        byteArr = Encoding.Unicode.GetBytes(buffer + '\0');
-                        break;
-                    case RegistryType.REG_BINARY:
-                        byteArr = StringToByteArrayFastest(buffer);
-                        break;
-                    case RegistryType.REG_DWORD:
-                        byteArr = BitConverter.GetBytes(uint.Parse(buffer));
-                        break;
-                    case RegistryType.REG_MULTI_SZ:
-                        byteArr = Encoding.Unicode.GetBytes(buffer + '\0');
-                        break;
-                }
-                return rpc.RegSetValue((uint)hKey, subKey, value, (uint)type, byteArr);
-            }
-
-            private static int GetHexVal(char hex)
-            {
-                var val = hex;
-                //For uppercase A-F letters:
-                //return val - (val < 58 ? 48 : 55);
-                //For lowercase a-f letters:
-                //return val - (val < 58 ? 48 : 87);
-                //Or the two combined, but a bit slower:
-                return val - (val < 58 ? 48 : val < 97 ? 55 : 87);
-            }
-
-            private static byte[] StringToByteArrayFastest(string hex)
-            {
-                try
-                {
-                    if (hex.Length % 2 == 1)
-                    {
-                        throw new Exception("The binary key cannot have an odd number of digits");
-                    }
-                    var arr = new byte[hex.Length >> 1];
-                    for (int i = 0; i < hex.Length >> 1; ++i)
-                    {
-                        arr[i] = (byte)((GetHexVal(hex[i << 1]) << 4) + GetHexVal(hex[(i << 1) + 1]));
-                    }
-                    return arr;
-                }
-                catch (Exception ex)
-                {
-                    ThrowException(ex);
-                    return null;
-                }
             }
         }
 

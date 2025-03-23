@@ -24,22 +24,22 @@ namespace BackgroundTasks
 
             Helper.Init();
 
-            if (Helper.LocalSettingsHelper.LoadSettings("GlanceAutoColorEnabled", 0) == 1)
+            if (Settings.GlanceAutoColorEnabled)
             {
-                Helper.RegistryHelper.SetRegValueEx(Helper.RegistryHelper.RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", Helper.RegistryHelper.RegistryType.REG_DWORD, colors[Helper.LocalSettingsHelper.LoadSettings("GlanceColorIndex", 0)].ToString());
-                if (Helper.LocalSettingsHelper.LoadSettings("GlanceColorIndex", 0) < 5)
-                {
-                    Helper.LocalSettingsHelper.SaveSettings("GlanceColorIndex", Helper.LocalSettingsHelper.LoadSettings("GlanceColorIndex", 0) + 1);
-                }
-                else
-                {
-                    Helper.LocalSettingsHelper.SaveSettings("GlanceColorIndex", 0);
-                }
+                int GlanceColorIndex = Settings.GlanceColorIndex;
+                RegEdit.SetRegValueEx(
+                    RegistryHive.HKEY_LOCAL_MACHINE,
+                    "SOFTWARE\\OEM\\Nokia\\lpm",
+                    "ClockAndIndicatorsCustomColor",
+                    RegistryType.REG_DWORD,
+                    colors[GlanceColorIndex].ToString()
+                );
+                Settings.GlanceColorIndex = GlanceColorIndex + (GlanceColorIndex < 5).ToInt();
             }
 
-            if (Helper.LocalSettingsHelper.LoadSettings("StartWallSwitch", false))
+            if (Settings.StartWallSwitch)
             {
-                if (Helper.LocalSettingsHelper.LoadSettings("StartWallTrigger", 0) == 1)
+                if (Settings.StartWallTrigger)
                 {
                     int interval = Helper.LocalSettingsHelper.LoadSettings("StartWallInterval", 15);
                     DateTime dateTime = DateTime.ParseExact(Helper.LocalSettingsHelper.LoadSettings("StartWallTime", $"{DateTime.Now.Subtract(TimeSpan.FromMinutes(interval)).ToString("dd/MM/yy HH:mm:ss")}"), "dd/MM/yy HH:mm:ss", CultureInfo.InvariantCulture);
