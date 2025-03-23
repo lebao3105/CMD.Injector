@@ -50,7 +50,14 @@ namespace CMDInjectorHelper
         
         public static string GetRegValue(string value, RegistryType type)
         {
+            Debug.Assert(!string.IsNullOrWhiteSpace(CurrentKeyPath), "RegEdit.GoToKey() is not called!");
             return GetRegValue(CurrentHive, CurrentKeyPath, value, type);
+        }
+
+        public static string GetRegValue(string subKey, string value, RegistryType type)
+        {
+            Debug.Assert(!Enum.IsDefined(typeof(RegistryHive), CurrentHive), "RegEdit.GoToKey() is not called!");
+            return GetRegValue(CurrentHive, subKey, value, type);
         }
         #endregion
 
@@ -69,13 +76,19 @@ namespace CMDInjectorHelper
         {
             Debug.Assert(
                 !string.IsNullOrWhiteSpace(CurrentKeyPath),
-                "RegEdit.GoToKey() is not used. Can not use the short overload of SetRegValue.");
+                "RegEdit.GoToKey() is not used!");
             SetRegValue(CurrentHive, CurrentKeyPath, value, type, buffer);
         }
 
         public static void SetRegValue(RegistryHive hKey, string subKey, string value, RegistryType type, string buffer)
         {
             Globals.oem.rset((uint)hKey, subKey, value, (uint)type, buffer, 0);
+        }
+
+        public static void SetRegValue(string subKey, string value, RegistryType type, string buffer)
+        {
+            Debug.Assert(!Enum.IsDefined(typeof(RegistryHive), CurrentHive), "RegEdit.GoToKey() is not called!");
+            SetRegValue(CurrentHive, subKey, value, type, buffer);
         }
 
         public static uint SetRegValueEx(RegistryHive hKey, string subKey, string value, RegistryType type, string buffer)
@@ -106,6 +119,23 @@ namespace CMDInjectorHelper
                 !string.IsNullOrWhiteSpace(CurrentKeyPath),
                 "RegEdit.GoToKey() is not used. Can not use the short overload of SetRegValueEx.");
             return SetRegValueEx(CurrentHive, CurrentKeyPath, value, type, buffer);
+        }
+        #endregion
+
+        #region Delete Registry Values
+        public static uint DeleteRegValue(RegistryHive hive, string subKey, string value)
+            => Globals.rpc.RegDeleteValue((uint)hive, subKey, value);
+
+        public static uint DeleteRegValue(string value)
+        {
+            Debug.Assert(!string.IsNullOrWhiteSpace(CurrentKeyPath), "RegEdit.GoToKey() is not called!");
+            return DeleteRegValue(CurrentHive, CurrentKeyPath, value);
+        }
+
+        public static uint DeleteRegValue(string subKey, string value)
+        {
+            Debug.Assert(!Enum.IsDefined(typeof(RegistryHive), CurrentHive), "RegEdit.GoToKey() is not called!");
+            return DeleteRegValue(CurrentHive, subKey, value);
         }
         #endregion
 

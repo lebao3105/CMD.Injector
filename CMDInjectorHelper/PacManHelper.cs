@@ -86,36 +86,50 @@ namespace CMDInjectorHelper
             {
                 var displayName = string.Empty;
                 var desciption = string.Empty;
-                StorageFolder installedLocation = null;
                 var installedDate = string.Empty;
+
                 var isOptional = false;
                 var isXap = false;
+
+                StorageFolder installedLocation = null;
                 AppListEntry app = null;
+
                 if (excludeCMDApp && package.Id.Name == "CMDInjector") continue;
+
                 try
                 {
                     var appEntries = await package.GetAppListEntriesAsync();
                     app = appEntries.FirstOrDefault();
                 }
                 catch (Exception ex) { }
-                if (app == null || app.DisplayInfo.DisplayName == string.Empty || app.DisplayInfo.DisplayName.Length == 1) displayName = package.Id.Name;
-                else displayName = app.DisplayInfo.DisplayName;
-                if (app == null) desciption = package.Description;
-                else desciption = app.DisplayInfo.Description;
+
+                if (app == null || string.IsNullOrWhiteSpace(app.DisplayInfo.DisplayName))
+                    displayName = package.Id.Name;
+                else
+                    displayName = app.DisplayInfo.DisplayName;
+
+                if (app == null)
+                    desciption = package.Description;
+                else
+                    desciption = app.DisplayInfo.Description;
+
                 if (type.ToString() == "Xap")
                 {
                     isXap = true;
                 }
+
                 try
                 {
                     installedLocation = package.InstalledLocation;
                 }
                 catch (Exception ex) { }
+
                 if (Helper.build >= 14393)
                 {
                     installedDate = package.InstalledDate.DateTime.ToString();
                     isOptional = package.IsOptional;
                 }
+
                 appsDetails.Where(l => l.Type != type.ToString()).ToList().All(i => appsDetails.Remove(i));
                 appsDetails.Add(new AppsDetails()
                 {

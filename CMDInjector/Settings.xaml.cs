@@ -59,18 +59,6 @@ namespace CMDInjector
 
         private async void Initialize()
         {
-            if (Helper.build < 10572)
-            {
-                MenuTransitionTog.IsEnabled = false;
-            }
-            else
-            {
-                MenuTransitionTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("MenuTransition", true);
-            }
-            if (Helper.build < 10586)
-            {
-                LoginReqTog.IsEnabled = false;
-            }
             if (Helper.build <= 14393)
             {
                 if (Helper.build < 14393)
@@ -79,16 +67,26 @@ namespace CMDInjector
                     Helper.LocalSettingsHelper.SaveSettings("ConKeyBtnSet", false);
                 }
                 BackupFoldBtn.IsEnabled = false;
+
+                if (Helper.build < 10572)
+                {
+                    MenuTransitionTog.IsEnabled = false;
+                }
+                else
+                {
+                    MenuTransitionTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("MenuTransition", true);
+                }
+
+                if (Helper.build < 10586)
+                {
+                    LoginReqTog.IsEnabled = false;
+                }
             }
 
-            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DefaultApplications", ".xap", RegistryType.REG_SZ) == "CMDInjector_kqyng60eng17c")
-            {
-                DefaultTog.IsOn = true;
-            }
-            else
-            {
-                DefaultTog.IsOn = false;
-            }
+            DefaultTog.IsOn = RegEdit.GetRegValue(
+                RegistryHive.HKEY_LOCAL_MACHINE,
+                "Software\\Microsoft\\DefaultApplications",
+                ".xap", RegistryType.REG_SZ) == "CMDInjector_kqyng60eng17c";
 
             GetExternalAsync();
             SplashScrTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("SplashScreen", true);
@@ -115,45 +113,27 @@ namespace CMDInjector
                 StorageApplicationPermissions.FutureAccessList.AddOrReplace("PMLogPath", KnownFolders.DocumentsLibrary);
                 Helper.LocalSettingsHelper.SaveSettings("PMLogPath", true);
             }
-            if ((await StorageApplicationPermissions.FutureAccessList.GetFolderAsync("PMLogPath")).Path.ToUpper() == @"C:\Data\USERS\DefApps\APPDATA\ROAMING\MICROSOFT\WINDOWS\Libraries\Documents.library-ms".ToUpper())
+
+            var PMLogPath = (await StorageApplicationPermissions.FutureAccessList.GetFolderAsync("PMLogPath")).Path;
+            if (PMLogPath.ToUpper() == @"C:\Data\USERS\DefApps\APPDATA\ROAMING\MICROSOFT\WINDOWS\Libraries\Documents.library-ms".ToUpper())
             {
                 LogPathBox.Text = "C:\\Data\\Users\\Public\\Documents\\PacMan_Installer.pmlog";
             }
             else
             {
-                LogPathBox.Text = $"{(await StorageApplicationPermissions.FutureAccessList.GetFolderAsync("PMLogPath")).Path}\\PacMan_Installer.pmlog";
+                LogPathBox.Text = $"{PMLogPath}\\PacMan_Installer.pmlog";
             }
+
             if (ThemeToggle.IsOn)
             {
                 CustomTheme.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("Theme", 0);
             }
 
-            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD) == "00000001")
-            {
-                UMCIToggle.IsOn = true;
-            }
-            else
-            {
-                UMCIToggle.IsOn = false;
-            }
+            RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet");
 
-            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD) == "00000004")
-            {
-                WifiServiceToggle.IsOn = false;
-            }
-            else
-            {
-                WifiServiceToggle.IsOn = true;
-            }
-
-            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD) == "00000004")
-            {
-                BootshToggle.IsOn = false;
-            }
-            else
-            {
-                BootshToggle.IsOn = true;
-            }
+            UMCIToggle.IsOn = RegEdit.GetRegValue("Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD) == "00000001";
+            WifiServiceToggle.IsOn = RegEdit.GetRegValue("services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD) != "00000004";
+            BootshToggle.IsOn = RegEdit.GetRegValue("Services\\Bootsh", "Start", RegistryType.REG_DWORD) != "00000004";
 
             foreach (var color in typeof(Colors).GetRuntimeProperties())
             {
@@ -262,15 +242,14 @@ namespace CMDInjector
 
         private void CustomTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            Helper.LocalSettingsHelper.SaveSettings("Theme", CustomTheme.SelectedIndex);
             if (CustomTheme.SelectedIndex == 0)
             {
-                Helper.LocalSettingsHelper.SaveSettings("Theme", CustomTheme.SelectedIndex);
                 ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Dark;
                 Helper.color = Colors.Black;
             }
             else
             {
-                Helper.LocalSettingsHelper.SaveSettings("Theme", CustomTheme.SelectedIndex);
                 ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Light;
                 Helper.color = Colors.White;
             }
@@ -285,11 +264,12 @@ namespace CMDInjector
         {
             try
             {
-                if (flag == true)
+                if (flag)
                 {
                     int count = 0;
                     foreach (var color in typeof(Colors).GetRuntimeProperties())
                     {
+                        // TODO
                         if (color.Name != "AliceBlue" && color.Name != "AntiqueWhite" && color.Name != "Azure" && color.Name != "Beige" && color.Name != "Bisque" && color.Name != "Black" && color.Name != "BlanchedAlmond" && color.Name != "Cornsilk" && color.Name != "FloralWhite" && color.Name != "Gainsboro" && color.Name != "GhostWhite" && color.Name != "Honeydew" && color.Name != "Ivory" && color.Name != "Lavender" && color.Name != "LavenderBlush" && color.Name != "LemonChiffon"
                         && color.Name != "LightCyan" && color.Name != "LightGoldenrodYellow" && color.Name != "LightGray" && color.Name != "LightYellow" && color.Name != "Linen" && color.Name != "MintCream" && color.Name != "MistyRose" && color.Name != "Moccasin" && color.Name != "OldLace" && color.Name != "PapayaWhip" && color.Name != "SeaShell" && color.Name != "Snow" && color.Name != "Transparent" && color.Name != "White" && color.Name != "WhiteSmoke")
                         {
@@ -326,16 +306,8 @@ namespace CMDInjector
 
         private void HamBurMenu_Toggled(object sender, RoutedEventArgs e)
         {
-            if (HamBurMenu.IsOn)
-            {
-                Helper.LocalSettingsHelper.SaveSettings("SplitView", true);
-                Helper.pageNavigation.Invoke(45, null);
-            }
-            else
-            {
-                Helper.LocalSettingsHelper.SaveSettings("SplitView", false);
-                Helper.pageNavigation.Invoke(0, null);
-            }
+            Helper.LocalSettingsHelper.SaveSettings("SplitView", HamBurMenu.IsOn);
+            Helper.pageNavigation.Invoke(HamBurMenu.IsOn ? 45 : 0, null);
         }
 
         private void CommandsWrapToggle_Toggled(object sender, RoutedEventArgs e)
@@ -350,14 +322,7 @@ namespace CMDInjector
 
         private void ConKeyBtnTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (ConKeyBtnTog.IsOn)
-            {
-                Helper.LocalSettingsHelper.SaveSettings("ConKeyBtnSet", true);
-            }
-            else
-            {
-                Helper.LocalSettingsHelper.SaveSettings("ConKeyBtnSet", false);
-            }
+            Helper.LocalSettingsHelper.SaveSettings("ConKeyBtnSet", ConKeyBtnTog.IsOn);
         }
 
         private void SnapNotifTog_Toggled(object sender, RoutedEventArgs e)
@@ -367,15 +332,8 @@ namespace CMDInjector
 
         private void BootshToggle_Toggled(object sender, RoutedEventArgs e)
         {
-            if (BootshToggle.IsOn)
-            {
-                RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD, "00000002");
-            }
-            else
-            {
-                RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD, "00000004");
-            }
-            if (flag == true)
+            RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD, BootshToggle.IsOn ? "00000002" : "00000004");
+            if (flag)
             {
                 BootshIndicator.Visibility = Visibility.Visible;
             }
@@ -383,19 +341,8 @@ namespace CMDInjector
 
         private void UMCIToggle_Toggled(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                if (UMCIToggle.IsOn)
-                {
-                    RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD, "00000001");
-                }
-                else
-                {
-                    RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD, "00000000");
-                }
-            }
-            catch (Exception ex) { Helper.ThrowException(ex); }
-            if (flag == true)
+            RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD, UMCIToggle.IsOn.ToDWORDStr());
+            if (flag)
             {
                 UMCIModeIndicator.Visibility = Visibility.Visible;
             }
@@ -403,19 +350,8 @@ namespace CMDInjector
 
         private void WifiServiceToggle_Toggled(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                if (WifiServiceToggle.IsOn)
-                {
-                    RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD, "00000002");
-                }
-                else
-                {
-                    RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD, "00000004");
-                }
-            }
-            catch (Exception ex) { Helper.ThrowException(ex); }
-            if (flag == true)
+            RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD, WifiServiceToggle.IsOn ? "00000002" : "00000004");
+            if (flag)
             {
                 WifiServiceIndicator.Visibility = Visibility.Visible;
             }
@@ -423,25 +359,20 @@ namespace CMDInjector
 
         private void StorageTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (StorageTog.IsOn)
-            {
-                Helper.LocalSettingsHelper.SaveSettings("StorageSet", true);
-            }
-            else
-            {
-                Helper.LocalSettingsHelper.SaveSettings("StorageSet", false);
-            }
+            Helper.LocalSettingsHelper.SaveSettings("StorageSet", StorageTog.IsOn);
         }
 
         private void DefaultTog_Toggled(object sender, RoutedEventArgs e)
         {
+            RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DefaultApplications");
+
             if (DefaultTog.IsOn)
             {
                 try
                 {
-                    RegEdit.SetHKLMValue("Software\\Microsoft\\DefaultApplications", ".xap", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
-                    RegEdit.SetHKLMValue("Software\\Microsoft\\DefaultApplications", ".appx", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
-                    RegEdit.SetHKLMValue("Software\\Microsoft\\DefaultApplications", ".appxbundle", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
+                    RegEdit.SetRegValue(".xap", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
+                    RegEdit.SetRegValue(".appx", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
+                    RegEdit.SetRegValue(".appxbundle", RegistryType.REG_SZ, "CMDInjector_kqyng60eng17c");
                 }
                 catch (Exception ex) { Helper.ThrowException(ex); }
             }
@@ -449,13 +380,13 @@ namespace CMDInjector
             {
                 if (tClient.IsConnected && HomeHelper.IsConnected())
                 {
-                    _ = tClient.Send("reg delete HKLM\\Software\\Microsoft\\DefaultApplications /v .xap /f" +
-                        "&reg delete HKLM\\Software\\Microsoft\\DefaultApplications /v .appx /f" +
-                        "&reg delete HKLM\\Software\\Microsoft\\DefaultApplications /v .appxbundle /f");
+                    RegEdit.DeleteRegValue(".xap");
+                    RegEdit.DeleteRegValue(".appx");
+                    RegEdit.DeleteRegValue(".appxbundle");
                 }
                 else
                 {
-                    _ = Helper.MessageBox(HomeHelper.GetTelnetTroubleshoot(), Helper.SoundHelper.Sound.Error, "Error");
+                    Helper.MessageBox(HomeHelper.GetTelnetTroubleshoot(), Helper.SoundHelper.Sound.Error, "Error");
                 }
             }
             if (flag == true)
@@ -472,38 +403,22 @@ namespace CMDInjector
             };
             folderPicker.FileTypeFilter.Add("*");
             StorageFolder LogPath = await folderPicker.PickSingleFolderAsync();
-            if (LogPath == null)
+            if (LogPath != null)
             {
-                return;
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace("PMLogPath", LogPath);
+                LogPathBox.Text = $"{(await StorageApplicationPermissions.FutureAccessList.GetFolderAsync("PMLogPath")).Path}\\PacMan_Installer.pmlog";
             }
-            StorageApplicationPermissions.FutureAccessList.AddOrReplace("PMLogPath", LogPath);
-            LogPathBox.Text = $"{(await StorageApplicationPermissions.FutureAccessList.GetFolderAsync("PMLogPath")).Path}\\PacMan_Installer.pmlog";
         }
 
         private void ArgConfirmTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (ArgConfirmTog.IsOn)
-            {
-                Helper.LocalSettingsHelper.SaveSettings("TerminalRunArg", true);
-            }
-            else
-            {
-                Helper.LocalSettingsHelper.SaveSettings("TerminalRunArg", false);
-            }
+            Helper.LocalSettingsHelper.SaveSettings("TerminalRunArg", ArgConfirmTog.IsOn);
         }
 
         private void SplashScrTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (SplashScrTog.IsOn)
-            {
-                Helper.LocalSettingsHelper.SaveSettings("SplashScreen", true);
-                SplashScrCombo.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                Helper.LocalSettingsHelper.SaveSettings("SplashScreen", false);
-                SplashScrCombo.Visibility = Visibility.Collapsed;
-            }
+            Helper.LocalSettingsHelper.SaveSettings("SplashScreen", SplashScrTog.IsOn);
+            SplashScrCombo.Visibility = SplashScrTog.IsOn.ToVisibility();
         }
 
         private void SplashScrCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -515,14 +430,7 @@ namespace CMDInjector
 
         private void LoginReqTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (LoginReqTog.IsOn)
-            {
-                Helper.LocalSettingsHelper.SaveSettings("LoginTogReg", true);
-            }
-            else
-            {
-                Helper.LocalSettingsHelper.SaveSettings("LoginTogReg", false);
-            }
+            Helper.LocalSettingsHelper.SaveSettings("LoginTogReg", LoginReqTog.IsOn);
         }
 
         private async void BackupFoldBtn_Click(object sender, RoutedEventArgs e)
@@ -548,8 +456,7 @@ namespace CMDInjector
             if (ResCapTog.IsOn && flag)
             {
                 ResCapTog.IsEnabled = false;
-                var result = await Helper.AskCapabilitiesPermission();
-                if (!result)
+                if (!await Helper.AskCapabilitiesPermission())
                 {
                     ResCapTog.IsEnabled = true;
                     ResCapTog.IsOn = false;

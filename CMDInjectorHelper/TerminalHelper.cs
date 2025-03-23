@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CMDInjectorHelper
+﻿namespace CMDInjectorHelper
 {
     public static class TerminalHelper
     {
@@ -13,13 +7,7 @@ namespace CMDInjectorHelper
             get
             {
                 var fontSize = Helper.LocalSettingsHelper.LoadSettings("ConFontSizeSet", 3);
-                if (fontSize == 0) return 12;
-                else if (fontSize == 1) return 13;
-                else if (fontSize == 2) return 14;
-                else if (fontSize == 3) return 15;
-                else if (fontSize == 4) return 16;
-                else if (fontSize == 5) return 17;
-                return 15;
+                return (5 > fontSize && fontSize > 0) ? 12 + fontSize : 15;
             }
         }
 

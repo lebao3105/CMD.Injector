@@ -24,8 +24,11 @@ typedef CLIENT_CALL_RETURN(*__cdecl _NdrClientCall2)(PMIDL_STUB_DESC pStubDescri
 
 typedef BOOL(*__stdcall _Ndtk_FileCopy)(PUCHAR, PUCHAR, PUCHAR, PUCHAR, PUCHAR, ULONG);
 typedef BOOL(*__stdcall _Ndtk_SystemReboot)(PUCHAR, PUCHAR, PUCHAR);
+
 typedef ULONG(*__stdcall _Ndtk_RegQueryValueExW)(PUCHAR, PUCHAR, PUCHAR, ULONG, PUCHAR, PUCHAR, PUCHAR, PUCHAR, ULONG);
 typedef ULONG(*__stdcall _Ndtk_RegSetValueExW)(PUCHAR, PUCHAR, PUCHAR, ULONG, PUCHAR, PUCHAR, ULONG, PUCHAR, ULONG, ULONG);
+typedef ULONG(*__stdcall _Ndtk_RegDeleteValueW)(PUCHAR, PUCHAR, PUCHAR, PUCHAR, PUCHAR);
+
 typedef ULONG(*__stdcall _Ndtk_StopService)(PUCHAR, PUCHAR, PUCHAR, PUCHAR);
 typedef ULONG(*__stdcall _Ndtk_StartService)(PUCHAR, PUCHAR, PUCHAR, PUCHAR);
 
@@ -250,5 +253,44 @@ unsigned int NRPC::RegSetValue(unsigned int hKey, String^ subkey, String^ value,
 	}
 	catch (...) {
 		return 0x80004005;
+	}
+}
+
+unsigned int NRPC::RegDeleteValue(unsigned int hKey, String^ subkey, String^ value)
+{
+	//////////////////////////////////////////////////////////////////
+	//
+	// hKey: 0 HKEY_CLASSES_ROOT 
+	//        1 HKEY_LOCAL_MACHINE
+	//        2 HKEY_CURRENT_USER
+	//        3 HKEY_CURRENT_CONFIG
+	//        4 HKEY_USERS
+	// subkey: ex: software\microsoft\mtp
+	// value: ex: Datastore (the registry value to delete)
+	//
+	// return code: COM error code. E_SUCCESS (0) if success, 
+	//              0x8007xxxx if fail (the error code is the Win32 error ORed with 0x80070000)
+	//
+	//////////////////////////////////////////////////////////////////
+
+	try {
+		ULONG rStatus;
+
+		_Ndtk_RegDeleteValueW Ndtk_RegDeleteValueW = (_Ndtk_RegDeleteValueW)GetProcAddress(L"RPCRT4.DLL", "NdrClientCall2");
+
+		// Delete the registry value
+		if (rStatus = Ndtk_RegDeleteValueW((PUCHAR)&hello_StubDesc,
+			(PUCHAR)&hello__MIDL_ProcFormatString.Format[120],
+			(PUCHAR)rpc_bh,
+			(PUCHAR)subkey->Data(),
+			(PUCHAR)value->Data()))
+		{
+			return rStatus;
+		}
+
+		return 0;
+	}
+	catch (...) {
+		return 0x80004005;  // General error
 	}
 }
