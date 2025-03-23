@@ -6,10 +6,12 @@ From the original author, Fadil Fadz:
 > Since the app has reached its goal, I’ve decided to release the source code for the CMD Injector project (from 2021) as a token of remembrance.
 > This was my first project after learning to code, so please excuse the messy code.
 
-Where you are now is a fork of CMD Injector. This was born to not only make the code cleaner, as the original code is really messy - but also bring small UI changes, along with new features. Read the TODO section below.
+Where you are now is a fork of CMD Injector. This is made to make the code cleaner, the UI have some small changes, but also try to make the package smaller with a better speed.
+
+Read the TODO section below.
 
 ### Disclaimer
-> Author does not take responsibility for any damage of the phone caused by the app. You are using this app solely at your own risk.
+We do not take responsibility for any damage of the phone caused by the app. You are using this app solely at your own risk.
 
 
 ### Requirements
@@ -27,18 +29,18 @@ Where you are now is a fork of CMD Injector. This was born to not only make the 
 
 ### Screenshots
 <table><tr>
-<td> <img src="assets/66063294/2844126b-b6d3-4330-a284-9bf1ed21c855" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/a2696e81-c080-4f82-b767-086853ffc069" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/eec37c6e-d568-4b21-a40f-11bdd76ead8c" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/87ba7b93-11aa-4b10-bb83-38db96e27d9b" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/ea1e827a-1892-4852-9dc9-a39af787b78d" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/a744effb-9239-46b6-ab62-a23decb5a7ff" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/2844126b-b6d3-4330-a284-9bf1ed21c855" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/a2696e81-c080-4f82-b767-086853ffc069" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/eec37c6e-d568-4b21-a40f-11bdd76ead8c" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/87ba7b93-11aa-4b10-bb83-38db96e27d9b" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/ea1e827a-1892-4852-9dc9-a39af787b78d" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/a744effb-9239-46b6-ab62-a23decb5a7ff" alt="Drawing" style="width: 160px;"/> </td>
 </tr><tr>
-<td> <img src="assets/66063294/cdc38a16-3067-465b-9af7-d6c5fc5b3b6f" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/ec5c060d-5944-45c5-9d88-5458b30e629c" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/01ac0e50-46db-4157-956c-aa63ebe17ca4" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/d29292e5-5193-4320-ad26-e050f093038e" alt="Drawing" style="width: 160px;"/> </td>
-<td> <img src="assets/66063294/f88645e8-a899-47c4-802a-b13ebad24352" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/cdc38a16-3067-465b-9af7-d6c5fc5b3b6f" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/ec5c060d-5944-45c5-9d88-5458b30e629c" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/01ac0e50-46db-4157-956c-aa63ebe17ca4" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/d29292e5-5193-4320-ad26-e050f093038e" alt="Drawing" style="width: 160px;"/> </td>
+<td> <img src="https://github.com/fadilfadz01/CMD.Injector/assets/66063294/f88645e8-a899-47c4-802a-b13ebad24352" alt="Drawing" style="width: 160px;"/> </td>
 <td> </td>
 </tr></table>
 
