@@ -16,7 +16,6 @@ Where you are now is a fork of CMD Injector. This was born to not only make the 
 * W10M build 10240 or higher.
 * Interop unlock (Except for `non Lumia X50` devices).
 
-
 ### Features
 * Command Prompt console
 * Execution of CMD commands on phone bootup
@@ -25,7 +24,6 @@ Where you are now is a fork of CMD Injector. This was born to not only make the 
 * Customize BCD & install boot app Developer Menu
 * Live lockscreen, auto wallpaper switcher, auto theme switcher and various other tweaks collection
 * And much more
-
 
 ### Screenshots
 <table><tr>
@@ -50,6 +48,10 @@ Where you are now is a fork of CMD Injector. This was born to not only make the 
 
 ### TODO
 * Consider between Gus's RegistryRT and WP8NativeAccess's Registry
+* Complete CMDInjectorHelper.Settings class
+* Reduce the amount of nested classes
+* Use switch-case more
+* Modify the UI
 
 ### Thanks
 * [@gus33000](https://github.com/gus33000)
