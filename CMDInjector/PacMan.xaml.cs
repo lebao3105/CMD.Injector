@@ -64,8 +64,8 @@ namespace CMDInjector
         {
             this.InitializeComponent();
             this.NavigationCacheMode = NavigationCacheMode.Enabled;
-            BrowseBtnTip.Visibility = Helper.LocalSettingsHelper.LoadSettings("BrowseBtnTipSettings", true) ? Visibility.Visible : Visibility.Collapsed;
-            PacManMangerTip.Visibility = Helper.LocalSettingsHelper.LoadSettings("PacManMangerTipSettings", true) ? Visibility.Visible : Visibility.Collapsed;
+            BrowseBtnTip.Visibility = AppSettings.LoadSettings("BrowseBtnTipSettings", true) ? Visibility.Visible : Visibility.Collapsed;
+            PacManMangerTip.Visibility = AppSettings.LoadSettings("PacManMangerTipSettings", true) ? Visibility.Visible : Visibility.Collapsed;
             PacmanManager(false);
             Connect();
             Initialize("Loading");
@@ -128,7 +128,7 @@ namespace CMDInjector
                     }
                 }
                 PacmanManager(true);
-                AppLoadStack.Visibility = Visibility.Collapsed;
+                AppLoadStack.Collapse();
             }
             catch (Exception ex)
             {
@@ -141,11 +141,11 @@ namespace CMDInjector
         {
             _ = tClient.Connect();
             long i = 0;
-            while (tClient.IsConnected == false && i < 1000000)
+            while (Helper.IsTelnetConnected() == false && i < 1000000)
             {
                 i++;
             }
-            if (!tClient.IsConnected || !HomeHelper.IsConnected())
+            if (!Helper.IsTelnetConnected() || !HomeHelper.IsConnected())
             {
                 flag = true;
                 BrowseBtn.IsEnabled = false;
@@ -244,8 +244,8 @@ namespace CMDInjector
                     }
                     AppsPath.Text = AppsPath.Text.Remove(AppsPath.Text.Length - 1, 1);
                 }
-                BrowseBtnTip.Visibility = Visibility.Collapsed;
-                Helper.LocalSettingsHelper.SaveSettings("BrowseBtnTipSettings", false);
+                BrowseBtnTip.Collapse();
+                AppSettings.SaveSettings("BrowseBtnTipSettings", false);
             }
             catch
             {
@@ -283,7 +283,7 @@ namespace CMDInjector
             {
                 try
                 {
-                    SeeLogBox.Visibility = Visibility.Collapsed;
+                    SeeLogBox.Collapse();
                     DeploymentOpt.IsEnabled = false;
                     DeploymentInfoBtn.IsEnabled = false;
                     InstallType.IsEnabled = false;
@@ -295,7 +295,7 @@ namespace CMDInjector
                     InstallProg.Value = 0;
                     InstallProg.Maximum = AppsPath.Text.Split(';').Length;
                     IndivitualInstProg.IsIndeterminate = true;
-                    IndivitualInstProg.Visibility = Visibility.Visible;
+                    IndivitualInstProg.Visible();
                     int appCount = 0;
                     succeeded = 0;
                     failed = 0;
@@ -321,7 +321,7 @@ namespace CMDInjector
                             report = "Registering";
                             selectedType = "/Register";
                         }
-                        if (Helper.LocalSettingsHelper.LoadSettings("StorageSet", false))
+                        if (AppSettings.LoadSettings("StorageSet", false))
                         {
                             selectedType = "/AddToVolume";
                             selectedStorage = "/Volume:D:\\";
@@ -399,16 +399,16 @@ namespace CMDInjector
                         PacmanManager(false);
                         AppLoadingText.Text = "Reloading...";
                         AppLoadingProg.Value = 0;
-                        AppLoadStack.Visibility = Visibility.Visible;
+                        AppLoadStack.Visible();
                         Initialize("Reloading");
                     }
                     ResultBox.Text = $"Result: {succeeded} Succeeded, {failed} Failed.";
                     if (failed != 0)
                     {
-                        SeeLogBox.Visibility = Visibility.Visible;
+                        SeeLogBox.Visible();
                         ShowLog();
                     }
-                    IndivitualInstProg.Visibility = Visibility.Collapsed;
+                    IndivitualInstProg.Collapse();
                     IndivitualInstProg.IsIndeterminate = false;
                     DeploymentOpt.IsEnabled = true;
                     DeploymentInfoBtn.IsEnabled = true;
@@ -426,7 +426,7 @@ namespace CMDInjector
                         PacmanManager(false);
                         AppLoadingText.Text = "Reloading...";
                         AppLoadingProg.Value = 0;
-                        AppLoadStack.Visibility = Visibility.Visible;
+                        AppLoadStack.Visible();
                         Initialize("Reloading");
                     }
                     Helper.ThrowException(ex);
@@ -505,7 +505,7 @@ namespace CMDInjector
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            while (Helper.LocalSettingsHelper.LoadSettings("LoginTogReg", true) && (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available)
+            while (AppSettings.LoadSettings("LoginTogReg", true) && (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available)
             {
                 await Task.Delay(200);
                 if (Globals.userVerified) break;
@@ -519,22 +519,22 @@ namespace CMDInjector
                     var strFilePath = await SharedStorageAccessManager.RedeemTokenForFileAsync(sharedFile);
                     if (Path.GetExtension(strFilePath.Path.ToLower()) == ".xap" || Path.GetExtension(strFilePath.Path.ToLower()) == ".appx" || Path.GetExtension(strFilePath.Path.ToLower()) == ".appxbundle" || Path.GetExtension(strFilePath.Path.ToLower()) == ".xml")
                     {
-                        ManagerStack.Visibility = Visibility.Collapsed;
-                        BrowseBtnTip.Visibility = Visibility.Collapsed;
+                        ManagerStack.Collapse();
+                        BrowseBtnTip.Collapse();
                         AppsPath.Text = strFilePath.Path;
                         AppsPath.IsReadOnly = true;
                         InstallBtn.IsEnabled = true;
-                        BrowseBtn.Visibility = Visibility.Collapsed;
+                        BrowseBtn.Collapse();
                         if (Path.GetExtension(strFilePath.Path).ToLower() == ".xml")
                         {
                             RegisterType.IsChecked = true;
-                            InstallType.Visibility = Visibility.Collapsed;
-                            UpdateType.Visibility = Visibility.Collapsed;
+                            InstallType.Collapse();
+                            UpdateType.Collapse();
                             RegisterType.Margin = new Thickness(40, 0, 0, 0);
                         }
                         else
                         {
-                            RegisterType.Visibility = Visibility.Collapsed;
+                            RegisterType.Collapse();
                             InstallType.Margin = new Thickness(15, 0, -30, 0);
                         }
                     }
@@ -620,22 +620,22 @@ namespace CMDInjector
                     StorageFile strFilePath = e.Parameter as StorageFile;
                     if (Path.GetExtension(strFilePath.Path.ToLower()) == ".xap" || Path.GetExtension(strFilePath.Path.ToLower()) == ".appx" || Path.GetExtension(strFilePath.Path.ToLower()) == ".appxbundle" || Path.GetExtension(strFilePath.Path.ToLower()) == ".xml")
                     {
-                        ManagerStack.Visibility = Visibility.Collapsed;
-                        BrowseBtnTip.Visibility = Visibility.Collapsed;
+                        ManagerStack.Collapse();
+                        BrowseBtnTip.Collapse();
                         AppsPath.Text = strFilePath.Path;
                         AppsPath.IsReadOnly = true;
                         InstallBtn.IsEnabled = true;
-                        BrowseBtn.Visibility = Visibility.Collapsed;
+                        BrowseBtn.Collapse();
                         if (Path.GetExtension(strFilePath.Path).ToLower() == ".xml")
                         {
                             RegisterType.IsChecked = true;
-                            InstallType.Visibility = Visibility.Collapsed;
-                            UpdateType.Visibility = Visibility.Collapsed;
+                            InstallType.Collapse();
+                            UpdateType.Collapse();
                             RegisterType.Margin = new Thickness(40, 0, 0, 0);
                         }
                         else
                         {
-                            RegisterType.Visibility = Visibility.Collapsed;
+                            RegisterType.Collapse();
                             InstallType.Margin = new Thickness(15, 0, -30, 0);
                         }
                     }
@@ -857,8 +857,8 @@ namespace CMDInjector
                 if (CurrentApp.IsXap) dataPath.SetText($"{PacManHelper.XapAppDataInternal}\\{{{CurrentApp.Name.ToUpper()}}}");
                 else dataPath.SetText($"{PacManHelper.AppDataInternal}\\{CurrentApp.FamilyName}");
                 Clipboard.SetContent(dataPath);
-                PacManMangerTip.Visibility = Visibility.Collapsed;
-                Helper.LocalSettingsHelper.SaveSettings("PacManMangerTipSettings", false);
+                PacManMangerTip.Collapse();
+                AppSettings.SaveSettings("PacManMangerTipSettings", false);
                 await Helper.MessageBox("Application Data path copied to clipboard.", Helper.SoundHelper.Sound.Alert);
             }
             catch (Exception ex)
@@ -901,8 +901,8 @@ namespace CMDInjector
                 if (CurrentApp.InstalledLocation == null) appPath.SetText($"C:\\Data\\Programs\\{{{CurrentApp.Name.ToUpper()}}}");
                 else appPath.SetText(CurrentApp.InstalledLocation.Path);
                 Clipboard.SetContent(appPath);
-                PacManMangerTip.Visibility = Visibility.Collapsed;
-                Helper.LocalSettingsHelper.SaveSettings("PacManMangerTipSettings", false);
+                PacManMangerTip.Collapse();
+                AppSettings.SaveSettings("PacManMangerTipSettings", false);
                 await Helper.MessageBox("Application installed path copied to clipboard.", Helper.SoundHelper.Sound.Alert);
             }
             catch (Exception ex)
@@ -949,7 +949,7 @@ namespace CMDInjector
             try
             {
                 Button button = sender as Button;
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
                     if (button.Content.ToString() == "Enable Loopback")
                     {
@@ -1003,7 +1003,7 @@ namespace CMDInjector
             {
                 buttonOnHold = true;
                 if (e.HoldingState != Windows.UI.Input.HoldingState.Started) return;
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
                     if (CurrentApp.IsXap)
                     {
@@ -1035,7 +1035,7 @@ namespace CMDInjector
                 {
                     ContentDialog dialog = new ContentDialog
                     {
-                        Content = "The UWP apps can be moved from system Apps & features settings. Do you want to open these settings?",
+                        Content = "The UWP apps can be moved from system Apps & features AppSettings. Do you want to open these settings?",
                         PrimaryButtonText = "Yes",
                         SecondaryButtonText = "No"
                     };
@@ -1500,13 +1500,13 @@ namespace CMDInjector
         {
             AppLoadingText.Text = loadingText;
             AppLoadingProg.IsIndeterminate = true;
-            AppLoadStack.Visibility = Visibility.Visible;
+            AppLoadStack.Visible();
         }
 
         private void EndProgression()
         {
             AppLoadingProg.IsIndeterminate = false;
-            AppLoadStack.Visibility = Visibility.Collapsed;
+            AppLoadStack.Collapse();
         }
 
         private async void PacmanManager(bool value)

@@ -2,9 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Core;
@@ -82,47 +80,23 @@ namespace CMDInjectorHelper
         {
             ObservableCollection<AppsDetails> appsDetails = new ObservableCollection<AppsDetails>();
             IEnumerable<Package> packages = new PackageManager().FindPackagesForUserWithPackageTypes("", type);
+
             foreach (var package in packages)
             {
-                var displayName = string.Empty;
-                var desciption = string.Empty;
-                var installedDate = string.Empty;
-
-                var isOptional = false;
-                var isXap = false;
-
-                StorageFolder installedLocation = null;
-                AppListEntry app = null;
-
                 if (excludeCMDApp && package.Id.Name == "CMDInjector") continue;
 
-                try
-                {
-                    var appEntries = await package.GetAppListEntriesAsync();
-                    app = appEntries.FirstOrDefault();
-                }
-                catch (Exception ex) { }
+                string displayName, description, installedDate = string.Empty;
+                bool isOptional = false;
+
+                StorageFolder installedLocation = package.InstalledLocation;
+                AppListEntry app = (await package.GetAppListEntriesAsync()).FirstOrDefault();
 
                 if (app == null || string.IsNullOrWhiteSpace(app.DisplayInfo.DisplayName))
                     displayName = package.Id.Name;
                 else
                     displayName = app.DisplayInfo.DisplayName;
 
-                if (app == null)
-                    desciption = package.Description;
-                else
-                    desciption = app.DisplayInfo.Description;
-
-                if (type.ToString() == "Xap")
-                {
-                    isXap = true;
-                }
-
-                try
-                {
-                    installedLocation = package.InstalledLocation;
-                }
-                catch (Exception ex) { }
+                description = app == null ? package.Description : app.DisplayInfo.Description;
 
                 if (Helper.build >= 14393)
                 {
@@ -135,7 +109,7 @@ namespace CMDInjectorHelper
                 {
                     Name = package.Id.Name,
                     DisplayName = displayName,
-                    Description = desciption,
+                    Description = description,
                     FamilyName = package.Id.FamilyName,
                     FullName = package.Id.FullName,
                     Publisher = package.Id.Publisher,
@@ -150,7 +124,7 @@ namespace CMDInjectorHelper
                     IsDevelopmentMode = package.IsDevelopmentMode,
                     IsFramework = package.IsFramework,
                     IsResourcePackage = package.IsResourcePackage,
-                    IsXap = isXap
+                    IsXap = type == PackageTypes.Xap
                 });
                 if (progress != null) progress.Report(1);
             }
@@ -264,10 +238,10 @@ namespace CMDInjectorHelper
 
         public static async Task<StorageFolder> GetLogPath()
         {
-            if (!Helper.LocalSettingsHelper.LoadSettings("PMLogPath", false))
+            if (!AppSettings.LoadSettings("PMLogPath", false))
             {
                 StorageApplicationPermissions.FutureAccessList.AddOrReplace("PMLogPath", KnownFolders.DocumentsLibrary);
-                Helper.LocalSettingsHelper.SaveSettings("PMLogPath", true);
+                AppSettings.SaveSettings("PMLogPath", true);
             }
             return await StorageApplicationPermissions.FutureAccessList.GetFolderAsync("PMLogPath");
         }

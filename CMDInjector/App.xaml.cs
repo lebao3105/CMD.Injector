@@ -1,26 +1,25 @@
-﻿using System;
+﻿using CMDInjectorHelper;
+using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Background;
+using Windows.ApplicationModel.Core;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Security.Credentials.UI;
+using Windows.Storage.AccessCache;
+using Windows.System;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using Windows.ApplicationModel.Core;
-using Windows.System;
-using Windows.Storage.AccessCache;
-using System.Reflection;
-using System.Threading.Tasks;
-using Windows.ApplicationModel.DataTransfer;
-using System.Threading;
 using XamlBrewer.Uwp.Controls;
-using CMDInjectorHelper;
-using Windows.ApplicationModel.Background;
-using MinimalisticTelnet;
-using WinUniversalTool;
-using Windows.Security.Credentials.UI;
 
 namespace CMDInjector
 {
@@ -29,46 +28,53 @@ namespace CMDInjector
     /// </summary>
     sealed partial class App : Application
     {
-        /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
-        /// </summary>
-
         Frame rootFrame;
-        TelnetConnection tc;
+        //TelnetConnection tc;
         static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        TelnetClient tClient = new TelnetClient(TimeSpan.FromSeconds(1), cancellationTokenSource.Token);
         bool isRootFrame = false;
-
-        private void Connect()
-        {
-            string IP = "127.0.0.1";
-            int Port = Int32.Parse("9999");
-            tc = new TelnetConnection(IP, Port);
-            long i = 0;
-            while (tc.IsConnected == false && i < 1000000)
-            {
-                i++;
-            }
-
-            _ = tClient.Connect();
-            long j = 0;
-            while (tClient.IsConnected == false && j < 1000000)
-            {
-                j++;
-            }
-        }
 
         public App()
         {
-            this.InitializeComponent();
-            this.Suspending += OnSuspending;
-            Connect();
+            InitializeComponent();
+            Suspending += OnSuspending;
+
+            //Connect();
             Helper.Init();
             Helper.SoundHelper.Init();
-            if (!Helper.BackgroundTaskHelper.IsThemeTaskActivated()) _ = Helper.BackgroundTaskHelper.RegisterThemeTask(15, new SystemTrigger(SystemTriggerType.UserAway, false));
-            if (!Helper.BackgroundTaskHelper.IsWallpaperTaskActivated()) _ = Helper.BackgroundTaskHelper.RegisterWallpaperTask(15, new SystemTrigger(SystemTriggerType.UserPresent, false));
+
+#pragma warning disable CS4014
+            if (!Helper.BackgroundTaskHelper.IsThemeTaskActivated())
+                Helper.BackgroundTaskHelper.RegisterThemeTask(15, new SystemTrigger(SystemTriggerType.UserAway, false));
+
+            if (!Helper.BackgroundTaskHelper.IsWallpaperTaskActivated())
+                Helper.BackgroundTaskHelper.RegisterWallpaperTask(15, new SystemTrigger(SystemTriggerType.UserPresent, false));
+#pragma warning restore CS4014
         }
+
+        // FIXME: Do something when a while loop stops
+//        private void Connect()
+//        {
+//#pragma warning disable CS4014
+//            string IP = "127.0.0.1";
+//            int Port = 9999;
+
+//            tc = new TelnetConnection(IP, Port);
+//            long i = 0;
+
+//            while (tc.IsConnected == false && i < 1000000)
+//            {
+//                i++;
+//            }
+
+//            tClient.Connect();
+//            i = 0;
+
+//            while (Helper.IsTelnetConnected() == false && i < 1000000)
+//            {
+//                i++;
+//            }
+//#pragma warning restore CS4014
+//        }
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -77,63 +83,81 @@ namespace CMDInjector
         /// <param name="e">Details about the launch request and process.</param>
         protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
-            if (e.Arguments == "Restart")
+            switch (e.Arguments)
             {
-                Helper.RebootSystem();
-            }
-            else if (e.Arguments == "Shutdown" || e.Arguments == "Lockscreen" || e.Arguments == "FFULoader" || e.Arguments == "VolUp" || e.Arguments == "VolDown" || e.Arguments == "VolMute")
-            {
-                if (tClient.IsConnected && HomeHelper.IsConnected())
-                {
-                    switch (e.Arguments)
+                case "Restart":
+                    Helper.RebootSystem();
+                    break;
+
+                case "Shutdown":
+                case "Lockscreen":
+                case "FFULoader":
+                case "VolUp":
+                case "VolDown":
+                case "VolMute":
+                    if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                     {
-                        case "Shutdown":
-                            _ = tClient.Send("shutdown /s /t 0");
-                            break;
-                        case "Lockscreen":
-                            Helper.SoundHelper.PlaySound(Helper.SoundHelper.Sound.Lock);
-                            _ = tClient.Send("powertool -screenoff");
-                            break;
-                        case "FFULoader":
-                            _ = tClient.Send("start " + Helper.installedLocation.Path + "\\Contents\\BatchScripts\\RebootToFlashingMode.bat");
-                            await Helper.MessageBox("Rebooting to FFU Loader...");
-                            break;
-                        case "VolUp":
-                            _ = tClient.Send("SendKeys -v \"0xAF 0xAF\"");
-                            break;
-                        case "VolDown":
-                            _ = tClient.Send("SendKeys -v \"0xAE 0xAE\"");
-                            break;
-                        case "VolMute":
-                            _ = tClient.Send("SendKeys -v \"0xAD\"");
-                            break;
+#pragma warning disable CS4014
+                        switch (e.Arguments)
+                        {
+                            case "Shutdown":
+                                Helper.Send("shutdown /s /t 0");
+                                break;
+
+                            case "Lockscreen":
+                                Helper.SoundHelper.PlaySound(Helper.SoundHelper.Sound.Lock);
+                                Helper.Send("powertool -screenoff");
+                                break;
+
+                            case "FFULoader":
+                                Helper.Send("start " + Helper.installedLocation.Path + "\\Contents\\BatchScripts\\RebootToFlashingMode.bat");
+                                await Helper.MessageBox("Rebooting to FFU Loader...");
+                                break;
+
+                            case "VolUp":
+                                Helper.Send("SendKeys -v \"0xAF 0xAF\"");
+                                break;
+
+                            case "VolDown":
+                                Helper.Send("SendKeys -v \"0xAE 0xAE\"");
+                                break;
+
+                            case "VolMute":
+                                Helper.Send("SendKeys -v \"0xAD\"");
+                                break;
+                        }
+
+                        if (e.PreviousExecutionState == ApplicationExecutionState.NotRunning)
+                        {
+                            CoreApplication.Exit();
+                        }
+                        else if (e.PreviousExecutionState != ApplicationExecutionState.Running)
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(2));
+                            Helper.Send("SendKeys -v \"0x5B\"");
+                        }
+                        return;
                     }
-                    if (e.PreviousExecutionState == ApplicationExecutionState.NotRunning)
+                    else
                     {
-                        CoreApplication.Exit();
+                        Helper.MessageBox(HomeHelper.GetTelnetTroubleshoot(), Helper.SoundHelper.Sound.Error, "Error");
                     }
-                    else if (e.PreviousExecutionState != ApplicationExecutionState.Running)
+                    break;
+
+                default:
+                    if (StorageApplicationPermissions.FutureAccessList.ContainsItem(e.Arguments))
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(2));
-                        _ = tClient.Send("SendKeys -v \"0x5B\"");
+                        try
+                        {
+                            await Launcher.LaunchFolderAsync(await StorageApplicationPermissions.FutureAccessList.GetFolderAsync(e.Arguments));
+                            if (e.PreviousExecutionState == ApplicationExecutionState.NotRunning) CoreApplication.Exit();
+                        }
+                        catch (Exception) { Helper.MessageBox("The folder you are trying to open is no longer exist.", Helper.SoundHelper.Sound.Error, "Missing Folder"); }
+                        return;
                     }
-                    return;
-                }
-                else
-                {
-                    _ = Helper.MessageBox(HomeHelper.GetTelnetTroubleshoot(), Helper.SoundHelper.Sound.Error, "Error");
-                }
+                    break;
             }
-            else if (e.Arguments != "" && StorageApplicationPermissions.FutureAccessList.ContainsItem(e.Arguments))
-            {
-                try
-                {
-                    await Launcher.LaunchFolderAsync(await StorageApplicationPermissions.FutureAccessList.GetFolderAsync(e.Arguments));
-                    if (e.PreviousExecutionState == ApplicationExecutionState.NotRunning) CoreApplication.Exit();
-                }
-                catch (Exception) { _ = Helper.MessageBox("The folder you are trying to open is no longer exist.", Helper.SoundHelper.Sound.Error, "Missing Folder"); }
-                return;
-            }
+#pragma warning restore CS4014
 
             Helper.rect = e.SplashScreen.ImageLocation;
 
@@ -155,10 +179,11 @@ namespace CMDInjector
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
-
-                if (Helper.LocalSettingsHelper.LoadSettings("ThemeSettings", false))
+                
+                // Do we exactly NEED these when the Window already has content?
+                if (AppSettings.ThemeSettings)
                 {
-                    if (Helper.LocalSettingsHelper.LoadSettings("Theme", 0) == 0)
+                    if (AppSettings.Theme == 0)
                     {
                         ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Dark;
                         Helper.color = Colors.Black;
@@ -172,14 +197,13 @@ namespace CMDInjector
                 else
                 {
                     ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Default;
-                    if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD) == "00000000")
-                    {
-                        Helper.color = Colors.White;
-                    }
-                    else
-                    {
-                        Helper.color = Colors.Black;
-                    }
+
+                    Helper.color = RegEdit.GetRegValue(
+                        RegistryHive.HKEY_LOCAL_MACHINE,
+                        "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme",
+                        "CurrentTheme",
+                        RegistryType.REG_DWORD
+                    ).IsDWORDStrFullZeros() ? Colors.White : Colors.Black;
                 }
 
                 try
@@ -188,39 +212,45 @@ namespace CMDInjector
                     {
                         await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                         {
-                            if (Helper.LocalSettingsHelper.LoadSettings("AccentSettings", false))
+                            if (AppSettings.LoadSettings("AccentSettings", false))
                             {
-                                int count = 0;
-                                foreach (var color in typeof(Colors).GetRuntimeProperties())
+                                var accentColor = (Color)typeof(Colors).GetRuntimeProperties()
+                                        .Where(obj => !Globals.CursedColors.Contains(obj.Name))
+                                        .ElementAt(AppSettings.LoadSettings("Accent", 11)).GetValue(null);
+
+                                //int count = 0;
+                                //foreach (var color in typeof(Colors).GetRuntimeProperties())
+                                //{
+                                //    if (!Globals.CursedColors.Contains(color.Name))
+                                //    {
+                                //        if (AppSettings.LoadSettings("Accent", 11) == count)
+                                //        {
+                                //            var accentColor = (Color)color.GetValue(null);
+
+                                (this.GetResource("AppAccentColor") as SolidColorBrush).Color = accentColor;
+                                (this.GetResource("ToggleSwitchFillOn") as SolidColorBrush).Color = accentColor;
+                                (this.GetResource("TextControlBorderBrushFocused") as SolidColorBrush).Color = accentColor;
+                                (this.GetResource("RadioButtonOuterEllipseCheckedStroke") as SolidColorBrush).Color = accentColor;
+                                (this.GetResource("SliderTrackValueFill") as SolidColorBrush).Color = accentColor;
+                                (this.GetResource("SliderThumbBackground") as SolidColorBrush).Color = accentColor;
+                                (this.GetResource("SystemControlHighlightAccentBrush") as SolidColorBrush).Color = accentColor;
+
+                                (this.GetResource("SystemControlHighlightListAccentLowBrush") as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
+                                (this.GetResource("SystemControlHighlightListAccentHighBrush") as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
+
+                                if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
                                 {
-                                    if (color.Name != "AliceBlue" && color.Name != "AntiqueWhite" && color.Name != "Azure" && color.Name != "Beige" && color.Name != "Bisque" && color.Name != "Black" && color.Name != "BlanchedAlmond" && color.Name != "Cornsilk" && color.Name != "FloralWhite" && color.Name != "Gainsboro" && color.Name != "GhostWhite" && color.Name != "Honeydew" && color.Name != "Ivory" && color.Name != "Lavender" && color.Name != "LavenderBlush" && color.Name != "LemonChiffon"
-                                    && color.Name != "LightCyan" && color.Name != "LightGoldenrodYellow" && color.Name != "LightGray" && color.Name != "LightYellow" && color.Name != "Linen" && color.Name != "MintCream" && color.Name != "MistyRose" && color.Name != "Moccasin" && color.Name != "OldLace" && color.Name != "PapayaWhip" && color.Name != "SeaShell" && color.Name != "Snow" && color.Name != "Transparent" && color.Name != "White" && color.Name != "WhiteSmoke")
+                                    var statusBar = StatusBar.GetForCurrentView();
+                                    if (statusBar != null)
                                     {
-                                        if (Helper.LocalSettingsHelper.LoadSettings("Accent", 11) == count)
-                                        {
-                                            var accentColor = (Color)color.GetValue(null);
-                                            (Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
-                                            (Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
-                                            (Current.Resources["TextControlBorderBrushFocused"] as SolidColorBrush).Color = accentColor;
-                                            (Current.Resources["RadioButtonOuterEllipseCheckedStroke"] as SolidColorBrush).Color = accentColor;
-                                            (Current.Resources["SliderTrackValueFill"] as SolidColorBrush).Color = accentColor;
-                                            (Current.Resources["SliderThumbBackground"] as SolidColorBrush).Color = accentColor;
-                                            (Current.Resources["SystemControlHighlightAccentBrush"] as SolidColorBrush).Color = accentColor;
-                                            (Current.Resources["SystemControlHighlightListAccentLowBrush"] as SolidColorBrush).Color = Color.FromArgb(204, accentColor.R, accentColor.G, accentColor.B);
-                                            (Current.Resources["SystemControlHighlightListAccentHighBrush"] as SolidColorBrush).Color = Color.FromArgb(242, accentColor.R, accentColor.G, accentColor.B);
-                                            if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
-                                            {
-                                                var statusBar = StatusBar.GetForCurrentView();
-                                                if (statusBar != null)
-                                                {
-                                                    statusBar.ForegroundColor = accentColor;
-                                                }
-                                            }
-                                            break;
-                                        }
-                                        count++;
+                                        statusBar.ForegroundColor = accentColor;
                                     }
                                 }
+                                //            break;
+                                //        }
+                                //        count++;
+                                //    }
+                                //}
                             }
                             else if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
                             {
@@ -236,7 +266,9 @@ namespace CMDInjector
                 }
                 catch (Exception ex) { /*CommonHelper.ThrowException(ex);*/ }
 
+                #region Check for updates
                 bool flag = false;
+
                 try
                 {
                     if (!Helper.NotificationHelper.IsToastAlreadyThere("CheckUpdateTag"))
@@ -246,7 +278,7 @@ namespace CMDInjector
                         {
                             flag = true;
                             Helper.NotificationHelper.PushNotification("A new version of CMD Injector is available.", "Update Available", "DownloadUpdate", "CheckUpdateTag", 0);
-                            Helper.LocalSettingsHelper.SaveSettings("UpdateNotifyTime", DateTime.Now.AddHours(12));
+                            AppSettings.SaveSettings("UpdateNotifyTime", DateTime.Now.AddHours(12));
                         }
                     }
                 }
@@ -254,14 +286,18 @@ namespace CMDInjector
                 {
                     //CommonHelper.ThrowException(ex);
                 }
-                if (!flag && File.Exists(@"C:\Windows\System32\CMDInjectorVersion.dat"))
+
+                if (!flag && "CMDInjectorVersion.dat".IsAFileInSystem32())
                 {
-                    if (!Helper.NotificationHelper.IsToastAlreadyThere("Re-InjectTag") && Convert.ToInt32(Globals.InjectedBatchVersion) < Globals.currentBatchVersion)
+                    if (!Helper.NotificationHelper.IsToastAlreadyThere("Re-InjectTag") && Globals.InjectedBatchVersion.ToInt32() < Globals.currentBatchVersion)
                     {
-                        if (File.Exists(@"C:\Windows\System32\CMDInjector.dat")) Helper.NotificationHelper.PushNotification("The App has been updated, required re-injection in order to work the app fine.", "Re-injection required", "ReinjectionRequired", "Re-InjectTag", 1800);
-                        else Helper.NotificationHelper.PushNotification("The App has been updated, required re-injection in order to work the App fine.", "Re-injection required", "ReinjectionRequired", "Re-InjectTag", 1800, "Re-Inject", "InjectCMD", "Re-Inject");
+                        if (File.Exists(@"C:\Windows\System32\CMDInjector.dat"))
+                            Helper.NotificationHelper.PushNotification("The App has been updated, a re-injection is required.", "Re-injection required", "ReinjectionRequired", "Re-InjectTag", 1800);
+                        else
+                            Helper.NotificationHelper.PushNotification("The App has been updated, a re-injection is required.", "Re-injection required", "ReinjectionRequired", "Re-InjectTag", 1800, "Re-Inject", "InjectCMD", "Re-Inject");
                     }
                 }
+                #endregion
             }
 
             if (e.PrelaunchActivated == false)
@@ -271,64 +307,79 @@ namespace CMDInjector
                     // When the navigation stack isn't restored navigate to the first page,
                     // configuring the new page by passing required information as a navigation
                     // parameter
-                    if (Helper.LocalSettingsHelper.LoadSettings("SplashScreen", true))
+                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
+
+                    if (AppSettings.LoginTogReg && AppSettings.SplashScreen && Helper.build >= 10572)
                     {
                         ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
+                        (rootFrame.Content as Page).OpenFromSplashScreen(e.SplashScreen.ImageLocation, Helper.color, new Uri("ms-appx:///Assets/SplashScreen.png"));
                     }
-                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
-                    if (Helper.LocalSettingsHelper.LoadSettings("LoginTogReg", true) && Helper.LocalSettingsHelper.LoadSettings("SplashScreen", true) && Helper.build >= 10572) (rootFrame.Content as Windows.UI.Xaml.Controls.Page).OpenFromSplashScreen(e.SplashScreen.ImageLocation, Helper.color, new Uri("ms-appx:///Assets/SplashScreen.png"));
                 }
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
+
             Type frame = null;
-            if (string.IsNullOrEmpty(e.Arguments) == false)
+
+            if (!string.IsNullOrEmpty(e.Arguments))
             {
                 isRootFrame = true;
+
                 //var rootFrame = new Frame();
-                if (e.Arguments == "HomePage")
-                {
-                    frame = typeof(Home);
-                }
-                else if (e.Arguments.Contains("TerminalPage"))
-                {
-                    frame = typeof(Terminal);
-                }
-                else if (e.Arguments == "StartupPage")
-                {
-                    frame = typeof(Startup);
-                }
-                else if (e.Arguments == "PacManPage")
-                {
-                    frame = typeof(PacMan);
-                }
-                else if (e.Arguments == "SnapperPage")
-                {
-                    frame = typeof(Snapper);
-                }
-                else if (e.Arguments == "BootConfigPage")
-                {
-                    frame = typeof(BootConfig);
-                }
-                else if (e.Arguments == "TweakBoxPage")
-                {
-                    frame = typeof(TweakBox);
-                }
-                else if (e.Arguments == "SettingsPage")
-                {
-                    frame = typeof(Settings);
-                }
-                else if (e.Arguments == "HelpPage")
-                {
-                    frame = typeof(Help);
-                }
-                else if (e.Arguments == "AboutPage")
-                {
-                    frame = typeof(About);
-                }
+                if (e.Arguments.EndsWith("Page"))
+                    frame = Type.GetType($"CMDInjector.{e.Arguments.Replace("Page", "")}");
+                //switch (e.Arguments)
+                //{
+                //    case "HomePage":
+                //        frame = typeof(Home);
+                //        break;
+
+                //    case "TerminalPage":
+                //        frame = typeof(Terminal);
+                //}
+                //if (e.Arguments == "HomePage")
+                //{
+                //    frame = typeof(Home);
+                //}
+                //else if (e.Arguments.Contains("TerminalPage"))
+                //{
+                //    frame = typeof(Terminal);
+                //}
+                //else if (e.Arguments == "StartupPage")
+                //{
+                //    frame = typeof(Startup);
+                //}
+                //else if (e.Arguments == "PacManPage")
+                //{
+                //    frame = typeof(PacMan);
+                //}
+                //else if (e.Arguments == "SnapperPage")
+                //{
+                //    frame = typeof(Snapper);
+                //}
+                //else if (e.Arguments == "BootConfigPage")
+                //{
+                //    frame = typeof(BootConfig);
+                //}
+                //else if (e.Arguments == "TweakBoxPage")
+                //{
+                //    frame = typeof(TweakBox);
+                //}
+                //else if (e.Arguments == "SettingsPage")
+                //{
+                //    frame = typeof(Settings);
+                //}
+                //else if (e.Arguments == "HelpPage")
+                //{
+                //    frame = typeof(Help);
+                //}
+                //else if (e.Arguments == "AboutPage")
+                //{
+                //    frame = typeof(About);
+                //}
             }
 
-            if (Helper.LocalSettingsHelper.LoadSettings("SplashScreen", true) && !Helper.splashScreenDisplayed)
+            if (AppSettings.SplashScreen && !Helper.splashScreenDisplayed)
             {
                 if (e.PreviousExecutionState != ApplicationExecutionState.Running)
                 {
@@ -353,7 +404,7 @@ namespace CMDInjector
                 if (frame.Name == "Home" || frame.Name == "Terminal") rootFrame.Navigate(frame, e.Arguments);
                 else rootFrame.Navigate(frame);
             }
-            if (!Helper.LocalSettingsHelper.LoadSettings("LoginTogReg", true) && Helper.LocalSettingsHelper.LoadSettings("SplashScreen", true) && Helper.build >= 10572) (rootFrame.Content as Windows.UI.Xaml.Controls.Page).OpenFromSplashScreen(e.SplashScreen.ImageLocation, Helper.color, new Uri("ms-appx:///Assets/SplashScreen.png"));
+            if (!AppSettings.LoginTogReg && AppSettings.SplashScreen && Helper.build >= 10572) (rootFrame.Content as Page).OpenFromSplashScreen(e.SplashScreen.ImageLocation, Helper.color, new Uri("ms-appx:///Assets/SplashScreen.png"));
 
             Window.Current.Activate();
         }
@@ -408,17 +459,17 @@ namespace CMDInjector
                     if (e.Kind == ActivationKind.ToastNotification)
                     {
                         var toastActivationArgs = e as ToastNotificationActivatedEventArgs;
-                        if (toastActivationArgs.Argument == "OpenSnapper" || toastActivationArgs.Argument == "StopSnapper=StopCapturing;OpenSnapper" || toastActivationArgs.Argument == "StopSnapper=StopRecording;OpenSnapper" || toastActivationArgs.Argument == "OpenImage" || toastActivationArgs.Argument == "OpenVideo")
+                        if (toastActivationArgs.Argument.Contains("Snapper") || toastActivationArgs.Argument == "OpenImage" || toastActivationArgs.Argument == "OpenVideo")
                         {
                             rootFrame.Navigate(typeof(MainPage));
                             rootFrame.Navigate(typeof(Snapper));
                         }
-                        else if (toastActivationArgs.Argument == "Updation" || toastActivationArgs.Argument == "DownloadUpdate")
+                        else if (toastActivationArgs.Argument.Contains("Updat")) // Updation and DownloadUpdate
                         {
                             rootFrame.Navigate(typeof(MainPage));
                             rootFrame.Navigate(typeof(About), toastActivationArgs.Argument);
                         }
-                        else if (toastActivationArgs.Argument == "ReinjectionRequired" || toastActivationArgs.Argument == "InjectCMD=Re-Inject;ReinjectionRequired")
+                        else if (toastActivationArgs.Argument.Contains("ReinjectionRequired"))
                         {
                             rootFrame.Navigate(typeof(MainPage));
                             rootFrame.Navigate(typeof(Home), toastActivationArgs.Argument);
@@ -438,7 +489,7 @@ namespace CMDInjector
                         }
                         else
                         {
-                            var cleanToken = AbsoluteURI.Replace("cmdinjector::", "").Replace("cmdinjector:", "");
+                            var cleanToken = AbsoluteURI.Replace("cmdinjector::", "").Replace("cmdinjector:", ""); // ?
                             var strFilePath = await SharedStorageAccessManager.RedeemTokenForFileAsync(cleanToken);
                             if (Path.GetExtension(strFilePath.Path.ToString().ToLower()) == ".xap" || Path.GetExtension(strFilePath.Path.ToString().ToLower()) == ".appx" || Path.GetExtension(strFilePath.Path.ToString().ToLower()) == ".appxbundle" || Path.GetExtension(strFilePath.Path.ToString().ToLower()) == ".xml" || Path.GetExtension(strFilePath.Path).ToLower() == ".pmlog")
                             {
@@ -465,15 +516,16 @@ namespace CMDInjector
                     if (e.Kind == ActivationKind.ToastNotification)
                     {
                         var toastActivationArgs = e as ToastNotificationActivatedEventArgs;
-                        if (toastActivationArgs.Argument == "OpenSnapper" || toastActivationArgs.Argument == "StopSnapper=StopCapturing;OpenSnapper" || toastActivationArgs.Argument == "StopSnapper=StopRecording;OpenSnapper" || toastActivationArgs.Argument == "OpenImage" || toastActivationArgs.Argument == "OpenVideo")
+
+                        if (toastActivationArgs.Argument.Contains("Snapper") || toastActivationArgs.Argument == "OpenImage" || toastActivationArgs.Argument == "OpenVideo")
                         {
                             rootFrame.Navigate(typeof(Snapper), toastActivationArgs.Argument);
                         }
-                        else if (toastActivationArgs.Argument == "Updation" || toastActivationArgs.Argument == "DownloadUpdate")
+                        else if (toastActivationArgs.Argument.Contains("Updat"))
                         {
                             rootFrame.Navigate(typeof(About), toastActivationArgs.Argument);
                         }
-                        else if (toastActivationArgs.Argument == "ReinjectionRequired" || toastActivationArgs.Argument == "InjectCMD=Re-Inject;ReinjectionRequired")
+                        else if (toastActivationArgs.Argument.Contains("ReinjectionRequired"))
                         {
                             rootFrame.Navigate(typeof(Home), toastActivationArgs.Argument);
                         }
@@ -490,7 +542,9 @@ namespace CMDInjector
                         {
                             var cleanToken = AbsoluteURI.Replace("cmdinjector::", "").Replace("cmdinjector:", "");
                             var strFilePath = await SharedStorageAccessManager.RedeemTokenForFileAsync(cleanToken);
-                            if (Path.GetExtension(strFilePath.Path.ToString().ToLower()) == ".xap" || Path.GetExtension(strFilePath.Path.ToString().ToLower()) == ".appx" || Path.GetExtension(strFilePath.Path.ToString().ToLower()) == ".appxbundle" || Path.GetExtension(strFilePath.Path.ToString().ToLower()) == ".xml" || Path.GetExtension(strFilePath.Path).ToLower() == ".pmlog")
+                            var fileExt = Path.GetExtension(strFilePath.Path).ToLower();
+
+                            if (fileExt == ".xap" || fileExt == ".appx" || fileExt == ".appxbundle" || fileExt == ".xml" || fileExt == ".pmlog")
                             {
                                 rootFrame.Navigate(typeof(PacMan), cleanToken);
                             }
@@ -564,7 +618,7 @@ namespace CMDInjector
 
         private async Task<bool> CallLoginPage()
         {
-            if (Helper.build >= 10586 && (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available && Helper.LocalSettingsHelper.LoadSettings("LoginTogReg", true) && !Globals.userVerified)
+            if (Helper.build >= 10586 && (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available && AppSettings.LoadSettings("LoginTogReg", true) && !Globals.userVerified)
             {
                 rootFrame.Navigate(typeof(Login));
                 while (true)

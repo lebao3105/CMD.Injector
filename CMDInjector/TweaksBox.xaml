@@ -299,17 +299,11 @@
                     </StackPanel>
                     <ToggleSwitch Name="GlanceTog" OnContent="Enabled" OffContent="Disabled" Margin="40,-5,0,0" Toggled="GlanceTog_Toggled"/>
                     <TextBlock Text="Font file" FontSize="18" Margin="20,0,0,0"/>
+
                     <ComboBox Name="FontFileBox" Margin="40,0,0,0" MinWidth="150" SelectedIndex="0" SelectionChanged="FontFileBox_SelectionChanged">
                         <ComboBoxItem Content="Select" FontWeight="Bold" IsHitTestVisible="False"/>
-                        <ComboBoxItem Content="WVGA"/>
-                        <ComboBoxItem Content="720P"/>
-                        <ComboBoxItem Content="720p_HI"/>
-                        <ComboBoxItem Content="WXGA"/>
-                        <ComboBoxItem Content="FHD"/>
-                        <ComboBoxItem Content="FHD_HI"/>
-                        <ComboBoxItem Content="WQHD"/>
-                        <ComboBoxItem Content="WQHD_HI"/>
                     </ComboBox>
+                    
                     <TextBlock Text="Font color" FontSize="18" Margin="25,10,0,0"/>
                     <ToggleSwitch Name="FontColorTog" Margin="40,-5,0,0" Toggled="FontColorTog_Toggled"/>
                     <StackPanel Name="GlanceColorStack">
@@ -373,9 +367,11 @@
                         <TimePicker Name="StartTimePkr" Margin="40,0,0,0" Header="Start" ClockIdentifier="24HourClock" TimeChanged="LockscreenTimePkr_TimeChanged"/>
                         <TimePicker Name="StopTimePkr" Margin="40,5,0,0" Header="Stop" ClockIdentifier="24HourClock" TimeChanged="LockscreenTimePkr_TimeChanged"/>
                     </StackPanel>
+                    
                     <TextBlock Text="Disable on battery saver" FontSize="18" Margin="25,5,0,0"/>
                     <ToggleSwitch Name="WallDisBatSavTog" OnContent="Enabled" OffContent="Disabled" Margin="40,-5,0,0" Toggled="WallDisBatSavTog_Toggled"/>
                 </StackPanel>
+                
                 <StackPanel Grid.Row="8" Margin="0,10,0,0">
                     <TextBlock Text="Boot:" FontSize="25" Margin="20,0,0,0"/>
                     <TextBlock Text="Spinning progress" FontSize="18" Margin="25,0,10,0"/>

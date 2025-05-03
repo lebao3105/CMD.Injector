@@ -6,9 +6,7 @@ From the original author, Fadil Fadz:
 > Since the app has reached its goal, I’ve decided to release the source code for the CMD Injector project (from 2021) as a token of remembrance.
 > This was my first project after learning to code, so please excuse the messy code.
 
-Where you are now is a fork of CMD Injector. This is made to make the code cleaner, the UI have some small changes, but also try to make the package smaller with a better speed.
-
-Read the TODO section below.
+Where you are now is a fork of CMD Injector.
 
 ### Disclaimer
 We do not take responsibility for any damage of the phone caused by the app. You are using this app solely at your own risk.
@@ -16,7 +14,7 @@ We do not take responsibility for any damage of the phone caused by the app. You
 
 ### Requirements
 * W10M build 10240 or higher.
-* Interop unlock (Except for `non Lumia X50` devices).
+* Interop unlock (Except for **non Lumia X50** devices).
 
 ### Features
 * Command Prompt console
@@ -26,6 +24,19 @@ We do not take responsibility for any damage of the phone caused by the app. You
 * Customize BCD & install boot app Developer Menu
 * Live lockscreen, auto wallpaper switcher, auto theme switcher and various other tweaks collection
 * And much more
+
+### Remaster:tm: features
+* Relogics(?)
+* Cleaner code
+* Heavy use of Extensions (C# side)
+* Splitted CMDInjectorHelper.Helper class (C# side)
+* Dependencies removal (Registry, OEMSharedFolderAccess)
+* Maybe UI changes?
+* Still no PC+non-ARM (including but NOT limited to ARM64, x86_64) support
+* Documentations for devs
+* Localizations? (will take a LONG while)
+* CMDInjector\\Contents\\ renames (TODO)
+* Throw an error if the Telnet connection gets broken(?, TODO)
 
 ### Screenshots
 <table><tr>
@@ -48,14 +59,8 @@ We do not take responsibility for any damage of the phone caused by the app. You
 ### Video
 [<img src="https://img.youtube.com/vi/BBAlEPMGyg8/hqdefault.jpg" width="450" height="300"/>](https://www.youtube.com/embed/BBAlEPMGyg8)
 
-### TODO
-* Consider between Gus's RegistryRT and WP8NativeAccess's Registry
-* Complete CMDInjectorHelper.Settings class
-* Reduce the amount of nested classes
-* Use switch-case more
-* Modify the UI
-
 ### Thanks
+* [@fadilfadz01](https://github.com/fadilfadz01)
 * [@gus33000](https://github.com/gus33000)
 * [@basharastifan](https://github.com/basharast)
 * GoodDayToDie on XDA Forums for his WP8NativeAccess library

@@ -58,11 +58,11 @@ namespace CMDInjector
         {
             _ = tClient.Connect();
             long i = 0;
-            while (tClient.IsConnected == false && i < 1000000)
+            while (Helper.IsTelnetConnected() == false && i < 1000000)
             {
                 i++;
             }
-            if (!tClient.IsConnected || !HomeHelper.IsConnected())
+            if (!Helper.IsTelnetConnected() || !HomeHelper.IsConnected())
             {
                 AmountBox.IsReadOnly = true;
                 DelayBox.IsReadOnly = true;
@@ -227,7 +227,7 @@ namespace CMDInjector
                         AmountBox.IsEnabled = false;
                         DelayBox.IsEnabled = false;
                         isCapturing = true;
-                        if (Helper.LocalSettingsHelper.LoadSettings("SnapperNotify", true)) Helper.NotificationHelper.PushNotification("Capturing screenshots...", "Snapper", "OpenSnapper", null, int.Parse(AmountBox.Text) * int.Parse(DelayBox.Text) + 5, "Stop Capturing", "StopSnapper", "StopCapturing");
+                        if (AppSettings.LoadSettings("SnapperNotify", true)) Helper.NotificationHelper.PushNotification("Capturing screenshots...", "Snapper", "OpenSnapper", null, int.Parse(AmountBox.Text) * int.Parse(DelayBox.Text) + 5, "Stop Capturing", "StopSnapper", "StopCapturing");
                         ShotsFolder = await SnapPicturesFolder.CreateFolderAsync($"{DateTime.Now:yyyyMMdd_HHmmss}", CreationCollisionOption.OpenIfExists);
                         for (int i = 0; i < Convert.ToInt32(DelayBox.Text); i++)
                         {
@@ -256,7 +256,7 @@ namespace CMDInjector
                         if (BitRateBox.Text != string.Empty && FrameRateBox.Text != string.Empty) RecordBtn.IsEnabled = true;
                         AmountBox.IsEnabled = true;
                         DelayBox.IsEnabled = true;
-                        if (Helper.LocalSettingsHelper.LoadSettings("SnapperNotify", true)) Helper.NotificationHelper.PushNotification("The captured shots has been saved to " + ShotsFolder.Path + ".", "Snapper", "OpenImage", null, 120);
+                        if (AppSettings.LoadSettings("SnapperNotify", true)) Helper.NotificationHelper.PushNotification("The captured shots has been saved to " + ShotsFolder.Path + ".", "Snapper", "OpenImage", null, 120);
                         Helper.BackgroundTaskHelper.ClearSession();
                     }
                     else
@@ -295,7 +295,7 @@ namespace CMDInjector
                             CaptureBtn.IsEnabled = false;
                             FrameRateBox.IsEnabled = false;
                             BitRateBox.IsEnabled = false;
-                            if (Helper.LocalSettingsHelper.LoadSettings("SnapperNotify", true)) Helper.NotificationHelper.PushNotification("Recording screen...", "Snapper", "OpenSnapper", "RecordTag", 1200, "Stop Recording", "StopSnapper", "StopRecording");
+                            if (AppSettings.LoadSettings("SnapperNotify", true)) Helper.NotificationHelper.PushNotification("Recording screen...", "Snapper", "OpenSnapper", "RecordTag", 1200, "Stop Recording", "StopSnapper", "StopRecording");
                             File.Delete($"{Helper.localFolder.Path}\\RecordStop.txt");
                             File.Delete($"{Helper.localFolder.Path}\\RecordEnd.txt");
                             _ = SendCommand(Helper.installedLocation.Path + "\\Contents\\BatchScripts\\SnapperRecorder.bat 5000 0 " + Helper.localFolder.Path + " " + ClipsFolder.Path);
@@ -329,7 +329,7 @@ namespace CMDInjector
                             RecordBtn.IsEnabled = true;
                             FrameRateBox.IsEnabled = true;
                             BitRateBox.IsEnabled = true;
-                            if (Helper.LocalSettingsHelper.LoadSettings("SnapperNotify", true)) Helper.NotificationHelper.PushNotification("The recorded clip has been saved to " + snapVideosFolder.Path + "\\" + videoFilename + ".", "Snapper", "OpenVideo", null, 120);
+                            if (AppSettings.LoadSettings("SnapperNotify", true)) Helper.NotificationHelper.PushNotification("The recorded clip has been saved to " + snapVideosFolder.Path + "\\" + videoFilename + ".", "Snapper", "OpenVideo", null, 120);
                             Helper.BackgroundTaskHelper.ClearSession();
                         }
                         else
@@ -353,7 +353,7 @@ namespace CMDInjector
 
         private void PlaySnapperSound(Helper.SoundHelper.Sound sound)
         {
-            if (Helper.LocalSettingsHelper.LoadSettings("SnapSoundTog", true))
+            if (AppSettings.LoadSettings("SnapSoundTog", true))
             {
                 Helper.SoundHelper.PlaySound(sound);
             }

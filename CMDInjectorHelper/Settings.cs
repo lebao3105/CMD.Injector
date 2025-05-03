@@ -1,79 +1,238 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.UI.Xaml;
 
 namespace CMDInjectorHelper
 {
-    public class Settings
+    public static class AppSettings
     {
+        #region Setters
+        public static void SaveSettings(string key, bool updateValue, string fileName = null)
+        {
+            Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
+        }
+
+        public static void SaveSettings(string key, DateTime updateValue, string fileName = null)
+        {
+            Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
+        }
+
+        public static void SaveSettings(string key, decimal updateValue, string fileName = null)
+        {
+            Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
+        }
+
+        public static void SaveSettings(string key, double updateValue, string fileName = null)
+        {
+            Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
+        }
+
+        public static void SaveSettings(string key, float updateValue, string fileName = null)
+        {
+            Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
+        }
+
+        public static void SaveSettings(string key, int updateValue, string fileName = null)
+        {
+            Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
+        }
+
+        public static void SaveSettings(string key, long updateValue, string fileName = null)
+        {
+            Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
+        }
+
+        public static void SaveSettings(string key, string updateValue, string fileName = null)
+        {
+            Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
+        }
+        #endregion
+
+        #region Getters
+        public static bool LoadSettings(string key, bool defaultValue, string fileName = null)
+        {
+            return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
+        }
+
+        public static DateTime LoadSettings(string key, DateTime defaultValue, string fileName = null)
+        {
+            return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
+        }
+
+        public static decimal LoadSettings(string key, decimal defaultValue, string fileName = null)
+        {
+            return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
+        }
+
+        public static double LoadSettings(string key, double defaultValue, string fileName = null)
+        {
+            return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
+        }
+
+        public static float LoadSettings(string key, float defaultValue, string fileName = null)
+        {
+            return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
+        }
+
+        public static int LoadSettings(string key, int defaultValue, string fileName = null)
+        {
+            return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
+        }
+
+        public static long LoadSettings(string key, long defaultValue, string fileName = null)
+        {
+            return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
+        }
+
+        public static string LoadSettings(string key, string defaultValue, string fileName = null)
+        {
+            return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
+        }
+
+        private static int GetIntValue(string key, int defaultValue = 0) => LoadSettings(key, defaultValue);
+
+        private static bool GetBooleanValue(string key, bool defaultValue = false) => LoadSettings(key, defaultValue);
+
+        private static string GetStringValue(string key, string defaultValue) => LoadSettings(key, defaultValue);
+        #endregion
+
         public static bool AutoThemeMode
         {
             get => GetBooleanValue("AutoThemeMode");
-            set => Helper.LocalSettingsHelper.SaveSettings("AutoThemeMode", value);
+            set => SaveSettings("AutoThemeMode", value);
         }
 
         public static bool GlanceAutoColorEnabled
         {
             get => GetBooleanValue("GlanceAutoColorEnabled");
-            set => Helper.LocalSettingsHelper.SaveSettings("GlanceAutoColorEnabled", value);
+            set => SaveSettings("GlanceAutoColorEnabled", value);
         }
 
         public static int GlanceColorIndex
         {
             get => GetIntValue("GlanceColorIndex");
-            set => Helper.LocalSettingsHelper.SaveSettings("GlanceColorIndex", value);
+            set => SaveSettings("GlanceColorIndex", value);
         }
 
+        #region Automatic wallpaper change
         public static bool StartWallSwitch
         {
             get => GetBooleanValue("StartWallSwitch");
-            set => Helper.LocalSettingsHelper.SaveSettings("StartWallSwitch", value);
+            set => SaveSettings("StartWallSwitch", value);
         }
 
-        public static bool StartWallTrigger
+        public static int StartWallTrigger
         {
-            get => GetBooleanValue("StartWallTrigger");
-            set => Helper.LocalSettingsHelper.SaveSettings("StartWallTrigger", value);
+            get => GetIntValue("StartWallTrigger");
+            set => SaveSettings("StartWallTrigger", value);
         }
 
-        public static TextWrapping CommandsTextWrap
+        public static int StartWallInterval
         {
-            get => GetBooleanValue("CommandsTextWrap") ? TextWrapping.Wrap : TextWrapping.NoWrap;
-            set => Helper.LocalSettingsHelper.SaveSettings("CommandsTextWrap", value == TextWrapping.Wrap);
+            get => GetIntValue("StartWallInterval", 15);
+            set => SaveSettings("StartWallInterval", value);
+        }
+
+        public static string StartWallTime
+        {
+            get => GetStringValue(
+                "StartWallTime",
+                DateTime.Now.Subtract(TimeSpan.FromMinutes(StartWallInterval)).ToString("dd/MM/yy HH:mm:ss")
+            );
+            set => LoadSettings("StartWallTime", value);
+        }
+
+        public static int StartWallImagePosition
+        {
+            get => GetIntValue("StartWallImagePosition");
+            set => SaveSettings("StartWallImagePosition", value);
+        }
+        #endregion
+
+        public static bool CommandsTextWrap
+        {
+            get => GetBooleanValue("CommandsTextWrap");
+            set => SaveSettings("CommandsTextWrap", value);
         }
 
         public static string InitialLaunch
         {
             get => GetStringValue("InitialLaunch", "0.0.0.0");
-            set => Helper.LocalSettingsHelper.SaveSettings("InitialLaunch", value);
+            set => SaveSettings("InitialLaunch", value);
         }
 
         public static bool TempInjection
         {
             get => GetBooleanValue("TempInjection");
-            set => Helper.LocalSettingsHelper.SaveSettings("TempInjection", value);
+            set => SaveSettings("TempInjection", value);
         }
 
 
         public static bool AskCapPermission
         {
             get => GetBooleanValue("AskCapPermission");
-            set => Helper.LocalSettingsHelper.SaveSettings("AskCapPermission", value);
+            set => SaveSettings("AskCapPermission", value);
         }
 
         public static bool FirstLaunch
         {
             get => GetBooleanValue("FirstLaunch", true);
-            set => Helper.LocalSettingsHelper.SaveSettings("FirstLaunch", value);
+            set => SaveSettings("FirstLaunch", value);
         }
 
-        private static int GetIntValue(string key, int defaultValue = 0) => Helper.LocalSettingsHelper.LoadSettings(key, defaultValue);
+        public static string AutoThemeLight
+        {
+            get => GetStringValue("AutoThemeLight", "06:00");
+            set => SaveSettings("AutoThemeLight", value);
+        }
 
-        private static bool GetBooleanValue(string key, bool defaultValue = false) => Helper.LocalSettingsHelper.LoadSettings(key, defaultValue);
+        public static string AutoThemeDark
+        {
+            get => GetStringValue("AutoThemeDark", "18:00");
+            set => SaveSettings("AutoThemeDark", value);
+        }
 
-        private static string GetStringValue(string key, string defaultValue) => Helper.LocalSettingsHelper.LoadSettings(key, defaultValue);
+        public static bool ThemeSettings
+        {
+            get => GetBooleanValue("ThemeSettings");
+            set => SaveSettings("ThemeSettings", value);
+        }
+
+        public static int Theme
+        {
+            get => GetIntValue("Theme");
+            set => SaveSettings("Theme", value);
+        }
+
+        #region Splash screen
+        public static string SplashAnim
+        {
+            get => GetStringValue("SplashAnim", "Glitch");
+            set => SaveSettings("SplashAnim", value);
+        }
+
+        public static bool SplashScreen
+        {
+            get => GetBooleanValue("SlashScreen", true);
+            set => SaveSettings("SplashScreen", value);
+        }
+
+        public static int SplashAnimIndex
+        {
+            get => GetIntValue("SplashAnimIndex");
+            set => SaveSettings("SplashAnimIndex", 0);
+        }
+        #endregion
+
+        public static bool LoginTogReg // <- pretty much a typo?
+        {
+            get => GetBooleanValue("LoginTogReg", true);
+            set => SaveSettings("LoginTogReg", value);
+        }
+
+        public static bool HaveCamera
+        {
+            get => GetBooleanValue("HaveCamera", false);
+            set => SaveSettings("HaveCamera", value);
+        }
     }
 }

@@ -122,6 +122,7 @@ namespace WinUniversalTool
                             Report(ex);
                         }
                     }
+
                     try
                     {
                         AddingTask.SetResult(true);

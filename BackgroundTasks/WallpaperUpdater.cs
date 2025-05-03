@@ -3,10 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net.NetworkInformation;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.System.UserProfile;
 
@@ -24,82 +21,88 @@ namespace BackgroundTasks
 
             Helper.Init();
 
-            if (Settings.GlanceAutoColorEnabled)
+            if (AppSettings.GlanceAutoColorEnabled)
             {
-                int GlanceColorIndex = Settings.GlanceColorIndex;
                 RegEdit.SetRegValueEx(
                     RegistryHive.HKEY_LOCAL_MACHINE,
                     "SOFTWARE\\OEM\\Nokia\\lpm",
                     "ClockAndIndicatorsCustomColor",
                     RegistryType.REG_DWORD,
-                    colors[GlanceColorIndex].ToString()
+                    colors[AppSettings.GlanceColorIndex].ToString()
                 );
-                Settings.GlanceColorIndex = GlanceColorIndex + (GlanceColorIndex < 5).ToInt();
+                AppSettings.GlanceColorIndex += (AppSettings.GlanceColorIndex < 5).ToInt();
             }
 
-            if (Settings.StartWallSwitch)
+            if (AppSettings.StartWallSwitch)
             {
-                if (Settings.StartWallTrigger)
+                if (AppSettings.StartWallTrigger.ToBoolean())
                 {
-                    int interval = Helper.LocalSettingsHelper.LoadSettings("StartWallInterval", 15);
-                    DateTime dateTime = DateTime.ParseExact(Helper.LocalSettingsHelper.LoadSettings("StartWallTime", $"{DateTime.Now.Subtract(TimeSpan.FromMinutes(interval)).ToString("dd/MM/yy HH:mm:ss")}"), "dd/MM/yy HH:mm:ss", CultureInfo.InvariantCulture);
+                    int interval = AppSettings.StartWallInterval;
+
+                    DateTime dateTime = DateTime.ParseExact(
+                        AppSettings.StartWallTime, "dd/MM/yy HH:mm:ss", CultureInfo.InvariantCulture
+                    );
                     DateTime currentTime = DateTime.Now;
+
+                    // Hmm... I am not able to imagine how this really works
+                    // FIXME.
                     if ((currentTime - dateTime).Minutes < interval)
                     {
                         goto Update;
                     }
-                    Helper.LocalSettingsHelper.SaveSettings("StartWallTime", $"{DateTime.Now.ToString("dd/MM/yy HH:mm:ss")}");
+
+                    AppSettings.StartWallTime = currentTime.ToString("dd/MM/yy HH:mm:ss");
                 }
 
                 var library = await TweakBoxHelper.GetWallpaperLibrary();
-                var files = await library.GetFilesAsync();
+                var files = new List<Windows.Storage.StorageFile>( await library.GetFilesAsync() );
 
-                if (Helper.LocalSettingsHelper.LoadSettings("StartWallImagePosition", 0) >= files.Count)
+                if (AppSettings.StartWallImagePosition >= files.Count)
                 {
-                    Helper.LocalSettingsHelper.SaveSettings("StartWallImagePosition", 0);
+                    AppSettings.StartWallImagePosition = 0;
                 }
 
-                int j = 0;
-                for (int i = 0; i < files.Count; i++)
+                // support more?
+                // FIXME
+                List<string> imageExts = new List<string>
                 {
-                    var extension = Path.GetExtension(files[i].Name).ToLower();
+                    ".jpg", ".jpeg", ".png"
+                };
+                
+                var targetFile =
+                    files.Find(elm => imageExts.Contains(Path.GetExtension(elm.Name).ToLower()) &&
+                                      AppSettings.StartWallImagePosition == files.IndexOf(elm));
 
-                    if (extension == ".jpg" || extension == ".jpeg" || extension == ".png")
-                    {
-                        if(Helper.LocalSettingsHelper.LoadSettings("StartWallImagePosition", 0) == j)
-                        {
-                            var newFile = await files[i].CopyAsync(Helper.localFolder, Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + Path.GetExtension(files[i].Path));
-                            UserProfilePersonalizationSettings profileSettings = UserProfilePersonalizationSettings.Current;
-                            var result = await profileSettings.TrySetWallpaperImageAsync(newFile);
-                            Helper.LocalSettingsHelper.SaveSettings("StartWallImagePosition", Helper.LocalSettingsHelper.LoadSettings("StartWallImagePosition", 0) + 1);
-                            await newFile.DeleteAsync();
-                            break;
-                        }
-
-                        j++;
-                    }
-                }
+                var newFile = await targetFile.CopyAsync(
+                    Helper.localFolder,
+                    Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + Path.GetExtension(targetFile.Path)
+                );
+                UserProfilePersonalizationSettings profileSettings = UserProfilePersonalizationSettings.Current;
+                var result = await profileSettings.TrySetWallpaperImageAsync(newFile);
+                AppSettings.StartWallImagePosition += 1;
+                await newFile.DeleteAsync();
             }
-
-            // This is a label, kinda a piece of code that can be resued without creating a function
+            
+            // It is only used once.
+            // FIXME
             Update:
-            if (NetworkInterface.GetIsNetworkAvailable())
-            {
-                var currentTime = DateTime.Now;
-                if (currentTime >= Helper.LocalSettingsHelper.LoadSettings("UpdateNotifyTime", currentTime))
+                if (NetworkInterface.GetIsNetworkAvailable())
                 {
-                    bool isAlreadyExist = Helper.NotificationHelper.IsToastAlreadyThere("CheckUpdateTag");
-                    if (!isAlreadyExist)
+                    var currentTime = DateTime.Now;
+                    if (currentTime >= AppSettings.LoadSettings("UpdateNotifyTime", currentTime))
                     {
-                        var isAvailable = await AboutHelper.IsNewUpdateAvailable();
-                        if (isAvailable != null)
+                        bool isAlreadyExist = Helper.NotificationHelper.IsToastAlreadyThere("CheckUpdateTag");
+                        if (!isAlreadyExist)
                         {
-                            Helper.NotificationHelper.PushNotification("A new version of CMD Injector is available.", "Update Available", "DownloadUpdate", "CheckUpdateTag", 0);
-                            Helper.LocalSettingsHelper.SaveSettings("UpdateNotifyTime", currentTime.AddHours(12));
+                            var isAvailable = await AboutHelper.IsNewUpdateAvailable();
+                            if (isAvailable != null)
+                            {
+                                Helper.NotificationHelper.PushNotification("A new version of CMD Injector is available.", "Update Available", "DownloadUpdate", "CheckUpdateTag", 0);
+                                AppSettings.SaveSettings("UpdateNotifyTime", currentTime.AddHours(12));
+                            }
                         }
                     }
                 }
-            }
 
             _Deferral.Complete();
         }

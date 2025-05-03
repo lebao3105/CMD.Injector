@@ -94,7 +94,7 @@ if exist "%SystemRoot%\System32\CMDUninjector.dat" (
 	del "%SystemRoot%\System32\help.exe"
 	del "%SystemRoot%\System32\HOSTNAME.exe"
 	del "%SystemRoot%\System32\imagex.exe"
-	del "%SystemRoot%\System32\IoTSettings.exe"
+	del "%SystemRoot%\System32\IoTAppSettings.exe"
 	del "%SystemRoot%\System32\IoTShell.exe"
 	del "%SystemRoot%\System32\iotstartup.exe"
 	del "%SystemRoot%\System32\ipconfig.exe"

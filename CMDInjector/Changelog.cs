@@ -98,10 +98,10 @@ namespace CMDInjector
                 textBlock.Inlines.Add(new Run { Text = " • Bug fixes.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Many other improvements.\n\n\n" });
                 textBlock.Inlines.Add(new Run { Text = $"CMD Injector v3.7.5.0\n", FontWeight = Windows.UI.Text.FontWeights.Bold });
-                textBlock.Inlines.Add(new Run { Text = " • Added animated Splashscreen and can be customized from the App settings.\n" });
+                textBlock.Inlines.Add(new Run { Text = " • Added animated Splashscreen and can be customized from the App AppSettings.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Added sound effects for certain actions.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Added automatic system background theme switcher.\n" });
-                textBlock.Inlines.Add(new Run { Text = " • Added night light settings.\n" });
+                textBlock.Inlines.Add(new Run { Text = " • Added night light AppSettings.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Bug fixes.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Many other improvements.\n\n\n" });
                 textBlock.Inlines.Add(new Run { Text = $"CMD Injector v3.7.0.0\n", FontWeight = Windows.UI.Text.FontWeights.Bold });
@@ -229,7 +229,7 @@ namespace CMDInjector
                 textBlock.Inlines.Add(new Run { Text = " • Added XAP package installation feature.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Added advanced screenshot capturing feature.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Added loopback exemption for Windows Universal Tool (WUT) by Bashar Astifan.\n" });
-                textBlock.Inlines.Add(new Run { Text = " • Added various settings.\n" });
+                textBlock.Inlines.Add(new Run { Text = " • Added various AppSettings.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Bug fixes.\n" });
                 textBlock.Inlines.Add(new Run { Text = " • Many other improvements.\n\n\n" });
                 textBlock.Inlines.Add(new Run { Text = "CMD Injector v1.7.6.0\n", FontWeight = Windows.UI.Text.FontWeights.Bold });

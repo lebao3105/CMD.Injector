@@ -39,7 +39,7 @@
                 <!--<TextBlock Text="Q. I have insider build with unlocked bootloader, But why the App is detected as locked? And also can I inject in this case?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="25,10,0,0"/>
                 <TextBlock Text="A. Insider builds are unsupported by the WPinternals and the App only detects properly unlocked Booloader. But it is safe to inject in this case." TextWrapping="Wrap" Margin="25,0,5,0"/>
                 <TextBlock Text="Q. Can I relock the Bootloader once injected the CMD?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="25,10,0,0"/>
-                <TextBlock Text="A. Yes you can. But if you have build 10586 or below, you must have to restore the Security manager driver from the App Settings. Otherwise you will get BSOD during boot." TextWrapping="Wrap" Margin="25,0,5,0"/>
+                <TextBlock Text="A. Yes you can. But if you have build 10586 or below, you must have to restore the Security manager driver from the App AppSettings. Otherwise you will get BSOD during boot." TextWrapping="Wrap" Margin="25,0,5,0"/>
                 <TextBlock Text="Q. Does the CMD works after relock the Bootloader?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="25,10,0,0"/>
                 <TextBlock Text="A. No if you have build 10586 below." TextWrapping="Wrap" Margin="25,0,5,0"/>
                 <TextBlock Text="Q. I have forgotten to restore the Security manager driver before relocking the Bootloader. Now I have getting Sad face :( or BSOD during boot. How can I fix this?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="25,10,0,0"/>
@@ -49,7 +49,7 @@
                 <TextBlock Text="Q. Is it necessary to re-inject the CMD after updating the App?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="25,10,0,0"/>
                 <TextBlock Text="A. If you have already injected once, then yes it is necessary to re-inject to update the CMD components and files to the system." TextWrapping="Wrap" Margin="25,0,5,0"/>
                 <!--<TextBlock Text="Q. How can I remove or uninstall CMD from my device?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="25,10,0,0"/>
-                <TextBlock Text="A. There is no simple solution available, You have to perform a hard reset. Or you can disable the telnet &amp; CMD function by disabling Bootsh from the App settings." TextWrapping="Wrap" Margin="25,0,5,0"/>-->
+                <TextBlock Text="A. There is no simple solution available, You have to perform a hard reset. Or you can disable the telnet &amp; CMD function by disabling Bootsh from the App AppSettings." TextWrapping="Wrap" Margin="25,0,5,0"/>-->
                 <TextBlock Text="Q. What is the solution for the App crashing on launch?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="25,10,0,0"/>
                 <TextBlock Text="A. Make sure the NDTKSvc is restored and reboot the device." TextWrapping="Wrap" Margin="25,0,5,0"/>
                 <!--<TextBlock Text="Q. Why can't I install unsigned appx\bundle and xap packages?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="25,10,0,0"/>

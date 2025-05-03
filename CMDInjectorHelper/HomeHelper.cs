@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CMDInjectorHelper
 {
@@ -89,7 +86,6 @@ namespace CMDInjectorHelper
                 if (!"cmd.exe".IsAFileInSystem32() || !"telnetd.exe".IsAFileInSystem32())
                     return false;
 
-                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh");
                 if (RegEdit.GetRegValue(
                     RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD) == "00000004") return false;
 

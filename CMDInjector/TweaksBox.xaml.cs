@@ -1,47 +1,37 @@
-﻿using System;
+﻿using CMDInjectorHelper;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using Windows.ApplicationModel;
+using Windows.Management.Deployment;
+using Windows.Storage;
+using Windows.Storage.AccessCache;
+using Windows.Storage.Pickers;
+using Windows.System.UserProfile;
+using Windows.UI;
+using Windows.UI.StartScreen;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Storage.Pickers;
-using Windows.Storage;
-using Windows.UI.StartScreen;
-using Windows.Storage.AccessCache;
-using ndtklib;
-using Windows.ApplicationModel;
-using System.Text.RegularExpressions;
-using Registry;
-using Windows.UI;
-using System.Reflection;
 using Windows.UI.Xaml.Shapes;
-using System.Threading;
-using System.Collections.ObjectModel;
-using System.IO.Compression;
-using Windows.UI.ViewManagement;
-using CMDInjectorHelper;
-using WinUniversalTool;
-using Windows.System.UserProfile;
-using System.Xml.Linq;
-using Windows.Management.Deployment;
-
-using RegistryHive = CMDInjectorHelper.RegistryHive;
 
 namespace CMDInjector
 {
     public sealed partial class TweakBox : Page
     {
-        NRPC rpc = new NRPC();
-        NativeRegistry reg = new NativeRegistry();
-        static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        TelnetClient tClient = new TelnetClient(TimeSpan.FromSeconds(1), cancellationTokenSource.Token);
         string[] Paths;
         string TileIcon;
         ObservableCollection<int> glyphUnicodes = new ObservableCollection<int>();
@@ -50,201 +40,196 @@ namespace CMDInjector
         bool flag = false;
         bool secondFlag = false;
 
-        private void Connect()
-        {
-            _ = tClient.Connect();
-            long i = 0;
-            while (tClient.IsConnected == false && i < 1000000)
-            {
-                i++;
-            }
-        }
-
         public TweakBox()
         {
-            this.InitializeComponent();
-            this.NavigationCacheMode = NavigationCacheMode.Enabled;
-            rpc.Initialize();
-            Connect();
-            Init();
+            InitializeComponent();
+            NavigationCacheMode = NavigationCacheMode.Enabled;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            Initialize();
-            if (Helper.LocalSettingsHelper.LoadSettings("UnlockHidden", false))
+            Init();
+
+            if (AppSettings.LoadSettings("UnlockHidden", false))
             {
                 if (Helper.build == 14393)
                 {
-                    UfpModeStack.Visibility = Visibility.Visible;
+                    UfpModeStack.Visible();
                 }
-                SecMgrStack.Visibility = Visibility.Visible;
-                NDTKStack.Visibility = Visibility.Visible;
-                Helper.LocalSettingsHelper.SaveSettings("UnlockHidden", false);
+
+                SecMgrStack.Visible();
+                NDTKStack.Visible();
+
+                AppSettings.SaveSettings("UnlockHidden", false);
             }
             else
             {
-                UfpModeStack.Visibility = Visibility.Collapsed;
-                SecMgrStack.Visibility = Visibility.Collapsed;
-                NDTKStack.Visibility = Visibility.Collapsed;
+                UfpModeStack.Collapse();
+                SecMgrStack.Collapse();
+                NDTKStack.Collapse();
             }
+
+            foreach (var name in Directory.EnumerateFiles($"{Globals.installedLocation.Path}\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4"))
+                FontFileBox.Items.Add(name.Replace("lpmFont_", "").Replace(".bin", ""));
         }
 
         private async void Init()
         {
-            if (tClient.IsConnected && HomeHelper.IsConnected())
+            if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
             {
                 AutoWallTog.IsEnabled = true;
                 DisplayOrient.IsEnabled = true;
             }
 
-            if (Helper.build < 10549)
-            {
-                LiveLockStack.Visibility = Visibility.Collapsed;
-            }
-
-            if (Helper.build < 10570)
-            {
-                SearchOptStack.Visibility = Visibility.Collapsed;
-            }
-
-            if (Helper.build < 14393)
-            {
-                DisplayOrient.IsEnabled = false;
-                GlanceTog.IsEnabled = false;
-                ZipFileBtn.IsEnabled = false;
-            }
-
-            if (Helper.build < 14320)
-            {
-                VolOptStack.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                AUBtn.IsEnabled = false;
-            }
-
-            if (Helper.build < 15063)
-            {
-                NavRoots.Visibility = Visibility.Collapsed;
-            }
-            else
+            if (Helper.build >= 15063)
             {
                 CUBtn.IsEnabled = false;
                 InitializeFolders();
-            }
 
-            if (Helper.build >= 15254)
-            {
-                FCUBtn.IsEnabled = false;
-            }
-
-            if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", RegistryType.REG_SZ).ToLower() == "c:\\windows\\system32\\ndtksvc.dll")
-            {
-                RestoreNDTKTog.IsOn = true;
+                if (Helper.build >= 15254)
+                    FCUBtn.IsEnabled = false;
             }
             else
             {
-                RestoreNDTKTog.IsOn = false;
-            }
+                NavRoots.Collapse();
 
-            TipText.Visibility = Helper.LocalSettingsHelper.LoadSettings("TipSettings", true) ? Visibility.Visible : Visibility.Collapsed;
-
-            if (Helper.LocalSettingsHelper.LoadSettings("StartWallSwitch", false))
-            {
-                StartWallTog.IsOn = true;
-                WallSwitchExtraStack.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                StartWallTog.IsOn = false;
-                WallSwitchExtraStack.Visibility = Visibility.Collapsed;
-            }
-            var libraryPath = (await TweakBoxHelper.GetWallpaperLibrary()).Path;
-            if (libraryPath.Contains(Helper.installedLocation.Path)) StartWallLibPathBox.Text = "CMDInjector:\\Assets\\Images\\Lockscreens\\Stripes";
-            else StartWallLibPathBox.Text = libraryPath;
-            StartWallTrigCombo.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("StartWallTrigger", 0);
-            StartWallInterCombo.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("StartWallInterItem", 0);
-
-            foreach (var color in typeof(Colors).GetRuntimeProperties())
-            {
-                if (color.Name != "AliceBlue" && color.Name != "AntiqueWhite" && color.Name != "Azure" && color.Name != "Beige" && color.Name != "Bisque" && color.Name != "Black" && color.Name != "BlanchedAlmond" && color.Name != "Cornsilk" && color.Name != "FloralWhite" && color.Name != "Gainsboro" && color.Name != "GhostWhite" && color.Name != "Honeydew" && color.Name != "Ivory" && color.Name != "Lavender" && color.Name != "LavenderBlush" && color.Name != "LemonChiffon"
-                && color.Name != "LightCyan" && color.Name != "LightGoldenrodYellow" && color.Name != "LightGray" && color.Name != "LightYellow" && color.Name != "Linen" && color.Name != "MintCream" && color.Name != "MistyRose" && color.Name != "Moccasin" && color.Name != "OldLace" && color.Name != "PapayaWhip" && color.Name != "SeaShell" && color.Name != "Snow" && color.Name != "Transparent" && color.Name != "White" && color.Name != "WhiteSmoke")
+                if (Helper.build < 14393)
                 {
-                    var selectColor = new Rectangle { Width = 20, Height = 20, Margin = new Thickness(0, 0, 10, 0), Fill = new SolidColorBrush((Color)color.GetValue(null)) };
-                    var colorText = new TextBlock { Text = color.Name, VerticalAlignment = VerticalAlignment.Center };
-                    var colorStack = new StackPanel { Orientation = Orientation.Horizontal };
-                    colorStack.Children.Add(selectColor);
-                    colorStack.Children.Add(colorText);
-                    AccentColorCombo.Items.Add(new ComboBoxItem { Content = colorStack });
-                }
-            }
-            foreach (var color in typeof(Colors).GetRuntimeProperties())
-            {
-                if (color.Name != "AliceBlue" && color.Name != "AntiqueWhite" && color.Name != "Azure" && color.Name != "Beige" && color.Name != "Bisque" && color.Name != "Black" && color.Name != "BlanchedAlmond" && color.Name != "Cornsilk" && color.Name != "FloralWhite" && color.Name != "Gainsboro" && color.Name != "GhostWhite" && color.Name != "Honeydew" && color.Name != "Ivory" && color.Name != "Lavender" && color.Name != "LavenderBlush" && color.Name != "LemonChiffon"
-                && color.Name != "LightCyan" && color.Name != "LightGoldenrodYellow" && color.Name != "LightGray" && color.Name != "LightYellow" && color.Name != "Linen" && color.Name != "MintCream" && color.Name != "MistyRose" && color.Name != "Moccasin" && color.Name != "OldLace" && color.Name != "PapayaWhip" && color.Name != "SeaShell" && color.Name != "Snow" && color.Name != "Transparent" && color.Name != "White" && color.Name != "WhiteSmoke")
-                {
-                    var selectColor = new Rectangle { Width = 20, Height = 20, Margin = new Thickness(0, 0, 10, 0), Fill = new SolidColorBrush((Color)color.GetValue(null)) };
-                    var colorText = new TextBlock { Text = color.Name, VerticalAlignment = VerticalAlignment.Center };
-                    var colorStack = new StackPanel { Orientation = Orientation.Horizontal };
-                    colorStack.Children.Add(selectColor);
-                    colorStack.Children.Add(colorText);
-                    AccentColorTwoCombo.Items.Add(new ComboBoxItem { Content = colorStack });
-                }
-            }
+                    DisplayOrient.IsEnabled = false;
+                    GlanceTog.IsEnabled = false;
+                    ZipFileBtn.IsEnabled = false;
 
-            reg.ReadDWORD(Registry.RegistryHive.HKLM, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionBlackReplacementColor", out uint BurnInProtectionBlackReplacementColor);
-            foreach (var color in typeof(Colors).GetRuntimeProperties())
-            {
-                if (color.Name != "AliceBlue" && color.Name != "AntiqueWhite" && color.Name != "Azure" && color.Name != "Beige" && color.Name != "Bisque" && color.Name != "Black" && color.Name != "BlanchedAlmond" && color.Name != "Cornsilk" && color.Name != "FloralWhite" && color.Name != "Gainsboro" && color.Name != "GhostWhite" && color.Name != "Honeydew" && color.Name != "Ivory" && color.Name != "Lavender" && color.Name != "LavenderBlush" && color.Name != "LemonChiffon"
-                && color.Name != "LightCyan" && color.Name != "LightGoldenrodYellow" && color.Name != "LightGray" && color.Name != "LightYellow" && color.Name != "Linen" && color.Name != "MintCream" && color.Name != "MistyRose" && color.Name != "Moccasin" && color.Name != "OldLace" && color.Name != "PapayaWhip" && color.Name != "SeaShell" && color.Name != "Snow" && color.Name != "Transparent" && color.Name != "White" && color.Name != "WhiteSmoke")
-                {
-                    var selectColor = new Rectangle { Width = 20, Height = 20, Margin = new Thickness(0, 0, 10, 0), Fill = new SolidColorBrush((Color)color.GetValue(null)) };
-                    var colorText = new TextBlock { Text = color.Name, VerticalAlignment = VerticalAlignment.Center };
-                    var colorStack = new StackPanel { Orientation = Orientation.Horizontal };
-                    colorStack.Children.Add(selectColor);
-                    colorStack.Children.Add(colorText);
-                    var cbi = new ComboBoxItem { Content = colorStack };
-                    ColorPickCombo.Items.Add(cbi);
-                    SolidColorBrush solidColor = (SolidColorBrush)selectColor.Fill;
-                    if (Convert.ToInt32(solidColor.Color.ToString().Remove(0, 3), 16) == BurnInProtectionBlackReplacementColor)
+                    if (Helper.build < 14320)
                     {
-                        ColorPickCombo.SelectedItem = cbi;
+                        VolOptStack.Collapse();
+
+                        if (Helper.build < 10570)
+                        {
+                            SearchOptStack.Collapse();
+
+                            if (Helper.build < 10549)
+                            {
+                                LiveLockStack.Collapse();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        AUBtn.IsEnabled = false;
                     }
                 }
             }
 
+            RestoreNDTKTog.IsOn =
+                RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE,
+                                    "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path",
+                                    RegistryType.REG_SZ).ToLower() == "c:\\windows\\system32\\ndtksvc.dll";
+
+            TipText.Visibility = AppSettings.LoadSettings("TipSettings", true).ToVisibility();
+
+            if (AppSettings.StartWallSwitch)
+            {
+                StartWallTog.IsOn = true;
+                WallSwitchExtraStack.Visible();
+            }
+            else
+            {
+                StartWallTog.IsOn = false;
+                WallSwitchExtraStack.Collapse();
+            }
+
+            var libraryPath = (await TweakBoxHelper.GetWallpaperLibrary()).Path;
+
+            StartWallLibPathBox.Text = libraryPath.Contains(Helper.installedLocation.Path) ?
+                                            "CMDInjector:\\Assets\\Images\\Lockscreens\\Stripes" :
+                                            libraryPath;
+
+            StartWallTrigCombo.SelectedIndex = AppSettings.StartWallTrigger;
+            StartWallInterCombo.SelectedIndex = AppSettings.StartWallInterval;
+            
+            string BurnInProtectionBlackReplacementColor = RegEdit.GetRegValue("SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionBlackReplacementColor", RegistryType.REG_DWORD);
+
+
+            foreach (var color in typeof(Colors).GetRuntimeProperties().Where(color => !Globals.CursedColors.Contains(color.Name)))
+            {
+                #region
+                var selectColor = new Rectangle { Width = 20, Height = 20, Margin = new Thickness(0, 0, 10, 0), Fill = new SolidColorBrush((Color)color.GetValue(null)) };
+                var colorText = new TextBlock { Text = color.Name, VerticalAlignment = VerticalAlignment.Center };
+                var colorStack = new StackPanel { Orientation = Orientation.Horizontal };
+                colorStack.Children.Add(selectColor);
+                colorStack.Children.Add(colorText);
+
+                AccentColorCombo.Items.Add(new ComboBoxItem { Content = colorStack });
+                #endregion
+
+                #region
+                selectColor = new Rectangle { Width = 20, Height = 20, Margin = new Thickness(0, 0, 10, 0), Fill = new SolidColorBrush((Color)color.GetValue(null)) };
+                colorText = new TextBlock { Text = color.Name, VerticalAlignment = VerticalAlignment.Center };
+                colorStack = new StackPanel { Orientation = Orientation.Horizontal };
+                colorStack.Children.Add(selectColor);
+                colorStack.Children.Add(colorText);
+
+                AccentColorTwoCombo.Items.Add(new ComboBoxItem { Content = colorStack });
+                #endregion
+
+                #region
+                selectColor = new Rectangle { Width = 20, Height = 20, Margin = new Thickness(0, 0, 10, 0), Fill = new SolidColorBrush((Color)color.GetValue(null)) };
+                colorText = new TextBlock { Text = color.Name, VerticalAlignment = VerticalAlignment.Center };
+                colorStack = new StackPanel { Orientation = Orientation.Horizontal };
+
+                colorStack.Children.Add(selectColor);
+                colorStack.Children.Add(colorText);
+
+                var cbi = new ComboBoxItem { Content = colorStack };
+                ColorPickCombo.Items.Add(cbi);
+
+                SolidColorBrush solidColor = (SolidColorBrush)selectColor.Fill;
+
+                if (Convert.ToInt32(solidColor.Color.ToString().Remove(0, 3), 16) == BurnInProtectionBlackReplacementColor.ToUint32())
+                {
+                    ColorPickCombo.SelectedItem = cbi;
+                }
+                #endregion
+            }
+
+            #region
             IEnumerable<Package> allPackages = null;
             await Task.Run(() => { allPackages = new PackageManager().FindPackagesForUserWithPackageTypes("", PackageTypes.Main); });
             SearchAppLoadingProg.Maximum = allPackages.Count();
+
             IProgress<double> progress = new Progress<double>(value =>
             {
                 SearchAppLoadingProg.Value += value;
-                var finalValue = Math.Round(100 * (SearchAppLoadingProg.Value / SearchAppLoadingProg.Maximum));
-                SearchAppLoadingText.Text = $"Loading... {finalValue}%";
+                SearchAppLoadingText.Text = $"Loading... {Math.Round(100 * (SearchAppLoadingProg.Value / SearchAppLoadingProg.Maximum))}%";
             });
+
             var pressFound = false;
             var holdFound = false;
+
             await Task.Run(async () => { Packages = await PacManHelper.GetPackagesByType(PackageTypes.Main, false, progress); });
+
+            var press = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", RegistryType.REG_SZ);
+            var hold = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", RegistryType.REG_SZ);
+
             foreach (var Package in Packages)
             {
                 SearchPressAppsCombo.Items.Add(Package.DisplayName);
                 SearchHoldAppsCombo.Items.Add(Package.DisplayName);
+
                 try
                 {
                     var manifest = await Package.InstalledLocation.GetFileAsync("AppxManifest.xml");
                     var tags = XElement.Load(manifest.Path).Elements().Where(i => i.Name.LocalName == "PhoneIdentity");
                     var attributes = tags.Attributes().Where(i => i.Name.LocalName == "PhoneProductId");
-                    var press = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", RegistryType.REG_SZ);
-                    var hold = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", RegistryType.REG_SZ);
+
                     try
                     {
                         if (pressFound == false)
                         {
-                            if (press == "")
+                            if (string.IsNullOrWhiteSpace(press))
                             {
-                                SearchPressAppsCombo.SelectedIndex = 1;
                                 pressFound = true;
+                                SearchPressAppsCombo.SelectedIndex = 1;
                             }
                             else if (press == "{None}")
                             {
@@ -260,18 +245,14 @@ namespace CMDInjector
                             {
                                 SearchPressAppsCombo.SelectedIndex = 0;
                             }
-                            if (SearchPressAppsCombo.SelectedItem.ToString() == "CMD Injector") SearchPressParaCombo.Visibility = Visibility.Visible;
+
+                            if (SearchPressAppsCombo.SelectedItem.ToString() == "CMD Injector")
+                                SearchPressParaCombo.Visible();
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        //Helper.ThrowException(ex);
-                    }
-                    try
-                    {
+
                         if (holdFound == false)
                         {
-                            if (hold == "")
+                            if (string.IsNullOrWhiteSpace(hold))
                             {
                                 SearchHoldAppsCombo.SelectedIndex = 1;
                                 holdFound = true;
@@ -290,7 +271,8 @@ namespace CMDInjector
                             {
                                 SearchHoldAppsCombo.SelectedIndex = 0;
                             }
-                            if (SearchHoldAppsCombo.SelectedItem.ToString() == "CMD Injector") SearchHoldParaCombo.Visibility = Visibility.Visible;
+                            if (SearchHoldAppsCombo.SelectedItem.ToString() == "CMD Injector")
+                                SearchHoldParaCombo.Visible();
                         }
                     }
                     catch (Exception ex)
@@ -308,7 +290,8 @@ namespace CMDInjector
             SearchPressParaCombo.IsEnabled = true;
             SearchHoldAppsCombo.IsEnabled = true;
             SearchHoldParaCombo.IsEnabled = true;
-            SearchAppLoadStack.Visibility = Visibility.Collapsed;
+            SearchAppLoadStack.Collapse();
+            #endregion
 
             #region Set selected choices
             var pressParam = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppParam", RegistryType.REG_SZ);
@@ -371,47 +354,65 @@ namespace CMDInjector
             }
             #endregion
             secondFlag = true;
-        }
 
-        private async void Initialize()
-        {
             try
             {
-                DisplayOrient.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("OrientSet", 0);
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight", "UserSettingNoBrightnessSettings", RegistryType.REG_DWORD) != string.Empty) BrightTog.IsOn = true;
+                DisplayOrient.SelectedIndex = AppSettings.LoadSettings("OrientSet", 0);
 
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD) == "00000000")
-                {
-                    BackgModeCombo.SelectedIndex = 1;
-                }
-                else
-                {
-                    BackgModeCombo.SelectedIndex = 0;
-                }
-                AutoBackgCombo.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("AutoThemeMode", 0);
-                BackgStartTime.Time = new TimeSpan(Convert.ToInt32(Helper.LocalSettingsHelper.LoadSettings("AutoThemeLight", "06:00").Split(':')[0]), Convert.ToInt32(Helper.LocalSettingsHelper.LoadSettings("AutoThemeLight", "06:00").Split(':')[1]), 00);
-                BackgStopTime.Time = new TimeSpan(Convert.ToInt32(Helper.LocalSettingsHelper.LoadSettings("AutoThemeDark", "18:00").Split(':')[0]), Convert.ToInt32(Helper.LocalSettingsHelper.LoadSettings("AutoThemeDark", "18:00").Split(':')[1]), 00);
+                BrightTog.IsOn = !string.IsNullOrWhiteSpace(
+                    RegEdit.GetRegValue(
+                        RegistryHive.HKEY_LOCAL_MACHINE,
+                        "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight",
+                        "UserSettingNoBrightnessSettings",
+                        RegistryType.REG_DWORD
+                    )
+                );
+                
+                BackgModeCombo.SelectedIndex = RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE,
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme",
+                    "CurrentTheme",
+                    RegistryType.REG_DWORD
+                )
+                        .IsDWORDStrFullZeros()
+                        .ToInt();
+                AutoBackgCombo.SelectedIndex = AppSettings.AutoThemeMode.ToInt();
 
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\DeviceUpdate\\Agent\\Settings", "GuidOfCategoryToScan", RegistryType.REG_SZ) == "F1E8E1CD-9819-4AC5-B0A7-2AFF3D29B46E") UptTog.IsOn = false;
-                else UptTog.IsOn = true;
+                var autoLightSplits = AppSettings.AutoThemeLight.Split(':');
+                var autoDarkSplits = AppSettings.AutoThemeDark.Split(':');
 
-                if (await Helper.IsCapabilitiesAllowed()){
-                    if (File.Exists("C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll") && reg.ReadString(Registry.RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", out string FontFile) && reg.ReadDWORD(Registry.RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "Enabled", out uint GlanceEnabled)) GlanceTog.IsOn = true;
-                    else GlanceTog.IsOn = false;
-                }
-                else
+                BackgStartTime.Time = new TimeSpan(autoLightSplits[0].ToInt32(), autoLightSplits[1].ToInt32(), 00);
+                BackgStopTime.Time = new TimeSpan(autoDarkSplits[0].ToInt32(), autoDarkSplits[1].ToInt32(), 00);
+
+                UptTog.IsOn = RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE,
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\DeviceUpdate\\Agent\\Settings",
+                    "GuidOfCategoryToScan",
+                    RegistryType.REG_SZ
+                ) != "F1E8E1CD-9819-4AC5-B0A7-2AFF3D29B46E";
+
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm");
+                var fontFile = RegEdit.GetRegValue("FontFile", RegistryType.REG_SZ);
+
+                GlanceTog.IsOn = (await Helper.IsCapabilitiesAllowed()) &&
+                                 File.Exists("C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll") &&
+                                 !string.IsNullOrWhiteSpace(fontFile) &&
+                                 !string.IsNullOrWhiteSpace(RegEdit.GetRegValue("Enabled", RegistryType.REG_DWORD));
+
+                // Selected font kind/file
+                int i = 0;
+                foreach (var name in Directory.GetFiles($"{Globals.installedLocation.Path}\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4"))
                 {
-                    GlanceTog.IsOn = false;
+                    if (fontFile == name)
+                        FontFileBox.SelectedIndex = ++i;
                 }
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_WVGA.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 1;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_720P.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 2;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_720P_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 3;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_WXGA.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 4;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_FHD.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 5;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_FHD_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 6;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_WQHD.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 7;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ).IndexOf("lpmFont_WQHD_hi.bin", StringComparison.OrdinalIgnoreCase) >= 0) FontFileBox.SelectedIndex = 8;
-                if (reg.ReadDWORD(Registry.RegistryHive.HKLM, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", out uint ClockAndIndicatorsCustomColor) && ClockAndIndicatorsCustomColor != 0)
+
+                uint ClockAndIndicatorsCustomColor = RegEdit.GetRegValue(
+                    "ClockAndIndicatorsCustomColor",
+                    RegistryType.REG_DWORD
+                ).ToUint32();
+
+                if (ClockAndIndicatorsCustomColor != 0)
                 {
                     FontColorTog.IsOn = true;
                     RedRadio.IsChecked = false;
@@ -420,157 +421,163 @@ namespace CMDInjector
                     MagentaRadio.IsChecked = false;
                     BlueRadio.IsChecked = false;
                     YellowRadio.IsChecked = false;
-                    if (ClockAndIndicatorsCustomColor == 16711680) RedRadio.IsChecked = true;
-                    else if (ClockAndIndicatorsCustomColor == 65280) GreenRadio.IsChecked = true;
-                    else if (ClockAndIndicatorsCustomColor == 255) BlueRadio.IsChecked = true;
-                    else if (ClockAndIndicatorsCustomColor == 65535) CyanRadio.IsChecked = true;
-                    else if (ClockAndIndicatorsCustomColor == 16711935) MagentaRadio.IsChecked = true;
-                    else if (ClockAndIndicatorsCustomColor == 16776960) YellowRadio.IsChecked = true;
-                    GlanceColorStack.Visibility = Visibility.Visible;
+
+                    // Consider using DWORD instead
+                    switch (ClockAndIndicatorsCustomColor)
+                    {
+                        case 16711680: RedRadio.IsChecked = true; break;
+                        case 65280: GreenRadio.IsChecked = true; break;
+                        case 255: BlueRadio.IsChecked = true; break;
+                        case 65535: CyanRadio.IsChecked = true; break;
+                        case 16711935: MagentaRadio.IsChecked = true; break;
+                        case 16776960: YellowRadio.IsChecked = true; break;
+                    }
+                    GlanceColorStack.Visible();
                 }
                 else
                 {
                     FontColorTog.IsOn = false;
-                    GlanceColorStack.Visibility = Visibility.Collapsed;
+                    GlanceColorStack.Collapse();
                 }
-                GlanceAutoColor.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("GlanceAutoColorEnabled", 0);
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("00ff0000", StringComparison.OrdinalIgnoreCase) >= 0) RedRadio.IsChecked = true;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("0000ff00", StringComparison.OrdinalIgnoreCase) >= 0) GreenRadio.IsChecked = true;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("000000ff", StringComparison.OrdinalIgnoreCase) >= 0) BlueRadio.IsChecked = true;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("0000ffff", StringComparison.OrdinalIgnoreCase) >= 0) CyanRadio.IsChecked = true;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("00ff00ff", StringComparison.OrdinalIgnoreCase) >= 0) MagentaRadio.IsChecked = true;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", RegistryType.REG_DWORD).IndexOf("00ffff00", StringComparison.OrdinalIgnoreCase) >= 0) YellowRadio.IsChecked = true;
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", RegistryType.REG_DWORD) == "00000001") MoveClockTog.IsOn = true;
-                else MoveClockTog.IsOn = false;
 
-                if (File.Exists(Helper.localFolder.Path + "\\LiveLockscreen.bat"))
-                {
-                    AutoWallTog.IsOn = true;
-                }
-                if (!File.Exists($"{Helper.localFolder.Path}\\Lockscreen.dat"))
+                GlanceAutoColor.SelectedIndex = AppSettings.GlanceAutoColorEnabled.ToInt();
+                MoveClockTog.IsOn = RegEdit.GetRegValue("MoveClock", RegistryType.REG_DWORD).DWORDFlagToBool();
+
+                #region Automatic wallpaper change
+                AutoWallTog.IsOn = "LiveLockscreen.bat".IsAFileIn(Helper.localFolder.Path);
+
+                // TODO: File write extension
+                if (!"Lockscreen.dat".IsAFileIn(Helper.localFolder.Path))
                 {
                     WallCollectionCombo.SelectedIndex = 0;
-                    await FileIO.WriteTextAsync(await Helper.localFolder.CreateFileAsync("Lockscreen.dat"), $"{Helper.installedLocation.Path}\\Assets\\Images\\Lockscreens\\RedMoon\n65\nTrue\n00:00\n00:00\nTrue");
+                    await FileIO.WriteTextAsync(
+                        await Helper.localFolder.CreateFileAsync("Lockscreen.dat"),
+                        $"{Helper.installedLocation.Path}\\Assets\\Images\\Lockscreens\\RedMoon\n65\nTrue\n00:00\n00:00\nTrue"
+                    );
                 }
-                var LockscreenData = await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"));
-                if (File.ReadLines((await Helper.localFolder.GetFileAsync("Lockscreen.dat")).Path).Count() <= 2)
+
+                var datFile = await Helper.localFolder.GetFileAsync("Lockscreen.dat");
+                // FIXME: will .Split() split lines?
+                var LockscreenData = "Lockscreen.dat".ReadFromDir(Helper.localFolder.Path).Split('\n');
+
+                if (LockscreenData.Count() <= 2)
                 {
-                    await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"), $"{LockscreenData.Split('\n')[0]}\n{LockscreenData.Split('\n')[1]}\nTrue\n00:00\n00:00\nTrue");
+                    await FileIO.WriteTextAsync(datFile, $"{LockscreenData[0]}\n{LockscreenData[1]}\nTrue\n00:00\n00:00\nTrue");
                 }
                 else if (File.ReadLines((await Helper.localFolder.GetFileAsync("Lockscreen.dat")).Path).Count() <= 6)
                 {
-                    await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"), $"{LockscreenData.Split('\n')[0]}\n{LockscreenData.Split('\n')[1]}\n{LockscreenData.Split('\n')[2]}\n{LockscreenData.Split('\n')[3]}\n{LockscreenData.Split('\n')[4]}\nTrue");
+                    await FileIO.WriteTextAsync(datFile, string.Join("\n", Enumerable.Take(LockscreenData, 5)) + "\nTrue");
                 }
-                LockscreenData = await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"));
-                if (System.IO.Path.GetFileName(LockscreenData.Split('\n')[0]) == "RedMoon")
+
+                if (LockscreenData[0].StartsWith(Helper.installedLocation.Path))
                 {
-                    WallCollectionCombo.SelectedIndex = 0;
-                }
-                else if (System.IO.Path.GetFileName(LockscreenData.Split('\n')[0]) == "Flowers")
-                {
-                    WallCollectionCombo.SelectedIndex = 1;
-                }
-                else if (System.IO.Path.GetFileName(LockscreenData.Split('\n')[0]) == "Timelapse")
-                {
-                    WallCollectionCombo.SelectedIndex = 2;
+                    WallCollectionBox.Text = $"CMDInjector:\\Assets\\Images\\Lockscreens\\{System.IO.Path.GetFileName(LockscreenData[0])}";
+
+                    if (LockscreenData[0].Contains("RedMoon"))
+                    {
+                        WallCollectionCombo.SelectedIndex = 0;
+                    }
+                    else if (LockscreenData[0].Contains("Flowers"))
+                    {
+                        WallCollectionCombo.SelectedIndex = 1;
+                    }
+                    else if (LockscreenData[0].Contains("Timelapse"))
+                    {
+                        WallCollectionCombo.SelectedIndex = 2;
+                    }
                 }
                 else
                 {
-                    WallCollectionStack.Visibility = Visibility.Visible;
+                    if (LockscreenData[0].Contains(Helper.localFolder.Path))
+                        WallCollectionBox.Text = $"CMDInjector:\\Library\\{System.IO.Path.GetFileName(LockscreenData[0])}";
+                    else
+                        WallCollectionBox.Text = LockscreenData[0];
+
+                    WallCollectionStack.Visible();
                     WallCollectionCombo.SelectedIndex = 3;
                 }
-                if (LockscreenData.Split('\n')[0].Contains(Helper.localFolder.Path))
-                {
-                    WallCollectionBox.Text = $"CMDInjector:\\Library\\{System.IO.Path.GetFileName(LockscreenData.Split('\n')[0])}";
-                }
-                else if (LockscreenData.Split('\n')[0].Contains(Helper.installedLocation.Path))
-                {
-                    WallCollectionBox.Text = $"CMDInjector:\\Assets\\Images\\Lockscreens\\{System.IO.Path.GetFileName(LockscreenData.Split('\n')[0])}";
-                }
-                else
-                {
-                    WallCollectionBox.Text = LockscreenData.Split('\n')[0];
-                }
-                WallIntervalBox.Text = LockscreenData.Split('\n')[1];
-                if (LockscreenData.Split('\n')[2] == "True")
-                {
-                    WallRevLoopTog.IsOn = true;
-                }
-                if (Helper.LocalSettingsHelper.LoadSettings("ActiveHours", true) && LockscreenData.Split('\n')[3] != LockscreenData.Split('\n')[4])
+
+                WallIntervalBox.Text = LockscreenData[1];
+                WallRevLoopTog.IsOn = LockscreenData[2] == "True";
+
+                if (AppSettings.LoadSettings("ActiveHours", true) && LockscreenData[3] != LockscreenData[4])
                 {
                     ActiveHoursTog.IsOn = true;
-                    ActiveHoursStack.Visibility = Visibility.Visible;
+                    ActiveHoursStack.Visible();
                 }
                 else
                 {
                     ActiveHoursTog.IsOn = false;
-                    ActiveHoursStack.Visibility = Visibility.Collapsed;
+                    ActiveHoursStack.Collapse();
                 }
+
                 if (flag == false)
                 {
                     await Task.Delay(200);
-                    StartTimePkr.Time = new TimeSpan(Convert.ToInt32(LockscreenData.Split('\n')[3].Split(':')[0]), Convert.ToInt32(LockscreenData.Split('\n')[3].Split(':')[1]), 00);
-                    StopTimePkr.Time = new TimeSpan(Convert.ToInt32(LockscreenData.Split('\n')[4].Split(':')[0]), Convert.ToInt32(LockscreenData.Split('\n')[4].Split(':')[1]), 00);
-                }
-                if (LockscreenData.Split('\n')[5] == "True")
-                {
-                    WallDisBatSavTog.IsOn = true;
+
+                    // FIXME: Use TimeSpan.Parse
+                    string[] startTimes = LockscreenData[3].Split(':');
+                    string[] stopTimes  = LockscreenData[4].Split(':');
+
+                    StartTimePkr.Time = new TimeSpan(startTimes[0].ToInt32(), startTimes[1].ToInt32(), 0);
+                    StopTimePkr.Time  = new TimeSpan(stopTimes[0].ToInt32(), stopTimes[1].ToInt32(), 0);
                 }
 
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", RegistryType.REG_BINARY).Contains("01") && RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", RegistryType.REG_BINARY).Contains("01"))
-                {
-                    BootAnimTog.IsOn = false;
-                }
-                else
-                {
-                    BootAnimTog.IsOn = true;
-                }
+                WallDisBatSavTog.IsOn = LockscreenData[5] == "True";
+                #endregion
 
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ) == string.Empty)
-                {
-                    BootImageTog.IsOn = false;
-                }
-                else
-                {
-                    BootImageTog.IsOn = true;
-                }
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ) == string.Empty)
-                {
-                    ShutdownImageTog.IsOn = false;
-                }
-                else
-                {
-                    ShutdownImageTog.IsOn = true;
-                }
+                #region Boot up & Shutdown stuff
+                // Boot animations
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\");
+                BootAnimTog.IsOn = RegEdit.GetRegValue("16000069", "Element", RegistryType.REG_BINARY).Contains("01") &&
+                                   RegEdit.GetRegValue("1600007a", "Element", RegistryType.REG_BINARY).Contains("01");
 
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", RegistryType.REG_DWORD) == "00000001") SoftNavTog.IsOn = true;
-                else SoftNavTog.IsOn = false;
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", RegistryType.REG_DWORD) == "00000001") DoubleTapTog.IsOn = true;
-                else DoubleTapTog.IsOn = false;
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", RegistryType.REG_DWORD) == "00000001") AutoHideTog.IsOn = true;
-                else AutoHideTog.IsOn = false;
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", RegistryType.REG_DWORD) == "00000001") SwipeUpTog.IsOn = true;
-                else SwipeUpTog.IsOn = false;
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", RegistryType.REG_DWORD) == "00000001") UserManagedTog.IsOn = true;
-                else UserManagedTog.IsOn = false;
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", RegistryType.REG_DWORD) == "00000001") BurninProtTog.IsOn = true;
-                else BurninProtTog.IsOn = false;
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", RegistryType.REG_DWORD) != string.Empty)
-                    BurninTimeoutBox.Text = Convert.ToInt32(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", RegistryType.REG_DWORD), 16).ToString();
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", RegistryType.REG_DWORD) != string.Empty)
-                    OpacitySlide.Value = Convert.ToInt32(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", RegistryType.REG_DWORD), 16);
+                // Boot up & Shutdown images
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens");
+                BootImageTog.IsOn = RegEdit.GetRegValue("wpbootscreenoverride", RegistryType.REG_SZ).HasContent();
+                ShutdownImageTog.IsOn = RegEdit.GetRegValue("wpshutdownscreenoverride", RegistryType.REG_SZ).HasContent();
+                #endregion
 
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "00000004") TileCombo.SelectedIndex = 0;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "00000006") TileCombo.SelectedIndex = 1;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "00000008") TileCombo.SelectedIndex = 2;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "0000000a") TileCombo.SelectedIndex = 3;
-                else if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", RegistryType.REG_DWORD) == "0000000c") TileCombo.SelectedIndex = 4;
+                #region Navigation bar
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\NavigationBar");
+
+                SoftNavTog.IsOn = RegEdit.GetRegValue("SoftwareModeEnabled", RegistryType.REG_DWORD).DWORDFlagToBool();
+                DoubleTapTog.IsOn = RegEdit.GetRegValue("IsDoubleTapOffEnabled", RegistryType.REG_DWORD).DWORDFlagToBool();
+                AutoHideTog.IsOn = RegEdit.GetRegValue("IsAutoHideEnabled", RegistryType.REG_DWORD).DWORDFlagToBool();
+                SwipeUpTog.IsOn = RegEdit.GetRegValue("IsSwipeUpToHideEnabled", RegistryType.REG_DWORD).DWORDFlagToBool();
+                UserManagedTog.IsOn = RegEdit.GetRegValue("IsUserManaged", RegistryType.REG_DWORD).DWORDFlagToBool();
+                BurninProtTog.IsOn = RegEdit.GetRegValue("IsBurnInProtectionEnabled", RegistryType.REG_DWORD).DWORDFlagToBool();
+                BurninTimeoutBox.Text = Convert.ToInt32(RegEdit.GetRegValue("BurnInProtectionIdleTimerTimeout", RegistryType.REG_DWORD), 16).ToString();
+                OpacitySlide.Value = Convert.ToInt32(RegEdit.GetRegValue("BurnInProtectionIconsOpacity", RegistryType.REG_DWORD), 16);
+                #endregion
+
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Shell\\Start");
+                switch (RegEdit.GetRegValue("TileColumnSize", RegistryType.REG_DWORD))
+                {
+                    case "00000004":
+                        TileCombo.SelectedIndex = 0;
+                        break;
+                    case "00000006":
+                        TileCombo.SelectedIndex = 1;
+                        break;
+                    case "00000008":
+                        TileCombo.SelectedIndex = 2;
+                        break;
+                    case "0000000a":
+                        TileCombo.SelectedIndex = 3;
+                        break;
+                    case "0000000c":
+                        TileCombo.SelectedIndex = 4;
+                        break;
+                }
 
                 if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Camera\\Barc", "DNGDisabled", RegistryType.REG_DWORD) == "00000000") DngTog.IsOn = true;
 
                 VirtualMemBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Control\\Session Manager\\Memory Management", "PagingFiles", RegistryType.REG_MULTI_SZ);
 
-                switch (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpType", RegistryType.REG_DWORD))
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps");
+
+                switch (RegEdit.GetRegValue("DumpType", RegistryType.REG_DWORD))
                 {
                     case "00000000":
                         DumpTypeCombo.SelectedIndex = 0;
@@ -585,7 +592,8 @@ namespace CMDInjector
                         DumpTypeCombo.SelectedIndex = 0;
                         break;
                 }
-                switch (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", RegistryType.REG_DWORD))
+
+                switch (RegEdit.GetRegValue("DumpCount", RegistryType.REG_DWORD))
                 {
                     case "":
                         DumpCountCombo.SelectedIndex = 0;
@@ -625,7 +633,7 @@ namespace CMDInjector
                         DumpCountCombo.SelectedIndex = 9;
                         break;
                 }
-                DumpFolderBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", RegistryType.REG_MULTI_SZ);
+                DumpFolderBox.Text = RegEdit.GetRegValue("DumpFolder", RegistryType.REG_MULTI_SZ);
 
                 flag = true;
             }
@@ -641,28 +649,33 @@ namespace CMDInjector
             CustomPath.Click += Items_Click;
             CustomPath.Text = "Custom Location";
             AddFlyMenu.Items.Add(CustomPath);
-            if (!RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ).Contains("shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}"))
+
+            var navRoots = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ);
+
+            if (!navRoots.Contains("shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}"))
             {
                 MenuFlyoutItem Recent = new MenuFlyoutItem();
                 Recent.Click += Items_Click;
                 Recent.Text = "Recent";
                 AddFlyMenu.Items.Add(Recent);
             }
-            if (!RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ).Contains("knownfolder:{1C2AC1DC-4358-4B6C-9733-AF21156576F0}"))
+
+            if (!navRoots.Contains("knownfolder:{1C2AC1DC-4358-4B6C-9733-AF21156576F0}"))
             {
                 MenuFlyoutItem ThisDevice = new MenuFlyoutItem();
                 ThisDevice.Click += Items_Click;
                 ThisDevice.Text = "This Device";
                 AddFlyMenu.Items.Add(ThisDevice);
             }
-            if (!RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ).Contains("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}"))
+            if (!navRoots.Contains("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}"))
             {
                 MenuFlyoutItem ThisPC = new MenuFlyoutItem();
                 ThisPC.Click += Items_Click;
                 ThisPC.Text = "This PC";
                 AddFlyMenu.Items.Add(ThisPC);
             }
-            string[] NavigationRoots = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config", "NavigationRoots", RegistryType.REG_SZ).Split(';');
+
+            string[] NavigationRoots = navRoots.Split(';');
             if (NavigationRoots.Length <= 1)
             {
                 RemoveBtn.IsEnabled = false;
@@ -673,6 +686,7 @@ namespace CMDInjector
                 RemoveBtn.IsEnabled = true;
                 MoveUpBtn.IsEnabled = true;
             }
+
             Paths = new string[NavigationRoots.Length];
             for (int i = 0; i < NavigationRoots.Length; i++)
             {
@@ -729,7 +743,7 @@ namespace CMDInjector
             }
             else if (clickedItem.Text == "This PC")
             {
-                rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 4, BitConverter.GetBytes(uint.Parse("57873")));
+                Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 4, BitConverter.GetBytes(uint.Parse("57873")));
             }
             RootOrderList.Items.Add(clickedItem.Text);
             AddFlyMenu.Items.Remove(clickedItem);
@@ -761,7 +775,7 @@ namespace CMDInjector
                 StorageFolder CustomFolder = await folderPicker.PickSingleFolderAsync();
                 if (CustomFolder != null)
                 {
-                    rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", CustomFolder.Path, 4, BitConverter.GetBytes(uint.Parse("60737")));
+                    Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", CustomFolder.Path, 4, BitConverter.GetBytes(uint.Parse("60737")));
                     string value;
                     if (CustomFolder.Path.Equals("shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}", StringComparison.CurrentCultureIgnoreCase)) value = "MainOS (C:)";
                     if (CustomFolder.Path.Equals("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", StringComparison.CurrentCultureIgnoreCase)) value = "This PC";
@@ -800,7 +814,7 @@ namespace CMDInjector
                             {
                                 inputTextBox.Text = inputTextBox.Text.Remove(inputTextBox.Text.Length - 1);
                             }
-                            rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", inputTextBox.Text, 4, BitConverter.GetBytes(uint.Parse("60737")));
+                            Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", inputTextBox.Text, 4, BitConverter.GetBytes(uint.Parse("60737")));
                             if (inputTextBox.Text.Equals("C:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "MainOS (C:)";
                             else if (inputTextBox.Text.Equals("U:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "Data (U:)";
                             else if (inputTextBox.Text.Equals("D:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "SD Card (D:)";
@@ -819,7 +833,7 @@ namespace CMDInjector
                     {
                         inputTextBox.Text = inputTextBox.Text.Remove(inputTextBox.Text.Length - 1);
                     }
-                    rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", inputTextBox.Text, 4, BitConverter.GetBytes(uint.Parse("60737")));
+                    Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", inputTextBox.Text, 4, BitConverter.GetBytes(uint.Parse("60737")));
                     if (inputTextBox.Text.Equals("C:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "MainOS (C:)";
                     else if (inputTextBox.Text.Equals("U:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "Data (U:)";
                     else if (inputTextBox.Text.Equals("D:", StringComparison.CurrentCultureIgnoreCase)) inputTextBox.Text = "SD Card (D:)";
@@ -908,7 +922,7 @@ namespace CMDInjector
                     if (glyphUnicodes[i] == Convert.ToInt32(RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, RegistryType.REG_DWORD), 16))
                     {
                         FolderIconCombo.SelectedIndex = i;
-                        rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[i].ToString())));
+                        Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[i].ToString())));
                         break;
                     }
                     else
@@ -930,7 +944,7 @@ namespace CMDInjector
                 else if (SelFoldUri.Equals("MainOS (C:)", StringComparison.CurrentCultureIgnoreCase)) SelFoldUri = "C:";
                 else if (SelFoldUri.Equals("Data (U:)", StringComparison.CurrentCultureIgnoreCase)) SelFoldUri = "U:";
                 else if (SelFoldUri.Equals("SD Card (D:)", StringComparison.CurrentCultureIgnoreCase)) SelFoldUri = "D:";
-                rpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[FolderIconCombo.SelectedIndex].ToString())));
+                Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Windows\\CurrentVersion\\FileExplorer\\Config\\FolderIconCharacters", SelFoldUri, 4, BitConverter.GetBytes(uint.Parse(glyphUnicodes[FolderIconCombo.SelectedIndex].ToString())));
             }
         }
 
@@ -965,18 +979,39 @@ namespace CMDInjector
                         if (displayName.Text != string.Empty)
                         {
                             StorageApplicationPermissions.FutureAccessList.AddOrReplace(displayName.Text, PinTile);
-                            if (displayName.Text.ToUpper().Contains("DOCUMENT")) TileIcon = "ms-appx:///Assets/Icons/Folders/DocumentsFolderTileLogo.png";
-                            else if (displayName.Text.ToUpper().Contains("DOWNLOAD")) TileIcon = "ms-appx:///Assets/Icons/Folders/DownloadsFolderTileLogo.png";
-                            else if (displayName.Text.ToUpper().Contains("FAVORITE")) TileIcon = "ms-appx:///Assets/Icons/Folders/FavoritesFolderTileLogo.png";
-                            else if (displayName.Text.ToUpper().Contains("GAME") || displayName.Text.ToUpper().Contains("APP")) TileIcon = "ms-appx:///Assets/Icons/Folders/GamesFolderTileLogo.png";
-                            else if (displayName.Text.ToUpper().Contains("MUSIC") || displayName.Text.ToUpper().Contains("SONG")) TileIcon = "ms-appx:///Assets/Icons/Folders/MusicFolderTileLogo.png";
-                            else if (displayName.Text.ToUpper().Contains("PICTURE") || displayName.Text.ToUpper().Contains("IMAGE") || displayName.Text.ToUpper().Contains("PHOTO")) TileIcon = "ms-appx:///Assets/Icons/Folders/PicturesFolderTileLogo.png";
-                            else if (displayName.Text.ToUpper().Contains("USER") || displayName.Text.ToUpper().Contains("MY ")) TileIcon = "ms-appx:///Assets/Icons/Folders/UserFolderTileLogo.png";
-                            else if (displayName.Text.ToUpper().Contains("VIDEO") || displayName.Text.ToUpper().Contains("MOVIE") || displayName.Text.ToUpper().Contains("FILM")) TileIcon = "ms-appx:///Assets/Icons/Folders/VideosFolderTileLogo.png";
-                            else TileIcon = "ms-appx:///Assets/Icons/Folders/ExplorerFolderTileLogo.png";
+                            string upperedName = displayName.ToString().ToUpper();
+
+                            if (upperedName.Contains("DOCUMENT"))
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/DocumentsFolderTileLogo.png";
+
+                            else if (upperedName.Contains("DOWNLOAD"))
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/DownloadsFolderTileLogo.png";
+
+                            else if (upperedName.Contains("FAVORITE"))
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/FavoritesFolderTileLogo.png";
+
+                            else if (upperedName.Contains("GAME") || upperedName.Contains("APP"))
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/GamesFolderTileLogo.png";
+
+                            else if (upperedName.Contains("MUSIC") || upperedName.Contains("SONG"))
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/MusicFolderTileLogo.png";
+
+                            else if (upperedName.Contains("PICTURE") || upperedName.Contains("IMAGE") || upperedName.Contains("PHOTO"))
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/PicturesFolderTileLogo.png";
+
+                            else if (upperedName.Contains("USER") || upperedName.Contains("MY "))
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/UserFolderTileLogo.png";
+
+                            else if (upperedName.Contains("VIDEO") || upperedName.Contains("MOVIE") || upperedName.Contains("FILM"))
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/VideosFolderTileLogo.png";
+                            else
+                                TileIcon = "ms-appx:///Assets/Icons/Folders/ExplorerFolderTileLogo.png";
+
                             var FolderTile = new SecondaryTile(Regex.Replace(displayName.Text, "[^A-Za-z0-9]", ""), displayName.Text, displayName.Text, new Uri(TileIcon), TileSize.Default);
+
                             FolderTile.VisualElements.ShowNameOnSquare150x150Logo = true;
                             FolderTile.VisualElements.ShowNameOnWide310x150Logo = true;
+
                             await FolderTile.RequestCreateAsync();
                         }
                         else
@@ -994,20 +1029,10 @@ namespace CMDInjector
         {
             if (flag == true)
             {
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
-                    if (DisplayOrient.SelectedIndex == 0)
-                    {
-                        Helper.LocalSettingsHelper.SaveSettings("OrientSet", DisplayOrient.SelectedIndex);
-                        //await Task.Delay(100);
-                        _ = tClient.Send("setDisplayResolution.exe -Orientation:0");
-                    }
-                    else
-                    {
-                        Helper.LocalSettingsHelper.SaveSettings("OrientSet", DisplayOrient.SelectedIndex);
-                        //await Task.Delay(100);
-                        _ = tClient.Send("setDisplayResolution.exe -Orientation:180");
-                    }
+                    AppSettings.SaveSettings("OrientSet", DisplayOrient.SelectedIndex);
+                    Helper.Send($"setDisplayResolution.exe -Orientation:{(DisplayOrient.SelectedIndex == 0 ? 0 : 180)}");
                 }
                 else
                 {
@@ -1020,13 +1045,13 @@ namespace CMDInjector
         {
             if (BrightTog.IsOn)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight", "UserSettingNoBrightnessSettings", 4, BitConverter.GetBytes(uint.Parse("1")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight", "UserSettingNoBrightnessSettings", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
-                    _ = tClient.Send("reg delete HKLM\\SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight /v UserSettingNoBrightnessSettings /f");
+                    RegEdit.DeleteRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\OEM\\NOKIA\\Display\\ColorAndLight", "UserSettingNoBrightnessSettings");
                 }
                 else
                 {
@@ -1035,7 +1060,7 @@ namespace CMDInjector
             }
             if (flag == true)
             {
-                BrightTogIndicator.Visibility = Visibility.Visible;
+                BrightTogIndicator.Visible();
             }
         }
 
@@ -1055,31 +1080,33 @@ namespace CMDInjector
         {
             try
             {
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
-                    await tClient.Send($"reg export HKLM\\System\\Platform\\DeviceTargetingInfo {Helper.localFolder.Path}\\DeviceTargetingInfo.reg");
+                    await Helper.Send($"reg export HKLM\\System\\Platform\\DeviceTargetingInfo {Helper.localFolder.Path}\\DeviceTargetingInfo.reg");
                 }
-                string path = "System\\Platform\\DeviceTargetingInfo";
-                Button button = sender as Button;
-                if (button.Content as string == "Anniversary Update")
+                RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Platform\\DeviceTargetingInfo");
+
+                switch ((sender as Button).Content as string)
                 {
-                    RegEdit.SetHKLMValue(path, "PhoneManufacturer", RegistryType.REG_SZ, "NOKIA");
-                    RegEdit.SetHKLMValue(path, "PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1045_1083");
-                    RegEdit.SetHKLMValue(path, "PhoneModelName", RegistryType.REG_SZ, "Lumia 930");
+                    case "Anniversary Update":
+                        RegEdit.SetRegValue("PhoneManufacturer", RegistryType.REG_SZ, "NOKIA");
+                        RegEdit.SetRegValue("PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1045_1083");
+                        RegEdit.SetRegValue("PhoneModelName", RegistryType.REG_SZ, "Lumia 930");
+                        break;
+
+                    case "Creator Update":
+                        RegEdit.SetRegValue("PhoneManufacturer", RegistryType.REG_SZ, "NOKIA");
+                        RegEdit.SetRegValue("PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1096_1002");
+                        RegEdit.SetRegValue("PhoneModelName", RegistryType.REG_SZ, "RM-1096");
+                        break;
+
+                    case "Fall Creator Update":
+                        RegEdit.SetRegValue("PhoneManufacturer", RegistryType.REG_SZ, "MicrosoftMDG");
+                        RegEdit.SetRegValue("PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1116_11258");
+                        RegEdit.SetRegValue("PhoneModelName", RegistryType.REG_SZ, "Lumia 950 XL");
+                        break;
                 }
-                else if (button.Content as string == "Creator Update")
-                {
-                    RegEdit.SetHKLMValue(path, "PhoneManufacturer", RegistryType.REG_SZ, "NOKIA");
-                    RegEdit.SetHKLMValue(path, "PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1096_1002");
-                    RegEdit.SetHKLMValue(path, "PhoneModelName", RegistryType.REG_SZ, "RM-1096");
-                }
-                else if (button.Content as string == "Fall Creator Update")
-                {
-                    RegEdit.SetHKLMValue(path, "PhoneManufacturer", RegistryType.REG_SZ, "MicrosoftMDG");
-                    RegEdit.SetHKLMValue(path, "PhoneManufacturerModelName", RegistryType.REG_SZ, "RM-1116_11258");
-                    RegEdit.SetHKLMValue(path, "PhoneModelName", RegistryType.REG_SZ, "Lumia 950 XL");
-                }
-                await Helper.MessageBox($"Now you can able to update to {button.Content as string} from the Windows Update settings.", Helper.SoundHelper.Sound.Alert, "Success");
+                await Helper.MessageBox("Now you can update your phone to your desired version. Make sure to have free storage for the update.", Helper.SoundHelper.Sound.Alert, "Success");
             }
             catch (Exception ex) { Helper.ThrowException(ex); }
         }
@@ -1088,61 +1115,27 @@ namespace CMDInjector
         {
             try
             {
-                if (flag == true && GlanceTog.IsOn)
+                if (flag && GlanceTog.IsOn)
                 {
-                    if (!await Helper.IsCapabilitiesAllowed())
+                    if (!await Helper.IsCapabilitiesAllowed() && !await Helper.AskCapabilitiesPermission())
                     {
-                        if (!await Helper.AskCapabilitiesPermission())
-                        {
-                            GlanceTog.IsOn = false;
-                            return;
-                        }
+                        GlanceTog.IsOn = false;
+                        return;
                     }
-                    Directory.CreateDirectory("C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\NsgGlance_NlpmService_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll", "C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P.bin");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin");
-                    FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin");
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "PluginPath", 1, Encoding.Unicode.GetBytes("\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll" + '\0'));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Path", 1, Encoding.Unicode.GetBytes("C:\\Data\\SharedData\\OEM\\Public\\NsgGlance_NlpmService_4.1.12.4.dll" + '\0'));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Version", 1, Encoding.Unicode.GetBytes("4.1.12.4" + '\0'));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "PluginVersion", 1, Encoding.Unicode.GetBytes("4.1.12.4" + '\0'));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "Enabled", 4, BitConverter.GetBytes(uint.Parse("1")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "UsingBeta", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgGlance\\NlpmService", "UseBeta", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AlwaysOnInCharger", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AppGraphicTimeout", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "BSSwitchOffTimeout", 4, BitConverter.GetBytes(uint.Parse("30")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkMode", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeElements", 4, BitConverter.GetBytes(uint.Parse("15")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeEnd", 4, BitConverter.GetBytes(uint.Parse("420")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeOverrideColor", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeStart", 4, BitConverter.GetBytes(uint.Parse("1320")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DarkModeThreshold", 4, BitConverter.GetBytes(uint.Parse("20000")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "DoubleTapEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "Enabled", 4, BitConverter.GetBytes(uint.Parse("1")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MinimizeIcon", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "Mode", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "NormalModeElements", 4, BitConverter.GetBytes(uint.Parse("31")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SwipeEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SwitchOffTimeout", 4, BitConverter.GetBytes(uint.Parse("15")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "PanelType", 4, BitConverter.GetBytes(uint.Parse("1")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ShowDetailedAppStatus", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ShowSystemNotifications", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", 1, Encoding.Unicode.GetBytes("\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_wxga.bin" + '\0'));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "AppGraphicGestures", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SingleTapWakeup", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "EnablePublicSDK", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "SupportedTouchEvents", 4, BitConverter.GetBytes(uint.Parse("0")));
-                    rpc.RegSetValue(1, "SYSTEM\\CurrentControlSet\\Services\\NlpmService", "ImagePath", 2, Encoding.Unicode.GetBytes("C:\\windows\\System32\\OEMServiceHost.exe -k NsgGlance" + '\0'));
+
+                    string OEMPublicPath = "C:\\Data\\SharedData\\OEM\\Public";
+                    Directory.CreateDirectory($"{OEMPublicPath}\\lpmFonts_4.1.12.4");
+
+                    foreach (var name in Directory.GetFiles($"{Globals.installedLocation.Path}\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4"))
+                        FilesHelper.CopyFileToDir(name, $"{OEMPublicPath}\\lpmFonts_4.1.12.4");
+
+                    FilesHelper.CopyFromAppRoot("Contents\\GlanceScreen\\NsgGlance_NlpmService_4.1.12.4.dll", OEMPublicPath);
+                    FilesHelper.CopyFromAppRoot("Contents\\GlanceScreen\\NsgGlance_NlpmServiceImpl_4.1.12.4.dll", OEMPublicPath);
+
+                    await Helper.Send($"reg import {Globals.installedLocation.Path}\\Contents\\GlanceScreen\\Enable.reg");
+                   
                     FontFileBox.SelectedIndex = 3;
-                    RestoreGlanceIndicator.Visibility = Visibility.Visible;
+                    RestoreGlanceIndicator.Visible();
                 }
                 else
                 {
@@ -1154,31 +1147,27 @@ namespace CMDInjector
 
         private void FontFileBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (FontFileBox.SelectedIndex == 1) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WVGA.bin");
-            else if (FontFileBox.SelectedIndex == 2) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P.bin");
-            else if (FontFileBox.SelectedIndex == 3) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_720P_hi.bin");
-            else if (FontFileBox.SelectedIndex == 4) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WXGA.bin");
-            else if (FontFileBox.SelectedIndex == 5) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD.bin");
-            else if (FontFileBox.SelectedIndex == 6)
-            {
-                FilesHelper.CopyFromAppRoot("\\GlanceScreen\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin", "C:\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
-                RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_FHD_hi.bin");
-            }
-            else if (FontFileBox.SelectedIndex == 7) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD.bin");
-            else if (FontFileBox.SelectedIndex == 8) RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\lpm", "FontFile", RegistryType.REG_SZ, "\\Data\\SharedData\\OEM\\Public\\lpmFonts_4.1.12.4\\lpmFont_WQHD_hi.bin");
+            RegEdit.SetHKLMValue(
+                "SOFTWARE\\OEM\\Nokia\\lpm",
+                "FontFile",
+                RegistryType.REG_SZ,
+                Directory.GetFiles(
+                    $"{Globals.installedLocation.Path}\\Contents\\GlanceScreen\\lpmFonts_4.1.12.4"
+                )[FontFileBox.SelectedIndex - 1]
+            );
         }
 
         private void FontColorTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (FontColorTog.IsOn)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711680")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711680")));
                 RedRadio.IsChecked = true;
-                GlanceColorStack.Visibility = Visibility.Visible;
+                GlanceColorStack.Visible();
             }
             else
             {
-                rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("0")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("0")));
                 GlanceAutoColor.SelectedIndex = 0;
                 RedRadio.IsChecked = false;
                 GreenRadio.IsChecked = false;
@@ -1186,36 +1175,36 @@ namespace CMDInjector
                 CyanRadio.IsChecked = false;
                 MagentaRadio.IsChecked = false;
                 YellowRadio.IsChecked = false;
-                GlanceColorStack.Visibility = Visibility.Collapsed;
+                GlanceColorStack.Collapse();
             }
         }
 
         private void GlanceAutoColor_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (flag)
-                Helper.LocalSettingsHelper.SaveSettings("GlanceAutoColorEnabled", GlanceAutoColor.SelectedIndex);
+                AppSettings.SaveSettings("GlanceAutoColorEnabled", GlanceAutoColor.SelectedIndex);
         }
 
         private void FontColor_Checked(object sender, RoutedEventArgs e)
         {
             RadioButton rb = sender as RadioButton;
-            if (rb.Content as string == "Red") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711680")));
-            else if (rb.Content as string == "Green") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("65280")));
-            else if (rb.Content as string == "Blue") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("255")));
-            else if (rb.Content as string == "Cyan") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("65535")));
-            else if (rb.Content as string == "Magenta") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711935")));
-            else if (rb.Content as string == "Yellow") rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16776960")));
+            if (rb.Content as string == "Red") Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711680")));
+            else if (rb.Content as string == "Green") Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("65280")));
+            else if (rb.Content as string == "Blue") Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("255")));
+            else if (rb.Content as string == "Cyan") Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("65535")));
+            else if (rb.Content as string == "Magenta") Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16711935")));
+            else if (rb.Content as string == "Yellow") Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "ClockAndIndicatorsCustomColor", 4, BitConverter.GetBytes(uint.Parse("16776960")));
         }
 
         private void MoveClockTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (MoveClockTog.IsOn)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", 4, BitConverter.GetBytes(uint.Parse("1")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", 4, BitConverter.GetBytes(uint.Parse("0")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\OEM\\Nokia\\lpm", "MoveClock", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
         }
 
@@ -1227,13 +1216,13 @@ namespace CMDInjector
                 {
                     if (flag == true)
                     {
-                        Helper.LocalSettingsHelper.SaveSettings("BackupCurrentWall", RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Wallpaper", "CurrentWallpaper", RegistryType.REG_SZ));
+                        AppSettings.SaveSettings("BackupCurrentWall", RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Shell\\Wallpaper", "CurrentWallpaper", RegistryType.REG_SZ));
                         var currentLibrary = await StorageFolder.GetFolderFromPathAsync((await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[0]);
                         FilesHelper.CopyFile((await currentLibrary.GetFilesAsync())[0].Path, $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName((await currentLibrary.GetFilesAsync())[0].Path)}");
                         UserProfilePersonalizationSettings profileSettings = UserProfilePersonalizationSettings.Current;
                         await profileSettings.TrySetLockScreenImageAsync(await Helper.localFolder.GetFileAsync($"{System.IO.Path.GetFileName((await currentLibrary.GetFilesAsync())[0].Path)}"));
-                        rpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\BatchScripts\\LiveLockscreen.bat", Helper.localFolder.Path + "\\LiveLockscreen.bat", 0);
-                        _ = tClient.Send("start " + Helper.localFolder.Path + "\\LiveLockscreen.bat");
+                        Globals.nrpc.FileCopy(Helper.installedLocation.Path + "\\Contents\\BatchScripts\\LiveLockscreen.bat", Helper.localFolder.Path + "\\LiveLockscreen.bat", 0);
+                        Helper.Send("start " + Helper.localFolder.Path + "\\LiveLockscreen.bat");
                     }
                 }
                 else
@@ -1244,12 +1233,12 @@ namespace CMDInjector
                     }
                     if (flag == true)
                     {
-                        if (Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null) != null)
+                        if (AppSettings.LoadSettings("BackupCurrentWall", null) != null)
                         {
-                            FilesHelper.CopyFile(Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null), $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName(Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null))}");
+                            FilesHelper.CopyFile(AppSettings.LoadSettings("BackupCurrentWall", null), $"{Helper.localFolder.Path}\\{System.IO.Path.GetFileName(AppSettings.LoadSettings("BackupCurrentWall", null))}");
                             UserProfilePersonalizationSettings profileSettings = UserProfilePersonalizationSettings.Current;
-                            await profileSettings.TrySetLockScreenImageAsync(await Helper.localFolder.GetFileAsync($"{System.IO.Path.GetFileName(Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null))}"));
-                            RegEdit.SetHKLMValue("Software\\Microsoft\\Shell\\Wallpaper", "CurrentWallpaper", RegistryType.REG_SZ, Helper.LocalSettingsHelper.LoadSettings("BackupCurrentWall", null));
+                            await profileSettings.TrySetLockScreenImageAsync(await Helper.localFolder.GetFileAsync($"{System.IO.Path.GetFileName(AppSettings.LoadSettings("BackupCurrentWall", null))}"));
+                            RegEdit.SetHKLMValue("Software\\Microsoft\\Shell\\Wallpaper", "CurrentWallpaper", RegistryType.REG_SZ, AppSettings.LoadSettings("BackupCurrentWall", null));
                         }
                     }
                 }
@@ -1265,12 +1254,12 @@ namespace CMDInjector
                 {
                     if (WallCollectionCombo.SelectedIndex == 3)
                     {
-                        WallCollectionStack.Visibility = Visibility.Visible;
+                        WallCollectionStack.Visible();
                         await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"), $"{Helper.installedLocation.Path}\\Assets\\Images\\Lockscreens\\Stripes\n15000\nFalse\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[3]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[4]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[5]}");
                     }
                     else
                     {
-                        WallCollectionStack.Visibility = Visibility.Collapsed;
+                        WallCollectionStack.Collapse();
                         if (WallCollectionCombo.SelectedIndex == 0)
                         {
                             await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"), $"{Helper.installedLocation.Path}\\Assets\\Images\\Lockscreens\\RedMoon\n65\nTrue\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[3]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[4]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[5]}");
@@ -1334,7 +1323,7 @@ namespace CMDInjector
                     StorageFile zipFile = await filePicker.PickSingleFileAsync();
                     if (zipFile != null)
                     {
-                        ZipFileProg.Visibility = Visibility.Visible;
+                        ZipFileProg.Visible();
                         ZipFileProg.IsIndeterminate = true;
                         await Task.Run(async () =>
                         {
@@ -1401,7 +1390,7 @@ namespace CMDInjector
                                 });
                             }
                         });
-                        ZipFileProg.Visibility = Visibility.Collapsed;
+                        ZipFileProg.Collapse();
                         ZipFileProg.IsIndeterminate = false;
                     }
                 }
@@ -1411,9 +1400,11 @@ namespace CMDInjector
                     {
                         SuggestedStartLocation = PickerLocationId.ComputerFolder
                     };
+
                     folderPicker.FileTypeFilter.Add(".jpeg");
                     folderPicker.FileTypeFilter.Add(".jpg");
                     folderPicker.FileTypeFilter.Add(".png");
+
                     StorageFolder wallFolder = await folderPicker.PickSingleFolderAsync();
                     if (wallFolder != null)
                     {
@@ -1454,26 +1445,21 @@ namespace CMDInjector
 
         private void WallIntervalBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (WallIntervalBox.Text != string.Empty && !WallIntervalBox.Text.Contains('.') && WallIntervalBox.Text != "0" && WallIntervalBox.Text != "00" && WallIntervalBox.Text != "000" && WallIntervalBox.Text != "0000" && WallIntervalBox.Text != "00000" && Convert.ToInt32(WallIntervalBox.Text) >= 50 && Convert.ToInt32(WallIntervalBox.Text) <= 60000)
-            {
-                WallIntervalBtn.IsEnabled = true;
-            }
-            else
-            {
-                WallIntervalBtn.IsEnabled = false;
-            }
+            WallIntervalBtn.IsEnabled =
+                WallIntervalBox.Text.HasContent() &&
+                !WallIntervalBox.Text.Contains('.') &&
+                WallIntervalBox.Text.ToInt32() >= 50 &&
+                WallIntervalBox.Text.ToInt32() <= 60000;
         }
 
         private async void WallRevLoopTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (WallRevLoopTog.IsOn)
-            {
-                await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"), $"{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[0]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[1]}\nTrue\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[3]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[4]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[5]}");
-            }
-            else
-            {
-                await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"), $"{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[0]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[1]}\nFalse\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[3]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[4]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[5]}");
-            }
+            var file = await Helper.localFolder.GetFileAsync("Lockscreen.dat");
+            var originalLines = (await FileIO.ReadTextAsync(file)).Split('\n');
+
+            originalLines[2] = WallRevLoopTog.IsOn ? "True" : "False";
+
+            await FileIO.WriteTextAsync(file, string.Join("\n", originalLines));
             await Helper.localFolder.CreateFileAsync("LockscreenBreak.txt", CreationCollisionOption.OpenIfExists);
         }
 
@@ -1481,20 +1467,27 @@ namespace CMDInjector
         {
             if (flag == true)
             {
+                var file = await Helper.localFolder.GetFileAsync("Lockscreen.dat");
+                var originalLines = (await FileIO.ReadTextAsync(file)).Split('\n');
+
                 if (ActiveHoursTog.IsOn)
                 {
-                    await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"), $"{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[0]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[1]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[2]}\n{new DateTime(StartTimePkr.Time.Ticks).ToString("HH:mm")}\n{new DateTime(StopTimePkr.Time.Ticks).ToString("HH:mm")}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[5]}");
-                    await Helper.localFolder.CreateFileAsync("LockscreenBreak.txt", CreationCollisionOption.OpenIfExists);
-                    Helper.LocalSettingsHelper.SaveSettings("ActiveHours", true);
-                    ActiveHoursStack.Visibility = Visibility.Visible;
+                    originalLines[3] = new DateTime(StartTimePkr.Time.Ticks).ToString("HH:mm");
+                    originalLines[4] = new DateTime(StopTimePkr.Time.Ticks).ToString("HH:mm");
+                    await FileIO.WriteTextAsync(file, string.Join("\n", originalLines));
+                    AppSettings.SaveSettings("ActiveHours", true);
+                    ActiveHoursStack.Visible();
                 }
                 else
                 {
-                    await FileIO.WriteTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"), $"{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[0]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[1]}\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[2]}\n00:00\n00:00\n{(await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Lockscreen.dat"))).Split('\n')[5]}");
-                    await Helper.localFolder.CreateFileAsync("LockscreenBreak.txt", CreationCollisionOption.OpenIfExists);
-                    Helper.LocalSettingsHelper.SaveSettings("ActiveHours", false);
-                    ActiveHoursStack.Visibility = Visibility.Collapsed;
+                    originalLines[3] = "00:00";
+                    originalLines[4] = "00:00";
+                    await FileIO.WriteTextAsync(file, string.Join("\n", originalLines));
+                    AppSettings.SaveSettings("ActiveHours", false);
+                    ActiveHoursStack.Collapse();
                 }
+
+                await Helper.localFolder.CreateFileAsync("LockscreenBreak.txt", CreationCollisionOption.OpenIfExists);
             }
         }
 
@@ -1509,40 +1502,39 @@ namespace CMDInjector
 
         private void BootAnimTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (BootAnimTog.IsOn)
-            {
-                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", 3, ToBinary("00"));
-                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", 3, ToBinary("00"));
-            }
-            else
-            {
-                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069", "Element", 3, ToBinary("01"));
-                rpc.RegSetValue(1, "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a", "Element", 3, ToBinary("01"));
-            }
+            RegEdit.SetHKLMValue(
+                "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\16000069",
+                "Element", RegistryType.REG_BINARY, ToBinary(BootAnimTog.IsOn ? "00" : "01"));
+
+            RegEdit.SetHKLMValue(
+                "BCD00000001\\Objects\\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\\Elements\\1600007a",
+                "Element", RegistryType.REG_BINARY, ToBinary(BootAnimTog.IsOn ? "00" : "01"));
         }
 
         private void BootImageTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (BootImageTog.IsOn)
             {
-                BootImageStack.Visibility = Visibility.Visible;
+                BootImageStack.Visible();
+
                 if (flag == true)
                 {
                     RegEdit.SetHKLMValue("System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ, Helper.installedLocation.Path + "\\Assets\\Images\\Bootscreens\\BootupImage.png");
+                    BootImageBox.Text = $"CMDInjector:\\Assets\\Images\\Bootscreens\\BootupImage.png";
+                    return;
                 }
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ).Contains(Helper.installedLocation.Path))
+
+                BootImageBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ);
+
+                if (BootImageBox.Text.Contains(Helper.installedLocation.Path))
                 {
                     BootImageBox.Text = $"CMDInjector:\\Assets\\Images\\Bootscreens\\BootupImage.png";
-                }
-                else
-                {
-                    BootImageBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride", RegistryType.REG_SZ);
                 }
             }
             else
             {
-                BootImageStack.Visibility = Visibility.Collapsed;
-                reg.DeleteValue(Registry.RegistryHive.HKLM, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride");
+                BootImageStack.Collapse();
+                RegEdit.DeleteRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpbootscreenoverride");
             }
         }
 
@@ -1567,24 +1559,24 @@ namespace CMDInjector
         {
             if (ShutdownImageTog.IsOn)
             {
-                ShutdownImageStack.Visibility = Visibility.Visible;
+                ShutdownImageStack.Visible();
                 if (flag == true)
                 {
                     RegEdit.SetHKLMValue("System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ, Helper.installedLocation.Path + "\\Assets\\Images\\Bootscreens\\ShutdownImage.png");
+                    ShutdownImageBox.Text = $"CMDInjector:\\Assets\\Images\\Bootscreens\\ShutdownImage.png";
+                    return;
                 }
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ).Contains(Helper.installedLocation.Path))
+
+                ShutdownImageBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ);
+                if (ShutdownImageBox.Text.Contains(Helper.installedLocation.Path))
                 {
                     ShutdownImageBox.Text = $"CMDInjector:\\Assets\\Images\\Bootscreens\\ShutdownImage.png";
-                }
-                else
-                {
-                    ShutdownImageBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride", RegistryType.REG_SZ);
                 }
             }
             else
             {
-                ShutdownImageStack.Visibility = Visibility.Collapsed;
-                reg.DeleteValue(Registry.RegistryHive.HKLM, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride");
+                ShutdownImageStack.Collapse();
+                RegEdit.DeleteRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "System\\Shell\\OEM\\bootscreens", "wpshutdownscreenoverride");
             }
         }
 
@@ -1594,8 +1586,10 @@ namespace CMDInjector
             {
                 SuggestedStartLocation = PickerLocationId.ComputerFolder
             };
+
             folderOpenPicker.FileTypeFilter.Add(".png");
             folderOpenPicker.FileTypeFilter.Add(".jpg");
+
             StorageFile shutdownImage = await folderOpenPicker.PickSingleFileAsync();
             if (shutdownImage == null)
             {
@@ -1607,18 +1601,12 @@ namespace CMDInjector
 
         private void SoftNavTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (SoftNavTog.IsOn)
-            {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
-            }
-            else
-            {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
-            }
-            if (flag == true)
-            {
-                SoftwareModeIndicator.Visibility = Visibility.Visible;
-            }
+            RegEdit.SetHKLMValue(
+                "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "SoftwareModeEnabled",
+                RegistryType.REG_DWORD, BitConverter.GetBytes(uint.Parse(SoftNavTog.IsOn ? "1" : "0"))
+            );
+
+            SoftwareModeIndicator.Visible(flag);
         }
 
         private void DoubleTapTog_Toggled(object sender, RoutedEventArgs e)
@@ -1626,102 +1614,83 @@ namespace CMDInjector
             if (DoubleTapTog.IsOn)
             {
 
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
 
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsDoubleTapOffEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
-            if (flag == true)
-            {
-                DoubleTapIndicator.Visibility = Visibility.Visible;
-            }
+            DoubleTapIndicator.Visible(flag);
         }
 
         private void AutoHideTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (AutoHideTog.IsOn)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsAutoHideEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
-            if (flag == true)
-            {
-                AutoHideIndicator.Visibility = Visibility.Visible;
-            }
+            AutoHideIndicator.Visible(flag);
         }
 
         private void SwipeUpTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (SwipeUpTog.IsOn)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsSwipeUpToHideEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
-            if (flag == true)
-            {
-                SwipeUpIndicator.Visibility = Visibility.Visible;
-            }
+            SwipeUpIndicator.Visible(flag);
         }
 
         private void UserManagedTog_Toggled(object sender, RoutedEventArgs e)
         {
             if (UserManagedTog.IsOn)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", 4, BitConverter.GetBytes(uint.Parse("1")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", 4, BitConverter.GetBytes(uint.Parse("1")));
             }
             else
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", 4, BitConverter.GetBytes(uint.Parse("0")));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsUserManaged", 4, BitConverter.GetBytes(uint.Parse("0")));
             }
-            if (flag == true)
-            {
-                UserManagedIndicator.Visibility = Visibility.Visible;
-            }
+            UserManagedIndicator.Visible(flag);
         }
 
         private void BurninProtTog_Toggled(object sender, RoutedEventArgs e)
         {
-            if (BurninProtTog.IsOn)
-            {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", 4, BitConverter.GetBytes(uint.Parse("1")));
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionMaskSwitchingInterval", 4, BitConverter.GetBytes(uint.Parse("1")));
-            }
-            else
-            {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "IsBurnInProtectionEnabled", 4, BitConverter.GetBytes(uint.Parse("0")));
-            }
-            if (flag == true)
-            {
-                BurnInIndicator.Visibility = Visibility.Visible;
-            }
+            RegEdit.SetHKLMValue(
+                "SOFTWARE\\Microsoft\\Shell\\NavigationBar",
+                "BurnInProtectionMaskSwitchingInterval",
+                RegistryType.REG_DWORD,
+                BitConverter.GetBytes(BurninProtTog.IsOn ? 1u : 0u)
+            );
+            RegEdit.SetHKLMValue(
+                "SOFTWARE\\Microsoft\\Shell\\NavigationBar",
+                "IsBurnInProtectionEnabled", RegistryType.REG_DWORD,
+                BitConverter.GetBytes(BurninProtTog.IsOn ? 1u : 0u)
+            );
+
+            BurnInIndicator.Visible(flag);
         }
 
         private void BurninTimeoutBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (BurninTimeoutBox.Text == string.Empty)
-            {
-                BurninTimeoutBtn.IsEnabled = false;
-            }
-            else
-            {
-                BurninTimeoutBtn.IsEnabled = true;
-            }
+            BurninTimeoutBtn.IsEnabled = BurninTimeoutBox.Text.HasContent();
         }
 
         private void BurninTimeoutBtn_Click(object sender, RoutedEventArgs e)
         {
             if (BurninTimeoutBox.Text != string.Empty)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", 4, BitConverter.GetBytes(uint.Parse(BurninTimeoutBox.Text)));
-                BurnInTimeoutIndicator.Visibility = Visibility.Visible;
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIdleTimerTimeout", 4, BitConverter.GetBytes(uint.Parse(BurninTimeoutBox.Text)));
+                BurnInTimeoutIndicator.Visible();
             }
         }
 
@@ -1735,8 +1704,8 @@ namespace CMDInjector
                 SolidColorBrush solidColor = (SolidColorBrush)selectedColor;
                 string hexColor = solidColor.Color.ToString().Remove(0, 3);
                 int decimalColor = Convert.ToInt32(hexColor, 16);
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionBlackReplacementColor", 4, BitConverter.GetBytes(uint.Parse(decimalColor.ToString())));
-                BurnInColorIndicator.Visibility = Visibility.Visible;
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionBlackReplacementColor", 4, BitConverter.GetBytes(uint.Parse(decimalColor.ToString())));
+                BurnInColorIndicator.Visible();
             }
         }
 
@@ -1744,11 +1713,11 @@ namespace CMDInjector
         {
             if (sender is Slider slide)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", 4, BitConverter.GetBytes(uint.Parse(slide.Value.ToString())));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Shell\\NavigationBar", "BurnInProtectionIconsOpacity", 4, BitConverter.GetBytes(uint.Parse(slide.Value.ToString())));
             }
             if (flag == true)
             {
-                BurnInOpacityIndicator.Visibility = Visibility.Visible;
+                BurnInOpacityIndicator.Visible();
             }
         }
 
@@ -1759,7 +1728,7 @@ namespace CMDInjector
 
         private void DumpCountCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", 4, BitConverter.GetBytes(uint.Parse(((ComboBoxItem)DumpCountCombo.SelectedItem).Content.ToString())));
+            Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpCount", 4, BitConverter.GetBytes(uint.Parse(((ComboBoxItem)DumpCountCombo.SelectedItem).Content.ToString())));
         }
 
         private async void DumpFolderBtn_Click(object sender, RoutedEventArgs e)
@@ -1772,21 +1741,21 @@ namespace CMDInjector
             StorageFolder dumpFolder = await folderPicker.PickSingleFolderAsync();
             if (dumpFolder != null)
             {
-                rpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", 7, Encoding.Unicode.GetBytes(dumpFolder.Path + '\0'));
+                Globals.nrpc.RegSetValue(1, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", 7, Encoding.Unicode.GetBytes(dumpFolder.Path + '\0'));
                 DumpFolderBox.Text = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps", "DumpFolder", RegistryType.REG_MULTI_SZ);
             }
         }
 
         private void TileCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (TileCombo.SelectedIndex == 0) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("4")));
-            else if (TileCombo.SelectedIndex == 1) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("6")));
-            else if (TileCombo.SelectedIndex == 2) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("8")));
-            else if (TileCombo.SelectedIndex == 3) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("10")));
-            else if (TileCombo.SelectedIndex == 4) rpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("12")));
+            if (TileCombo.SelectedIndex == 0) Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("4")));
+            else if (TileCombo.SelectedIndex == 1) Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("6")));
+            else if (TileCombo.SelectedIndex == 2) Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("8")));
+            else if (TileCombo.SelectedIndex == 3) Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("10")));
+            else if (TileCombo.SelectedIndex == 4) Globals.nrpc.RegSetValue(1, "Software\\Microsoft\\Shell\\Start", "TileColumnSize", 4, BitConverter.GetBytes(uint.Parse("12")));
             if (flag == true)
             {
-                StartTileIndicator.Visibility = Visibility.Visible;
+                StartTileIndicator.Visible();
             }
         }
 
@@ -1818,8 +1787,8 @@ namespace CMDInjector
         {
             if (VirtualMemBox.Text != string.Empty)
             {
-                rpc.RegSetValue(1, "System\\CurrentControlSet\\Control\\Session Manager\\Memory Management", "PagingFiles", 7, Encoding.Unicode.GetBytes(VirtualMemBox.Text + '\0'));
-                VirtualMemoryIndicator.Visibility = Visibility.Visible;
+                Globals.nrpc.RegSetValue(1, "System\\CurrentControlSet\\Control\\Session Manager\\Memory Management", "PagingFiles", 7, Encoding.Unicode.GetBytes(VirtualMemBox.Text + '\0'));
+                VirtualMemoryIndicator.Visible();
             }
         }
 
@@ -1833,7 +1802,7 @@ namespace CMDInjector
         {
             if (BackgModeCombo.SelectedIndex == 0)
             {
-                /*_ = tClient.Send("reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v SystemUsesLightTheme /t REG_DWORD /d 0 /f" +
+                /*Helper.Send("reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v SystemUsesLightTheme /t REG_DWORD /d 0 /f" +
                     "&reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v AppsUseLightTheme /t REG_DWORD /d 0 /f" +
                     "&reg add \"HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Control Panel\\Theme\" /v CurrentTheme /t REG_DWORD /d 1 /f");*/
                 RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", RegistryType.REG_DWORD, "00000000");
@@ -1842,17 +1811,17 @@ namespace CMDInjector
                 if (AutoBackgCombo.SelectedIndex == 1)
                 {
                     AutoBackgCombo.SelectedIndex = -1;
-                    AutoBackgItem.Content = "Dark Untill Sunrise";
+                    AutoBackgItem.Content = "Dark Until Sunrise";
                     AutoBackgCombo.SelectedIndex = 1;
                 }
                 else
                 {
-                    AutoBackgItem.Content = "Dark Untill Sunrise";
+                    AutoBackgItem.Content = "Dark Until Sunrise";
                 }
             }
             else
             {
-                /*_ = tClient.Send("reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v SystemUsesLightTheme /t REG_DWORD /d 1 /f" +
+                /*Helper.Send("reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v SystemUsesLightTheme /t REG_DWORD /d 1 /f" +
                     "&reg add HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Themes\\Personalize /v AppsUseLightTheme /t REG_DWORD /d 1 /f" +
                     "&reg add \"HKLM\\Software\\Microsoft\\Windows\\Currentversion\\Control Panel\\Theme\" /v CurrentTheme /t REG_DWORD /d 0 /f");*/
                 RegEdit.SetHKLMValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", RegistryType.REG_DWORD, "00000001");
@@ -1861,15 +1830,15 @@ namespace CMDInjector
                 if (AutoBackgCombo.SelectedIndex == 1)
                 {
                     AutoBackgCombo.SelectedIndex = -1;
-                    AutoBackgItem.Content = "Light Untill Sunset";
+                    AutoBackgItem.Content = "Light Until Sunset";
                     AutoBackgCombo.SelectedIndex = 1;
                 }
                 else
                 {
-                    AutoBackgItem.Content = "Light Untill Sunset";
+                    AutoBackgItem.Content = "Light Until Sunset";
                 }
             }
-            if (!Helper.LocalSettingsHelper.LoadSettings("ThemeSettings", false))
+            if (!AppSettings.LoadSettings("ThemeSettings", false))
             {
                 if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD) == "00000000")
                 {
@@ -1886,29 +1855,29 @@ namespace CMDInjector
         {
             if (AutoBackgCombo.SelectedIndex == 0)
             {
-                BackgShiftStack.Visibility = Visibility.Collapsed;
+                BackgShiftStack.Collapse();
             }
             else if (AutoBackgCombo.SelectedIndex == 1)
             {
-                BackgShiftStack.Visibility = Visibility.Collapsed;
-                Helper.LocalSettingsHelper.SaveSettings("AutoThemeLight", "06:00");
-                Helper.LocalSettingsHelper.SaveSettings("AutoThemeDark", "18:00");
+                BackgShiftStack.Collapse();
+                AppSettings.SaveSettings("AutoThemeLight", "06:00");
+                AppSettings.SaveSettings("AutoThemeDark", "18:00");
                 BackgStartTime.Time = new TimeSpan(06, 00, 00);
                 BackgStopTime.Time = new TimeSpan(18, 00, 00);
             }
             else if (AutoBackgCombo.SelectedIndex == 2)
             {
-                BackgShiftStack.Visibility = Visibility.Visible;
+                BackgShiftStack.Visible();
             }
-            Helper.LocalSettingsHelper.SaveSettings("AutoThemeMode", AutoBackgCombo.SelectedIndex);
+            AppSettings.SaveSettings("AutoThemeMode", AutoBackgCombo.SelectedIndex);
         }
 
         private void ThemeBackgTime_TimeChanged(object sender, TimePickerValueChangedEventArgs e)
         {
             if (flag == true)
             {
-                Helper.LocalSettingsHelper.SaveSettings("AutoThemeLight", new DateTime(BackgStartTime.Time.Ticks).ToString("HH:mm"));
-                Helper.LocalSettingsHelper.SaveSettings("AutoThemeDark", new DateTime(BackgStopTime.Time.Ticks).ToString("HH:mm"));
+                AppSettings.SaveSettings("AutoThemeLight", new DateTime(BackgStartTime.Time.Ticks).ToString("HH:mm"));
+                AppSettings.SaveSettings("AutoThemeDark", new DateTime(BackgStopTime.Time.Ticks).ToString("HH:mm"));
             }
         }
 
@@ -1993,13 +1962,14 @@ namespace CMDInjector
                 }
                 var regvalue = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, @"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", RegistryType.REG_BINARY);
                 var array = regvalue.ToCharArray();
+                var colAsAnArray = col.ToString().Replace("#", "").ToCharArray();
 
-                array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(0), 24);
-                array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(1), 25);
-                array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(2), 26);
-                array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(3), 27);
-                array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(4), 28);
-                array.SetValue(col.ToString().Replace("#", string.Empty).ToCharArray().GetValue(5), 29);
+                array.SetValue(colAsAnArray.GetValue(0), 24);
+                array.SetValue(colAsAnArray.GetValue(1), 25);
+                array.SetValue(colAsAnArray.GetValue(2), 26);
+                array.SetValue(colAsAnArray.GetValue(3), 27);
+                array.SetValue(colAsAnArray.GetValue(4), 28);
+                array.SetValue(colAsAnArray.GetValue(5), 29);
 
                 var newpalette = string.Join("", array);
                 RegEdit.SetHKLMValue(@"Software\Microsoft\Windows\CurrentVersion\Control Panel\Theme", "AccentPalette", RegistryType.REG_BINARY, newpalette);
@@ -2038,8 +2008,8 @@ namespace CMDInjector
         private void NightModeSlide_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             Slider slider = sender as Slider;
-            rpc.RegSetValue(1, @"SOFTWARE\OEM\Nokia\Display\ColorAndLight", "UserSettingWhitePoint", 4, BitConverter.GetBytes(uint.Parse(Convert.ToInt32(Math.Round(slider.Value / 100 * (63 - 32) + (63 - 32) + 1).ToString(), 16).ToString())));
-            rpc.RegSetValue(1, @"SOFTWARE\OEM\Nokia\Display\ColorAndLight", "UserSettingNightLightPct", 1, Encoding.Unicode.GetBytes($"0,{Math.Round(slider.Value / 100 * (63 - 32) + (63 - 32) + 1)}" + '\0'));
+            Globals.nrpc.RegSetValue(1, @"SOFTWARE\OEM\Nokia\Display\ColorAndLight", "UserSettingWhitePoint", 4, BitConverter.GetBytes(uint.Parse(Convert.ToInt32(Math.Round(slider.Value / 100 * (63 - 32) + (63 - 32) + 1).ToString(), 16).ToString())));
+            Globals.nrpc.RegSetValue(1, @"SOFTWARE\OEM\Nokia\Display\ColorAndLight", "UserSettingNightLightPct", 1, Encoding.Unicode.GetBytes($"0,{Math.Round(slider.Value / 100 * (63 - 32) + (63 - 32) + 1)}" + '\0'));
         }
 
         private async Task Restart()
@@ -2062,9 +2032,9 @@ namespace CMDInjector
                 var result = await Helper.MessageBox("Are you sure you want to shutdown the device?", Helper.SoundHelper.Sound.Alert, "", "No", true, "Yes");
                 if (result == 0)
                 {
-                    if (tClient.IsConnected && HomeHelper.IsConnected())
+                    if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                     {
-                        _ = tClient.Send("shutdown /s /t 0");
+                        Helper.Send("shutdown /s /t 0");
                     }
                     else
                     {
@@ -2108,8 +2078,8 @@ namespace CMDInjector
                 bool isPinned = await RestartTile.RequestCreateAsync();
                 if (isPinned)
                 {
-                    TipText.Visibility = Visibility.Collapsed;
-                    Helper.LocalSettingsHelper.SaveSettings("TipSettings", false);
+                    TipText.Collapse();
+                    AppSettings.SaveSettings("TipSettings", false);
                 }
             }
             catch (Exception ex) { /*Helper.ThrowException(ex);*/ }
@@ -2120,7 +2090,7 @@ namespace CMDInjector
             try
             {
                 buttonOnHold = true;
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
                     SecondaryTile ShutdownTile = new SecondaryTile("ShutdownTileID", "Shutdown", "Shutdown", new Uri("ms-appx:///Assets/Icons/PowerOptions/ShutdownPowerOptionTileLogo.png"), TileSize.Default);
                     ShutdownTile.VisualElements.ShowNameOnSquare150x150Logo = true;
@@ -2129,8 +2099,8 @@ namespace CMDInjector
                     bool isPinned = await ShutdownTile.RequestCreateAsync();
                     if (isPinned)
                     {
-                        TipText.Visibility = Visibility.Collapsed;
-                        Helper.LocalSettingsHelper.SaveSettings("TipSettings", false);
+                        TipText.Collapse();
+                        AppSettings.SaveSettings("TipSettings", false);
                     }
                 }
                 else
@@ -2147,7 +2117,7 @@ namespace CMDInjector
             {
                 buttonOnHold = true;
                 if (e.HoldingState != Windows.UI.Input.HoldingState.Started) return;
-                if (tClient.IsConnected && HomeHelper.IsConnected() && File.Exists(@"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"))
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected() && File.Exists(@"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"))
                 {
                     SecondaryTile FFULoaderTile = new SecondaryTile("FFULoaderTileID", "FFU Loader", "FFULoader", new Uri("ms-appx:///Assets/Icons/PowerOptions/FFULoaderPowerOptionTileLogo.png"), TileSize.Default);
                     FFULoaderTile.VisualElements.ShowNameOnSquare150x150Logo = true;
@@ -2156,8 +2126,8 @@ namespace CMDInjector
                     bool isPinned = await FFULoaderTile.RequestCreateAsync();
                     if (isPinned)
                     {
-                        TipText.Visibility = Visibility.Collapsed;
-                        Helper.LocalSettingsHelper.SaveSettings("TipSettings", false);
+                        TipText.Collapse();
+                        AppSettings.SaveSettings("TipSettings", false);
                     }
                 }
                 else
@@ -2177,9 +2147,9 @@ namespace CMDInjector
                     buttonOnHold = false;
                     return;
                 }
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
-                    _ = tClient.Send("powertool -screenoff");
+                    Helper.Send("powertool -screenoff");
                     Helper.SoundHelper.PlaySound(Helper.SoundHelper.Sound.Lock);
                 }
                 else
@@ -2202,9 +2172,9 @@ namespace CMDInjector
                 var result = await Helper.MessageBox("Are you sure you want to reboot the device to FFU Loader?", Helper.SoundHelper.Sound.Alert, "", "No", true, "Yes");
                 if (result == 0)
                 {
-                    if (tClient.IsConnected && HomeHelper.IsConnected() && File.Exists(@"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"))
+                    if (Helper.IsTelnetConnected() && HomeHelper.IsConnected() && File.Exists(@"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"))
                     {
-                        _ = tClient.Send(Helper.installedLocation.Path + "\\Contents\\BatchScripts\\RebootToFlashingMode.bat");
+                        Helper.Send(Helper.installedLocation.Path + "\\Contents\\BatchScripts\\RebootToFlashingMode.bat");
                         if (Helper.build < 14393)
                         {
                             await Helper.MessageBox("Rebooting to FFU Loader...", Helper.SoundHelper.Sound.Alert);
@@ -2242,7 +2212,7 @@ namespace CMDInjector
             {
                 buttonOnHold = true;
                 if (e.HoldingState != Windows.UI.Input.HoldingState.Started) return;
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
                     SecondaryTile LockscreenTile = new SecondaryTile("LockscreenTileID", "Lockscreen", "Lockscreen", new Uri("ms-appx:///Assets/Icons/PowerOptions/LockscreenPowerOptionTileLogo.png"), TileSize.Default);
                     LockscreenTile.VisualElements.ShowNameOnSquare150x150Logo = true;
@@ -2251,8 +2221,8 @@ namespace CMDInjector
                     bool isPinned = await LockscreenTile.RequestCreateAsync();
                     if (isPinned)
                     {
-                        TipText.Visibility = Visibility.Collapsed;
-                        Helper.LocalSettingsHelper.SaveSettings("TipSettings", false);
+                        TipText.Collapse();
+                        AppSettings.SaveSettings("TipSettings", false);
                     }
                 }
                 else
@@ -2270,20 +2240,20 @@ namespace CMDInjector
                 buttonOnHold = false;
                 return;
             }
-            if (tClient.IsConnected && HomeHelper.IsConnected())
+            if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
             {
                 var button = sender as Button;
                 if (button.Content.ToString() == "Volume Up")
                 {
-                    _ = tClient.Send("SendKeys -v \"0xAF 0xAF\"");
+                    Helper.Send("SendKeys -v \"0xAF 0xAF\"");
                 }
                 else if (button.Content.ToString() == "Volume Down")
                 {
-                    _ = tClient.Send("SendKeys -v \"0xAE 0xAE\"");
+                    Helper.Send("SendKeys -v \"0xAE 0xAE\"");
                 }
                 else if (button.Content.ToString() == "Mute/Unmute")
                 {
-                    _ = tClient.Send("SendKeys -v \"0xAD\"");
+                    Helper.Send("SendKeys -v \"0xAD\"");
                 }
             }
             else
@@ -2298,12 +2268,12 @@ namespace CMDInjector
             if (RestoreNDTKTog.IsOn)
             {
                 RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", RegistryType.REG_SZ, "C:\\Windows\\System32\\NdtkSvc.dll");
-                NDTKIndicator.Visibility = Visibility.Visible;
+                NDTKIndicator.Visible();
             }
             else
             {
                 RegEdit.SetHKLMValue("SOFTWARE\\OEM\\Nokia\\NokiaSvcHost\\Plugins\\NsgExtA\\NdtkSvc", "Path", RegistryType.REG_SZ, "NdtkSvc.dll");
-                NDTKIndicator.Visibility = Visibility.Visible;
+                NDTKIndicator.Visible();
             }
         }
 
@@ -2313,7 +2283,7 @@ namespace CMDInjector
             if (result == 0)
             {
                 FilesHelper.CopyFromAppRoot("\\Drivers\\PatchedSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
-                SecMgrIndicator.Visibility = Visibility.Visible;
+                SecMgrIndicator.Visible();
             }
         }
 
@@ -2323,7 +2293,7 @@ namespace CMDInjector
             if (result == 0)
             {
                 FilesHelper.CopyFromAppRoot("\\Drivers\\OriginalSecMgr.sys", @"C:\Windows\System32\Drivers\SecMgr.sys");
-                SecMgrIndicator.Visibility = Visibility.Visible;
+                SecMgrIndicator.Visible();
             }
         }
         private void UfpEnableBtn_Click(object sender, RoutedEventArgs e)
@@ -2336,9 +2306,9 @@ namespace CMDInjector
 
         private void UfpDisableBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (tClient.IsConnected && HomeHelper.IsConnected())
+            if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
             {
-                _ = tClient.Send("reg delete hklm\\BCD00000001\\Objects\\{01de5a27-8705-40db-bad6-96fa5187d4a6}\\Elements\\25000209 /f" +
+                Helper.Send("reg delete hklm\\BCD00000001\\Objects\\{01de5a27-8705-40db-bad6-96fa5187d4a6}\\Elements\\25000209 /f" +
                         "&reg delete hklm\\BCD00000001\\Objects\\{01de5a27-8705-40db-bad6-96fa5187d4a6}\\Elements\\26000207 /f" +
                         "&reg delete hklm\\BCD00000001\\Objects\\{0ff5f24a-3785-4aeb-b8fe-4226215b88c4}\\Elements\\25000209 /f" +
                         "&reg delete hklm\\BCD00000001\\Objects\\{0ff5f24a-3785-4aeb-b8fe-4226215b88c4}\\Elements\\26000207 /f");
@@ -2374,15 +2344,15 @@ namespace CMDInjector
                 else
                 {
                     SearchPressParaCombo.SelectedIndex = 1;
-                    if (Packages[SearchPressAppsCombo.SelectedIndex - 3].DisplayName == "CMD Injector") SearchPressParaCombo.Visibility = Visibility.Visible;
-                    else SearchPressParaCombo.Visibility = Visibility.Collapsed;
+                    if (Packages[SearchPressAppsCombo.SelectedIndex - 3].DisplayName == "CMD Injector") SearchPressParaCombo.Visible();
+                    else SearchPressParaCombo.Collapse();
                     var manifest = await Packages[SearchPressAppsCombo.SelectedIndex - 3].InstalledLocation.GetFileAsync("AppxManifest.xml");
                     var tags = XElement.Load(manifest.Path).Elements().Where(i => i.Name.LocalName == "PhoneIdentity");
                     var attributes = tags.Attributes().Where(i => i.Name.LocalName == "PhoneProductId");
                     RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppID", RegistryType.REG_SZ, $"{{{attributes.First().Value}}}");
                 }
                 var isRemapped = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Features", "ButtonRemapping", RegistryType.REG_SZ);
-                if (isRemapped != "WEHButtonRouter.dll") SearchOptIndicator.Visibility = Visibility.Visible;
+                if (isRemapped != "WEHButtonRouter.dll") SearchOptIndicator.Visible();
                 RegEdit.SetHKLMValue("SYSTEM\\Features", "ButtonRemapping", RegistryType.REG_SZ, "WEHButtonRouter.dll");
             }
             catch (Exception ex)
@@ -2416,15 +2386,15 @@ namespace CMDInjector
                 else
                 {
                     SearchHoldParaCombo.SelectedIndex = 1;
-                    if (Packages[SearchHoldAppsCombo.SelectedIndex - 3].DisplayName == "CMD Injector") SearchHoldParaCombo.Visibility = Visibility.Visible;
-                    else SearchHoldParaCombo.Visibility = Visibility.Collapsed;
+                    if (Packages[SearchHoldAppsCombo.SelectedIndex - 3].DisplayName == "CMD Injector") SearchHoldParaCombo.Visible();
+                    else SearchHoldParaCombo.Collapse();
                     var manifest = await Packages[SearchHoldAppsCombo.SelectedIndex - 3].InstalledLocation.GetFileAsync("AppxManifest.xml");
                     var tags = XElement.Load(manifest.Path).Elements().Where(i => i.Name.LocalName == "PhoneIdentity");
                     var attributes = tags.Attributes().Where(i => i.Name.LocalName == "PhoneProductId");
                     RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppID", RegistryType.REG_SZ, $"{{{attributes.First().Value}}}");
                 }
                 var isRemapped = RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\Features", "ButtonRemapping", RegistryType.REG_SZ);
-                if (isRemapped != "WEHButtonRouter.dll") SearchOptIndicator.Visibility = Visibility.Visible;
+                if (isRemapped != "WEHButtonRouter.dll") SearchOptIndicator.Visible();
                 RegEdit.SetHKLMValue("SYSTEM\\Features", "ButtonRemapping", RegistryType.REG_SZ, "WEHButtonRouter.dll");
             }
             catch (Exception ex)
@@ -2437,15 +2407,15 @@ namespace CMDInjector
         {
             if (StartWallTog.IsOn)
             {
-                Helper.LocalSettingsHelper.SaveSettings("StartWallSwitch", true);
-                WallSwitchExtraStack.Visibility = Visibility.Visible;
+                AppSettings.SaveSettings("StartWallSwitch", true);
+                WallSwitchExtraStack.Visible();
             }
             else
             {
-                Helper.LocalSettingsHelper.SaveSettings("StartWallSwitch", false);
-                WallSwitchExtraStack.Visibility = Visibility.Collapsed;
+                AppSettings.SaveSettings("StartWallSwitch", false);
+                WallSwitchExtraStack.Collapse();
             }
-            Helper.LocalSettingsHelper.SaveSettings("StartWallImagePosition", 0);
+            AppSettings.SaveSettings("StartWallImagePosition", 0);
         }
 
         private async void StartWallLibraryBtn_Click(object sender, RoutedEventArgs e)
@@ -2455,7 +2425,7 @@ namespace CMDInjector
             {
                 if (library.Path.Contains(Helper.installedLocation.Path)) StartWallLibPathBox.Text = "CMDInjector:\\Assets\\Images\\Lockscreens\\Stripes";
                 else StartWallLibPathBox.Text = library.Path;
-                Helper.LocalSettingsHelper.SaveSettings("StartWallImagePosition", 0);
+                AppSettings.SaveSettings("StartWallImagePosition", 0);
             }
         }
 
@@ -2463,13 +2433,13 @@ namespace CMDInjector
         {
             if (StartWallTrigCombo.SelectedIndex == 0)
             {
-                StartWallInterCombo.Visibility = Visibility.Collapsed;
+                StartWallInterCombo.Collapse();
             }
             else
             {
-                StartWallInterCombo.Visibility = Visibility.Visible;
+                StartWallInterCombo.Visible();
             }
-            Helper.LocalSettingsHelper.SaveSettings("StartWallTrigger", StartWallTrigCombo.SelectedIndex);
+            AppSettings.SaveSettings("StartWallTrigger", StartWallTrigCombo.SelectedIndex);
         }
 
         private async void VolDownBtn_Holding(object sender, HoldingRoutedEventArgs e)
@@ -2485,8 +2455,8 @@ namespace CMDInjector
                 bool isPinned = await VolDownTile.RequestCreateAsync();
                 if (isPinned)
                 {
-                    TipText.Visibility = Visibility.Collapsed;
-                    Helper.LocalSettingsHelper.SaveSettings("TipSettings", false);
+                    TipText.Collapse();
+                    AppSettings.SaveSettings("TipSettings", false);
                 }
             }
             catch (Exception ex) { /*Helper.ThrowException(ex);*/ }
@@ -2504,8 +2474,8 @@ namespace CMDInjector
                 bool isPinned = await VolUpTile.RequestCreateAsync();
                 if (isPinned)
                 {
-                    TipText.Visibility = Visibility.Collapsed;
-                    Helper.LocalSettingsHelper.SaveSettings("TipSettings", false);
+                    TipText.Collapse();
+                    AppSettings.SaveSettings("TipSettings", false);
                 }
             }
             catch (Exception ex) { /*Helper.ThrowException(ex);*/ }
@@ -2524,8 +2494,8 @@ namespace CMDInjector
                 bool isPinned = await VolMuteTile.RequestCreateAsync();
                 if (isPinned)
                 {
-                    TipText.Visibility = Visibility.Collapsed;
-                    Helper.LocalSettingsHelper.SaveSettings("TipSettings", false);
+                    TipText.Collapse();
+                    AppSettings.SaveSettings("TipSettings", false);
                 }
             }
             catch (Exception ex) { /*Helper.ThrowException(ex);*/ }
@@ -2546,51 +2516,127 @@ namespace CMDInjector
 
         private void SearchPressParaCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string value = "";
-            if (SearchPressParaCombo.SelectedIndex == 1) value = "";
-            else if (SearchPressParaCombo.SelectedIndex == 4) value = "HomePage";
-            else if (SearchPressParaCombo.SelectedIndex == 5) value = "TerminalPage";
-            else if (SearchPressParaCombo.SelectedIndex == 6) value = "StartupPage";
-            else if (SearchPressParaCombo.SelectedIndex == 7) value = "PacManPage";
-            else if (SearchPressParaCombo.SelectedIndex == 8) value = "SnapperPage";
-            else if (SearchPressParaCombo.SelectedIndex == 9) value = "BootConfigPage";
-            else if (SearchPressParaCombo.SelectedIndex == 10) value = "TweakBoxPage";
-            else if (SearchPressParaCombo.SelectedIndex == 11) value = "SettingsPage";
-            else if (SearchPressParaCombo.SelectedIndex == 12) value = "HelpPage";
-            else if (SearchPressParaCombo.SelectedIndex == 13) value = "AboutPage";
-            else if (SearchPressParaCombo.SelectedIndex == 16) value = "Shutdown";
-            else if (SearchPressParaCombo.SelectedIndex == 17) value = "Restart";
-            else if (SearchPressParaCombo.SelectedIndex == 18) value = "Lockscreen";
-            else if (SearchPressParaCombo.SelectedIndex == 19) value = "FFULoader";
-            else if (SearchPressParaCombo.SelectedIndex == 22) value = "VolDown";
-            else if (SearchPressParaCombo.SelectedIndex == 23) value = "VolUp";
-            else if (SearchPressParaCombo.SelectedIndex == 24) value = "VolMute";
-            else value = "";
+            string value;
+            switch (SearchPressParaCombo.SelectedIndex)
+            {
+                case 4:
+                    value = "HomePage";
+                    break;
+                case 5:
+                    value = "TerminalPage";
+                    break;
+                case 6:
+                    value = "StartupPage";
+                    break;
+                case 7:
+                    value = "PacManPage";
+                    break;
+                case 8:
+                    value = "SnapperPage";
+                    break;
+                case 9:
+                    value = "BootConfigPage";
+                    break;
+                case 10:
+                    value = "TweakBoxPage";
+                    break;
+                case 11:
+                    value = "SettingsPage";
+                    break;
+                case 12:
+                    value = "HelpPage";
+                    break;
+                case 13:
+                    value = "AboutPage";
+                    break;
+                case 16:
+                    value = "Shutdown";
+                    break;
+                case 17:
+                    value = "Restart";
+                    break;
+                case 18:
+                    value = "Lockscreen";
+                    break;
+                case 19:
+                    value = "FFULoader";
+                    break;
+                case 22:
+                    value = "VolDown";
+                    break;
+                case 23:
+                    value = "VolUp";
+                    break;
+                case 24:
+                    value = "VolMute";
+                    break;
+                default:
+                    value = "";
+                    break;
+            }
             RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\Press", "AppParam", RegistryType.REG_SZ, value);
         }
 
         private void SearchHoldParaCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string value = "";
-            if (SearchHoldParaCombo.SelectedIndex == 1) value = "";
-            else if (SearchHoldParaCombo.SelectedIndex == 4) value = "HomePage";
-            else if (SearchHoldParaCombo.SelectedIndex == 5) value = "TerminalPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 6) value = "StartupPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 7) value = "PacManPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 8) value = "SnapperPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 9) value = "BootConfigPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 10) value = "TweakBoxPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 11) value = "SettingsPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 12) value = "HelpPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 13) value = "AboutPage";
-            else if (SearchHoldParaCombo.SelectedIndex == 16) value = "Shutdown";
-            else if (SearchHoldParaCombo.SelectedIndex == 17) value = "Restart";
-            else if (SearchHoldParaCombo.SelectedIndex == 18) value = "Lockscreen";
-            else if (SearchHoldParaCombo.SelectedIndex == 19) value = "FFULoader";
-            else if (SearchHoldParaCombo.SelectedIndex == 22) value = "VolDown";
-            else if (SearchHoldParaCombo.SelectedIndex == 23) value = "VolUp";
-            else if (SearchHoldParaCombo.SelectedIndex == 24) value = "VolMute";
-            else value = "";
+            string value;
+            switch (SearchHoldParaCombo.SelectedIndex)
+            {
+                case 4:
+                    value = "HomePage";
+                    break;
+                case 5:
+                    value = "TerminalPage";
+                    break;
+                case 6:
+                    value = "StartupPage";
+                    break;
+                case 7:
+                    value = "PacManPage";
+                    break;
+                case 8:
+                    value = "SnapperPage";
+                    break;
+                case 9:
+                    value = "BootConfigPage";
+                    break;
+                case 10:
+                    value = "TweakBoxPage";
+                    break;
+                case 11:
+                    value = "SettingsPage";
+                    break;
+                case 12:
+                    value = "HelpPage";
+                    break;
+                case 13:
+                    value = "AboutPage";
+                    break;
+                case 16:
+                    value = "Shutdown";
+                    break;
+                case 17:
+                    value = "Restart";
+                    break;
+                case 18:
+                    value = "Lockscreen";
+                    break;
+                case 19:
+                    value = "FFULoader";
+                    break;
+                case 22:
+                    value = "VolDown";
+                    break;
+                case 23:
+                    value = "VolUp";
+                    break;
+                case 24:
+                    value = "VolMute";
+                    break;
+                default:
+                    value = "";
+                    break;
+            }
             RegEdit.SetHKLMValue("SYSTEM\\Input\\WEH\\Buttons\\WEHButton4\\PressAndHold", "AppParam", RegistryType.REG_SZ, value);
         }
 
@@ -2598,26 +2644,23 @@ namespace CMDInjector
         {
             switch (StartWallInterCombo.SelectedIndex)
             {
-                case 0:
-                    Helper.LocalSettingsHelper.SaveSettings("StartWallInterval", 15);
-                    break;
                 case 1:
-                    Helper.LocalSettingsHelper.SaveSettings("StartWallInterval", 30);
+                    AppSettings.SaveSettings("StartWallInterval", 30);
                     break;
                 case 2:
-                    Helper.LocalSettingsHelper.SaveSettings("StartWallInterval", 60);
+                    AppSettings.SaveSettings("StartWallInterval", 60);
                     break;
                 case 3:
-                    Helper.LocalSettingsHelper.SaveSettings("StartWallInterval", 720);
+                    AppSettings.SaveSettings("StartWallInterval", 720);
                     break;
                 case 4:
-                    Helper.LocalSettingsHelper.SaveSettings("StartWallInterval", 1440);
+                    AppSettings.SaveSettings("StartWallInterval", 1440);
                     break;
                 default:
-                    Helper.LocalSettingsHelper.SaveSettings("StartWallInterval", 15);
+                    AppSettings.SaveSettings("StartWallInterval", 15);
                     break;
             }
-            Helper.LocalSettingsHelper.SaveSettings("StartWallInterItem", StartWallInterCombo.SelectedIndex);
+            AppSettings.SaveSettings("StartWallInterItem", StartWallInterCombo.SelectedIndex);
         }
     }
 }

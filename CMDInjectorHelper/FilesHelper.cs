@@ -11,7 +11,7 @@ namespace CMDInjectorHelper
         public static uint CopyFile(string source, string destination)
         {
             Debug.WriteLine($"Copying {source} to {destination}");
-            return Globals.rpc.FileCopy(source, destination, 0);
+            return Globals.nrpc.FileCopy(source, destination, 0);
         }
 
         public static uint CopyFileToDir(string sourceDir, string fileName, string destinationDir, string newName = null)
@@ -31,7 +31,7 @@ namespace CMDInjectorHelper
         /// <param name="path">The relative path to the file.</param>
         /// <param name="destinationDir">The destination folder.</param>
         public static uint CopyFromAppRoot(string path, string destination)
-            => CopyFile($"{Globals.installedLocation.Path}\\{path}", destination);
+            => CopyFileToDir($"{Globals.installedLocation.Path}\\{path}", destination);
 
         /// <summary>
         /// Copies a file from the application's folder.
@@ -42,7 +42,7 @@ namespace CMDInjectorHelper
         /// <returns></returns>
         public static uint CopyFromAppRoot(string path, string fileName, string destinationDir)
         {
-            if (path == null)
+            if (string.IsNullOrWhiteSpace(path))
             {
                 Debug.Assert(!string.IsNullOrWhiteSpace(CurrentFolder), "Set FilesHelper.CurrentFolder first!");
                 return CopyFromAppRoot(CurrentFolder, fileName, destinationDir);

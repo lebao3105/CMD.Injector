@@ -28,7 +28,7 @@ namespace CMDInjector
         {
             _ = tClient.Connect();
             long i = 0;
-            while (tClient.IsConnected == false && i < 1000000)
+            while (Helper.IsTelnetConnected() == false && i < 1000000)
             {
                 i++;
             }
@@ -41,11 +41,11 @@ namespace CMDInjector
             {
                 StorageTog.IsEnabled = false;
                 StorageTog.IsOn = false;
-                Helper.LocalSettingsHelper.SaveSettings("StorageSet", false);
+                AppSettings.SaveSettings("StorageSet", false);
             }
             else
             {
-                StorageTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("StorageSet", false);
+                StorageTog.IsOn = AppSettings.LoadSettings("StorageSet", false);
             }
         }
 
@@ -64,7 +64,7 @@ namespace CMDInjector
                 if (Helper.build < 14393)
                 {
                     ConKeyBtnTog.IsEnabled = false;
-                    Helper.LocalSettingsHelper.SaveSettings("ConKeyBtnSet", false);
+                    AppSettings.SaveSettings("ConKeyBtnSet", false);
                 }
                 BackupFoldBtn.IsEnabled = false;
 
@@ -74,7 +74,7 @@ namespace CMDInjector
                 }
                 else
                 {
-                    MenuTransitionTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("MenuTransition", true);
+                    MenuTransitionTog.IsOn = AppSettings.LoadSettings("MenuTransition", true);
                 }
 
                 if (Helper.build < 10586)
@@ -89,18 +89,21 @@ namespace CMDInjector
                 ".xap", RegistryType.REG_SZ) == "CMDInjector_kqyng60eng17c";
 
             GetExternalAsync();
-            SplashScrTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("SplashScreen", true);
-            SplashScrCombo.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("SplashAnimIndex", 0);
-            if (Helper.build >= 10586) LoginReqTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("LoginTogReg", true);
-            CommandsWrapToggle.IsOn = Helper.LocalSettingsHelper.LoadSettings("CommandsTextWrap", false);
-            ConKeyBtnTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("ConKeyBtnSet", false);
-            ConsoleFontSizeBox.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("ConFontSizeSet", 3);
-            ThemeToggle.IsOn = Helper.LocalSettingsHelper.LoadSettings("ThemeSettings", false);
-            AccentToggle.IsOn = Helper.LocalSettingsHelper.LoadSettings("AccentSettings", false);
-            HamBurMenu.IsOn = Helper.LocalSettingsHelper.LoadSettings("SplitView", false);
-            SnapNotifTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("SnapperNotify", true);
-            SnapSoundTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("SnapSoundTog", true);
-            ArgConfirmTog.IsOn = Helper.LocalSettingsHelper.LoadSettings("TerminalRunArg", true);
+            SplashScrTog.IsOn = AppSettings.SplashScreen;
+            SplashScrCombo.SelectedIndex = AppSettings.SplashAnimIndex;
+
+            if (Helper.build >= 10586)
+                LoginReqTog.IsOn = AppSettings.LoginTogReg;
+
+            CommandsWrapToggle.IsOn = AppSettings.CommandsTextWrap.Equals(TextWrapping.Wrap);
+            ConKeyBtnTog.IsOn = AppSettings.LoadSettings("ConKeyBtnSet", false);
+            ConsoleFontSizeBox.SelectedIndex = AppSettings.LoadSettings("ConFontSizeSet", 3);
+            ThemeToggle.IsOn = AppSettings.ThemeSettings;
+            AccentToggle.IsOn = AppSettings.LoadSettings("AccentSettings", false);
+            HamBurMenu.IsOn = AppSettings.LoadSettings("SplitView", false);
+            SnapNotifTog.IsOn = AppSettings.LoadSettings("SnapperNotify", true);
+            SnapSoundTog.IsOn = AppSettings.LoadSettings("SnapSoundTog", true);
+            ArgConfirmTog.IsOn = AppSettings.LoadSettings("TerminalRunArg", true);
 
             if (await Helper.IsCapabilitiesAllowed())
             {
@@ -108,13 +111,14 @@ namespace CMDInjector
                 ResCapTog.IsEnabled = false;
             }
 
-            if (!Helper.LocalSettingsHelper.LoadSettings("PMLogPath", false))
+            if (!AppSettings.LoadSettings("PMLogPath", false))
             {
                 StorageApplicationPermissions.FutureAccessList.AddOrReplace("PMLogPath", KnownFolders.DocumentsLibrary);
-                Helper.LocalSettingsHelper.SaveSettings("PMLogPath", true);
+                AppSettings.SaveSettings("PMLogPath", true);
             }
 
             var PMLogPath = (await StorageApplicationPermissions.FutureAccessList.GetFolderAsync("PMLogPath")).Path;
+
             if (PMLogPath.ToUpper() == @"C:\Data\USERS\DefApps\APPDATA\ROAMING\MICROSOFT\WINDOWS\Libraries\Documents.library-ms".ToUpper())
             {
                 LogPathBox.Text = "C:\\Data\\Users\\Public\\Documents\\PacMan_Installer.pmlog";
@@ -126,40 +130,47 @@ namespace CMDInjector
 
             if (ThemeToggle.IsOn)
             {
-                CustomTheme.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("Theme", 0);
+                CustomTheme.SelectedIndex = AppSettings.Theme;
             }
 
             RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet");
 
-            UMCIToggle.IsOn = RegEdit.GetRegValue("Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD) == "00000001";
+            UMCIToggle.IsOn = RegEdit.GetRegValue("Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD).DWORDFlagToBool();
             WifiServiceToggle.IsOn = RegEdit.GetRegValue("services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD) != "00000004";
             BootshToggle.IsOn = RegEdit.GetRegValue("Services\\Bootsh", "Start", RegistryType.REG_DWORD) != "00000004";
 
             foreach (var color in typeof(Colors).GetRuntimeProperties())
             {
-                if (color.Name != "AliceBlue" && color.Name != "AntiqueWhite" && color.Name != "Azure" && color.Name != "Beige" && color.Name != "Bisque" && color.Name != "Black" && color.Name != "BlanchedAlmond" && color.Name != "Cornsilk" && color.Name != "FloralWhite" && color.Name != "Gainsboro" && color.Name != "GhostWhite" && color.Name != "Honeydew" && color.Name != "Ivory" && color.Name != "Lavender" && color.Name != "LavenderBlush" && color.Name != "LemonChiffon"
-                && color.Name != "LightCyan" && color.Name != "LightGoldenrodYellow" && color.Name != "LightGray" && color.Name != "LightYellow" && color.Name != "Linen" && color.Name != "MintCream" && color.Name != "MistyRose" && color.Name != "Moccasin" && color.Name != "OldLace" && color.Name != "PapayaWhip" && color.Name != "SeaShell" && color.Name != "Snow" && color.Name != "Transparent" && color.Name != "White" && color.Name != "WhiteSmoke")
+                if (!Globals.CursedColors.Contains(color.Name))
                 {
                     var cbi = new ComboBoxItem();
-                    var colorStack = new StackPanel();
-                    var selectColor = new Rectangle();
-                    var colorText = new TextBlock();
-                    colorStack.Orientation = Orientation.Horizontal;
-                    selectColor.Width = 20;
-                    selectColor.Height = 20;
-                    selectColor.Margin = new Thickness(0, 0, 10, 0);
-                    selectColor.Fill = new SolidColorBrush((Color)color.GetValue(null));
-                    colorText.Text = color.Name;
-                    colorText.VerticalAlignment = VerticalAlignment.Center;
-                    colorStack.Children.Add(selectColor);
-                    colorStack.Children.Add(colorText);
-                    cbi.Content = colorStack;
+                    var selectColor = new Rectangle()
+                    {
+                        Width = 20,
+                        Height = 20,
+                        Margin = new Thickness(0, 0, 10, 0),
+                        Fill = new SolidColorBrush((Color)color.GetValue(null))
+                    };
+
+                    var colorText = new TextBlock()
+                    {
+                        Text = color.Name,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    };
+
+                    cbi.Content = new StackPanel()
+                    {
+                        Orientation = Orientation.Horizontal
+                    }
+                        .AddChildren(selectColor)
+                        .AddChildren(colorText);
+
                     CustomAccent.Items.Add(cbi);
                     SolidColorBrush solidColor = (SolidColorBrush)selectColor.Fill;
                 }
             }
 
-            CustomAccent.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("Accent", 11);
+            CustomAccent.SelectedIndex = AppSettings.LoadSettings("Accent", 11);
 
             flag = true;
         }
@@ -171,36 +182,31 @@ namespace CMDInjector
 
         private void ThemeToggle_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("ThemeSettings", ThemeToggle.IsOn);
+            AppSettings.SaveSettings("ThemeSettings", ThemeToggle.IsOn);
             if (ThemeToggle.IsOn)
             {
-                CustomTheme.Visibility = Visibility.Visible;
-                CustomTheme.SelectedIndex = Helper.LocalSettingsHelper.LoadSettings("Theme", 0);
+                CustomTheme.Visible();
+                CustomTheme.SelectedIndex = AppSettings.LoadSettings("Theme", 0);
+
                 if (CustomTheme.SelectedIndex == 0)
                 {
-                    Helper.LocalSettingsHelper.SaveSettings("Theme", CustomTheme.SelectedIndex);
                     ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Dark;
                     Helper.color = Colors.Black;
                 }
                 else
                 {
-                    Helper.LocalSettingsHelper.SaveSettings("Theme", CustomTheme.SelectedIndex);
                     ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Light;
                     Helper.color = Colors.White;
                 }
             }
             else
             {
-                CustomTheme.Visibility = Visibility.Collapsed;
+                CustomTheme.Collapse();
                 ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Default;
-                if (RegEdit.GetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme", "CurrentTheme", RegistryType.REG_DWORD) == "00000000")
-                {
-                    Helper.color = Colors.White;
-                }
-                else
-                {
-                    Helper.color = Colors.Black;
-                }
+                Helper.color = RegEdit.GetRegValue(
+                    RegistryHive.HKEY_LOCAL_MACHINE,
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Theme",
+                    "CurrentTheme", RegistryType.REG_DWORD).IsDWORDStrFullZeros() ? Colors.White : Colors.Black;
             }
         }
 
@@ -208,15 +214,15 @@ namespace CMDInjector
         {
             try
             {
-                Helper.LocalSettingsHelper.SaveSettings("AccentSettings", AccentToggle.IsOn);
+                AppSettings.SaveSettings("AccentSettings", AccentToggle.IsOn);
                 if (AccentToggle.IsOn)
                 {
-                    CustomAccent.Visibility = Visibility.Visible;
+                    CustomAccent.Visible();
                     AccentResources();
                 }
                 else
                 {
-                    CustomAccent.Visibility = Visibility.Collapsed;
+                    CustomAccent.Collapse();
                     Color accentColor = new UISettings().GetColorValue(UIColorType.Accent);
                     (Application.Current.Resources["AppAccentColor"] as SolidColorBrush).Color = accentColor;
                     (Application.Current.Resources["ToggleSwitchFillOn"] as SolidColorBrush).Color = accentColor;
@@ -242,7 +248,7 @@ namespace CMDInjector
 
         private void CustomTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("Theme", CustomTheme.SelectedIndex);
+            AppSettings.SaveSettings("Theme", CustomTheme.SelectedIndex);
             if (CustomTheme.SelectedIndex == 0)
             {
                 ((Frame)Window.Current.Content).RequestedTheme = ElementTheme.Dark;
@@ -293,7 +299,7 @@ namespace CMDInjector
                                         statusBar.ForegroundColor = accentColor;
                                     }
                                 }
-                                Helper.LocalSettingsHelper.SaveSettings("Accent", CustomAccent.SelectedIndex);
+                                AppSettings.SaveSettings("Accent", CustomAccent.SelectedIndex);
                                 break;
                             }
                             count++;
@@ -306,28 +312,29 @@ namespace CMDInjector
 
         private void HamBurMenu_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("SplitView", HamBurMenu.IsOn);
+            AppSettings.SaveSettings("SplitView", HamBurMenu.IsOn);
             Helper.pageNavigation.Invoke(HamBurMenu.IsOn ? 45 : 0, null);
         }
 
         private void CommandsWrapToggle_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("CommandsTextWrap", CommandsWrapToggle.IsOn);
+            //AppSettings.CommandsTextWrap = CommandsWrapToggle.IsOn;
+            AppSettings.SaveSettings("CommandsTextWrap", CommandsWrapToggle.IsOn);
         }
 
         private void ConsoleFontSizeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("ConFontSizeSet", ConsoleFontSizeBox.SelectedIndex);
+            AppSettings.SaveSettings("ConFontSizeSet", ConsoleFontSizeBox.SelectedIndex);
         }
 
         private void ConKeyBtnTog_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("ConKeyBtnSet", ConKeyBtnTog.IsOn);
+            AppSettings.SaveSettings("ConKeyBtnSet", ConKeyBtnTog.IsOn);
         }
 
         private void SnapNotifTog_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("SnapperNotify", SnapNotifTog.IsOn);
+            AppSettings.SaveSettings("SnapperNotify", SnapNotifTog.IsOn);
         }
 
         private void BootshToggle_Toggled(object sender, RoutedEventArgs e)
@@ -335,7 +342,7 @@ namespace CMDInjector
             RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Services\\Bootsh", "Start", RegistryType.REG_DWORD, BootshToggle.IsOn ? "00000002" : "00000004");
             if (flag)
             {
-                BootshIndicator.Visibility = Visibility.Visible;
+                BootshIndicator.Visible();
             }
         }
 
@@ -344,7 +351,7 @@ namespace CMDInjector
             RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\Control\\CI", "UMCIAuditMode", RegistryType.REG_DWORD, UMCIToggle.IsOn.ToDWORDStr());
             if (flag)
             {
-                UMCIModeIndicator.Visibility = Visibility.Visible;
+                UMCIModeIndicator.Visible();
             }
         }
 
@@ -353,13 +360,13 @@ namespace CMDInjector
             RegEdit.SetHKLMValue("SYSTEM\\CurrentControlSet\\services\\KeepWiFiOnSvc", "Start", RegistryType.REG_DWORD, WifiServiceToggle.IsOn ? "00000002" : "00000004");
             if (flag)
             {
-                WifiServiceIndicator.Visibility = Visibility.Visible;
+                WifiServiceIndicator.Visible();
             }
         }
 
         private void StorageTog_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("StorageSet", StorageTog.IsOn);
+            AppSettings.SaveSettings("StorageSet", StorageTog.IsOn);
         }
 
         private void DefaultTog_Toggled(object sender, RoutedEventArgs e)
@@ -378,7 +385,7 @@ namespace CMDInjector
             }
             else
             {
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
                     RegEdit.DeleteRegValue(".xap");
                     RegEdit.DeleteRegValue(".appx");
@@ -391,7 +398,7 @@ namespace CMDInjector
             }
             if (flag == true)
             {
-                DefInstIndicator.Visibility = Visibility.Visible;
+                DefInstIndicator.Visible();
             }
         }
 
@@ -412,25 +419,25 @@ namespace CMDInjector
 
         private void ArgConfirmTog_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("TerminalRunArg", ArgConfirmTog.IsOn);
+            AppSettings.SaveSettings("TerminalRunArg", ArgConfirmTog.IsOn);
         }
 
         private void SplashScrTog_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("SplashScreen", SplashScrTog.IsOn);
+            AppSettings.SaveSettings("SplashScreen", SplashScrTog.IsOn);
             SplashScrCombo.Visibility = SplashScrTog.IsOn.ToVisibility();
         }
 
         private void SplashScrCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var obj = sender as ComboBox;
-            Helper.LocalSettingsHelper.SaveSettings("SplashAnim", (obj.SelectedItem as ComboBoxItem).Content.ToString());
-            Helper.LocalSettingsHelper.SaveSettings("SplashAnimIndex", obj.SelectedIndex);
+            AppSettings.SaveSettings("SplashAnim", (obj.SelectedItem as ComboBoxItem).Content.ToString());
+            AppSettings.SaveSettings("SplashAnimIndex", obj.SelectedIndex);
         }
 
         private void LoginReqTog_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("LoginTogReg", LoginReqTog.IsOn);
+            AppSettings.SaveSettings("LoginTogReg", LoginReqTog.IsOn);
         }
 
         private async void BackupFoldBtn_Click(object sender, RoutedEventArgs e)
@@ -466,12 +473,12 @@ namespace CMDInjector
 
         private void SnapSoundTog_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("SnapSoundTog", SnapSoundTog.IsOn);
+            AppSettings.SaveSettings("SnapSoundTog", SnapSoundTog.IsOn);
         }
 
         private void MenuTransitionTog_Toggled(object sender, RoutedEventArgs e)
         {
-            Helper.LocalSettingsHelper.SaveSettings("MenuTransition", MenuTransitionTog.IsOn);
+            AppSettings.SaveSettings("MenuTransition", MenuTransitionTog.IsOn);
         }
     }
 }

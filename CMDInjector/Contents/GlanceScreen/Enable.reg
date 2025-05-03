@@ -1,0 +1,43 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\OEM\Nokia\NokiaSvcHost\Plugins\NsgGlance\NlpmService]
+"PluginPath"="\Data\SharedData\OEM\Public\NsgGlance_NlpmServiceImpl_4.1.12.4.dll"
+"Path"="\Data\SharedData\OEM\Public\NsgGlance_NlpmService_4.1.12.4.dll"
+"Version"="4.1.12.4"
+"PluginVersion"="4.1.12.4"
+"Enabled"=dword:0001
+"UsingBeta"=dword:0000
+"UseBeta"=dword:0000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\OEM\Nokia\lpm]
+"AlwaysOnInCharger"=dword:00000000
+"AppGraphicTimeout"=dword:00000000
+"BSSwitchOffTimeout"=dword:0000001e
+"DarkMode"=dword:00000000
+"DarkModeElements"=dword:0000000f
+"DarkModeEnd"=dword:000001a4
+"DarkModeOverrideColor"=dword:00000000
+"DarkModeStart"=dword:00000528
+"DarkModeThreshold"=dword:00004e20
+"DoubleTapEnabled"=dword:00000000
+"Enabled"=dword:00000001
+"MinimizeIcon"=dword:00000000
+"Mode"=dword:00000000
+"NormalModeElements"=dword:0000001f
+"SwipeEnabled"=dword:00000000
+"SwitchOffTimeout"=dword:0000000f
+"PanelType"=dword:00000001
+"ShowDetailedAppStatus"=dword:00000000
+"ShowSystemNotifications"=dword:00000000
+"FontFile"="\Data\SharedData\OEM\Public\lpmFonts_4.1.12.4\lpmFont_wxga.bin"
+"AppGraphicGestures"=dword:00000000
+"SingleTapWakeup"=dword:00000000
+"EnablePublicSDK"=dword:00000000
+"SupportedTouchEvents"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NlpmService]
+"ImagePath"=hex(2):43,00,3a,00,5c,00,5c,00,77,00,69,00,6e,00,64,00,6f,00,77,00,73,\
+				   00,5c,00,5c,00,53,00,79,00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,5c,00,\
+                   4f,00,45,00,4d,00,53,00,65,00,72,00,76,00,69,00,63,00,65,00,48,00,6f,00,73,\
+                   00,74,00,2e,00,65,00,78,00,65,00,20,00,2d,00,6b,00,20,00,4e,00,73,00,67,00,\
+                   47,00,6c,00,61,00,6e,00,63,00,65,00,00,00

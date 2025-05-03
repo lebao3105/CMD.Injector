@@ -58,24 +58,24 @@ namespace CMDInjector
             if (Helper.build < 14393)
             {
                 ConsoleBoxGrid.Padding = new Thickness(2, 0, 0, 100);
-                TelnetCommand.Visibility = Visibility.Collapsed;
-                CommandBtn.Visibility = Visibility.Collapsed;
+                TelnetCommand.Collapse();
+                CommandBtn.Collapse();
                 RowMinHig.MinHeight = 100;
             }
             else
             {
-                TelnetCommandBox.Visibility = Visibility.Collapsed;
-                CommandSendBtn.Visibility = Visibility.Collapsed;
-                if (Helper.LocalSettingsHelper.LoadSettings("ConKeyBtnSet", false))
+                TelnetCommandBox.Collapse();
+                CommandSendBtn.Collapse();
+                if (AppSettings.LoadSettings("ConKeyBtnSet", false))
                 {
                     ConsoleBoxGrid.Padding = new Thickness(2, 0, 0, 200);
-                    CommandBtn.Visibility = Visibility.Visible;
+                    CommandBtn.Visible();
                     RowMinHig.MinHeight = 100;
                 }
                 else
                 {
                     ConsoleBoxGrid.Padding = new Thickness(2, 0, 0, 270);
-                    CommandBtn.Visibility = Visibility.Collapsed;
+                    CommandBtn.Collapse();
                     RowMinHig.MinHeight = 30;
                 }
             }
@@ -85,12 +85,12 @@ namespace CMDInjector
                 {
                     return;
                 }
-                if (tClient.IsConnected && HomeHelper.IsConnected())
+                if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
                 {
                     try
                     {
                         var cmd = TerminalHelper.EscapeSymbols(e.Parameter.ToString(), true);
-                        if (Helper.LocalSettingsHelper.LoadSettings("TerminalRunArg", true))
+                        if (AppSettings.LoadSettings("TerminalRunArg", true))
                         {
                             TextBlock textBlockAsk = new TextBlock
                             {
@@ -121,7 +121,7 @@ namespace CMDInjector
                             }
                             if (checkBox.IsChecked == true)
                             {
-                                Helper.LocalSettingsHelper.SaveSettings("TerminalRunArg", false);
+                                AppSettings.SaveSettings("TerminalRunArg", false);
                             }
                         }
                         while (flag == false)
@@ -180,12 +180,12 @@ namespace CMDInjector
             ConsoleBox.Text = "Connecting...";
             _ = tClient.Connect();
             long i = 0;
-            while (tClient.IsConnected == false && i < 150)
+            while (Helper.IsTelnetConnected() == false && i < 150)
             {
                 await Task.Delay(100);
                 i++;
             }
-            if (tClient.IsConnected && HomeHelper.IsConnected())
+            if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
             {
                 ConsoleBox.Text = "Connected.";
             }
@@ -285,7 +285,7 @@ namespace CMDInjector
             }
             else if (textBox.Text.ToLower() == "cmdinjector -unlock")
             {
-                Helper.LocalSettingsHelper.SaveSettings("UnlockHidden", true);
+                AppSettings.SaveSettings("UnlockHidden", true);
                 TelnetCommand.Text = string.Empty;
                 TelnetCommandBox.Text = string.Empty;
             }
@@ -345,7 +345,7 @@ namespace CMDInjector
                                     }
                                     await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                                     {
-                                        TempBox.Visibility = Visibility.Visible;
+                                        TempBox.Visible();
                                         ConsoleScroll.ChangeView(0.0f, ConsoleScroll.ScrollableHeight, 1.0f);
                                     });
                                 }
@@ -354,7 +354,7 @@ namespace CMDInjector
                     });
                     ConsoleBox.Text += "\r\n" + TempBox.Text;
                     if (TempBox.Text != string.Empty) ConsoleBox.Text += "\r\n";
-                    TempBox.Visibility = Visibility.Collapsed;
+                    TempBox.Collapse();
                     TempBox.Text = string.Empty;
                     ConsoleScroll.ChangeView(0.0f, ConsoleScroll.ScrollableHeight, 1.0f);
                     File.Delete(TerminalHelper.EndFile);

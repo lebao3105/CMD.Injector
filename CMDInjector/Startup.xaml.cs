@@ -1,41 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Windows.Storage;
-using Windows.UI.Popups;
-using ndtklib;
 using CMDInjectorHelper;
 
 
 namespace CMDInjector
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class Startup : Page
     {
         public Startup()
         {
-            this.InitializeComponent();
-            this.NavigationCacheMode = NavigationCacheMode.Enabled;
+            InitializeComponent();
+            NavigationCacheMode = NavigationCacheMode.Enabled;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             Initialize();
-            CommandBox.TextWrapping = CMDInjectorHelper.Settings.CommandsTextWrap;
+            CommandBox.TextWrapping = AppSettings.CommandsTextWrap.ToTextWrapping();
         }
 
         private async void Initialize()
@@ -44,16 +28,14 @@ namespace CMDInjector
             {
                 if (HomeHelper.IsCMDInjected())
                 {
-                    if (File.Exists(@"C:\Windows\System32\Startup.bat"))
-                    {
-                        FilesHelper.CopyFile(@"C:\Windows\System32\Startup.bat", Helper.localFolder.Path + "\\Startup.bat");
-                    }
-                    else
-                    {
-                        FilesHelper.CopyFromAppRoot("\\BatchScripts\\Startup.bat", Helper.localFolder.Path + "\\Startup.bat");
-                    }
+                    FilesHelper.CopyFile(
+                        "Startup.bat".IsAFileInSystem32() ?
+                            "C:\\Windows\\System32\\Startup.bat" :
+                            $"{Globals.installedLocation.Path}\\Contents\\BatchScripts\\Startup.bat",
+                        $"{Helper.localFolder.Path}\\Startup.bat"
+                    );
                     var text = await FileIO.ReadTextAsync(await Helper.localFolder.GetFileAsync("Startup.bat"), Windows.Storage.Streams.UnicodeEncoding.Utf8);
-                    CommandBox.Text = CommandBox.Text.Remove($"{text}\r".LastIndexOf("\r"));
+                    CommandBox.Text = CommandBox.Text.Remove($"{text}\r".LastIndexOf("\r")); // ?
                 }
                 else
                 {

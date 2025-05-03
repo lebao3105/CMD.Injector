@@ -45,7 +45,7 @@ namespace CMDInjector
                 FilesHelper.CopyToSystem32FromAppRoot("Contents\\BatchScripts", "Startup.bat", null);
             }
 
-            if (Helper.currentVersion.IsGreaterThan(CMDInjectorHelper.Settings.InitialLaunch, '.'))
+            if (Helper.currentVersion.IsGreaterThan(AppSettings.InitialLaunch, '.'))
             {
                 if (Helper.InjectedBatchVersion.ToInt32() < 3800)
                 {
@@ -53,9 +53,9 @@ namespace CMDInjector
                 }
 
                 await Changelog.DisplayLog();
-                CMDInjectorHelper.Settings.InitialLaunch = Helper.currentVersion;
-                CMDInjectorHelper.Settings.TempInjection = true;
-                CMDInjectorHelper.Settings.AskCapPermission = true;
+                AppSettings.InitialLaunch = Helper.currentVersion;
+                AppSettings.TempInjection = true;
+                AppSettings.AskCapPermission = true;
             }
 
             if ((!HomeHelper.IsCMDInjected() && !"CMDInjector.dat".IsAFileInSystem32()) || !"WindowsPowerShell\\v1.0\\powershell.exe".IsAFileInSystem32())
@@ -63,10 +63,10 @@ namespace CMDInjector
                 var isInjected = await OperationInjection();
                 if (isInjected)
                 {
-                    if (CMDInjectorHelper.Settings.FirstLaunch && !"CMDInjectorFirstLaunch.dat".IsAFileInSystem32()/* && build >= 14393*/)
+                    if (AppSettings.FirstLaunch && !"CMDInjectorFirstLaunch.dat".IsAFileInSystem32()/* && build >= 14393*/)
                     {
                         isFirstLaunch = true;
-                        CMDInjectorHelper.Settings.FirstLaunch.Toggle();
+                        AppSettings.FirstLaunch.Toggle();
 
                         FilesHelper.CopyFile(Helper.localFolder.Path + "\\CMDInjector.dat", @"C:\Windows\System32\CMDInjectorFirstLaunch.dat");
                         var result = await Helper.MessageBox("A system reboot is required to initialize the App.", Helper.SoundHelper.Sound.Alert, "First Launch", "Cancel", true, "Reboot");
@@ -106,23 +106,23 @@ namespace CMDInjector
             }
             else
             {
-                CMDInjectorHelper.Settings.FirstLaunch = false;
+                AppSettings.FirstLaunch = false;
             }
 
-            if (CMDInjectorHelper.Settings.TempInjection)
+            if (AppSettings.TempInjection)
             {
                 _ = OperationInjection();
-                CMDInjectorHelper.Settings.TempInjection.Toggle();
+                AppSettings.TempInjection.Toggle();
             }
 
-            if (CMDInjectorHelper.Settings.AskCapPermission && !isFirstLaunch && !File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat"))
+            if (AppSettings.AskCapPermission && !isFirstLaunch && !File.Exists(@"C:\Windows\System32\CMDInjectorFirstLaunch.dat"))
             {
                 try
                 {
                     if (!await Helper.IsCapabilitiesAllowed())
                     {
                         await Helper.AskCapabilitiesPermission();
-                        CMDInjectorHelper.Settings.AskCapPermission.Toggle();
+                        AppSettings.AskCapPermission.Toggle();
                     }
                 }
                 catch (Exception ex)
@@ -242,7 +242,7 @@ namespace CMDInjector
 
             Helper.pageNavigation.Invoke(NavigationIndexes[textBlock.Text], null);
 
-            if (Helper.LocalSettingsHelper.LoadSettings("MenuTransition", true) && Globals.build >= 10572)
+            if (AppSettings.LoadSettings("MenuTransition", true) && Globals.build >= 10572)
             {
                 (Frame.Content as Page).OpenFromSplashScreen(Globals.rect, Globals.color, bitmapImage.UriSource);
             }

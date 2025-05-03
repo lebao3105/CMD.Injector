@@ -1,12 +1,12 @@
 ﻿using Microsoft.Toolkit.Uwp.Notifications;
-using ndtklib;
 using Newtonsoft.Json;
-using OEMSharedFolderAccessLib;
-using SecureBootRuntimeComponent;
+//using SecureBootRuntimeComponent;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,9 +24,9 @@ using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Popups;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using WinUniversalTool;
+using ndtklib;
 
 namespace CMDInjectorHelper
 {
@@ -63,7 +63,7 @@ namespace CMDInjectorHelper
 
         public static string InjectedBatchVersion {
             get {
-                return File.Exists(@"C:\Windows\System32\CMDInjectorVersion.dat") ? File.ReadAllText(@"C:\Windows\System32\CMDInjectorVersion.dat", Encoding.UTF8) : "0000";
+                return "CMDInjectorVersion.dat".IsAFileInSystem32() ? "CMDInjectorVersion.dat".ReadFromDir(@"C:\Windows\System32") : "0000";
             }
         }
 
@@ -76,16 +76,18 @@ namespace CMDInjectorHelper
         public static EventHandler pageNavigation;
         public static Rect rect;
 
-        /// <summary>
-        /// An instance of ndtklib's NRPC.
-        /// Gets fully initialized by <see cref="Helper.Init"/>.
-        /// </summary>
-        public static NRPC rpc = new NRPC();
+        public static NRPC nrpc = new NRPC();
 
         /// <summary>
-        /// An instance of COEMSharedFolder. Gets fully initialized by <see cref="Helper.Init"/>.
+        /// Colors that gets excluded times.
         /// </summary>
-        public static COEMSharedFolder oem = new COEMSharedFolder();
+        public static List<string> CursedColors = new List<string>
+        {
+            "AliceBlue", "AntiqueWhite", "Azure", "Beige", "Bisque", "Black", "BlanchedAlmond", "Cornsilk",
+            "FloralWhite", "Gainsboro", "GhostWhite", "Honeydew", "Ivory", "Lavender", "LavenderBlush", "LemonChiffon",
+            "LightCyan", "LightGoldenrodYellow", "LightGray", "LightYellow", "Linen", "MintCream", "MistyRose", "Moccasin",
+            "OldLace", "PapayaWhip", "SeaShell", "Snow", "Transparent", "White", "WhiteSmoke"
+        };
     }
 
     public static class Helper
@@ -123,14 +125,14 @@ namespace CMDInjectorHelper
         public static EventHandler pageNavigation;
         public static Rect rect;
         
-        private static PolicyProvisionNative sbp = new PolicyProvisionNative();
+        //private static PolicyProvisionNative sbp = new PolicyProvisionNative();
 
         private static async void Connect()
         {
             await tClient.Connect();
 
             long i = 0;
-            while (tClient.IsConnected == false && i < 150)
+            while (IsTelnetConnected() == false && i < 150)
             {
                 await Task.Delay(100);
                 i++;
@@ -140,18 +142,21 @@ namespace CMDInjectorHelper
                 ThrowException(new TimeoutException("Timed out waiting for the Telnet client to be ready"));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Init()
         {
-            Globals.oem.RPC_Init();
-            Globals.rpc.Initialize();
+            Globals.nrpc.Initialize();
             Connect();
         }
+
+        public static async Task Send(string message) => await tClient.Send(message);
+        public static bool IsTelnetConnected() => tClient.IsConnected;
 
         public static async Task WaitAppLaunch()
         {
             if (build > 10572)
             {
-                while (LocalSettingsHelper.LoadSettings("SplashScreen", true))
+                while (AppSettings.SplashScreen)
                 {
                     await Task.Delay(200);
                     if (Globals.splashScreenDisplayed)
@@ -160,7 +165,7 @@ namespace CMDInjectorHelper
                     }
                 }
 
-                while (LocalSettingsHelper.LoadSettings("LoginTogReg", true) &&
+                while (AppSettings.LoginTogReg &&
                        (await UserConsentVerifier.CheckAvailabilityAsync()) == UserConsentVerifierAvailability.Available)
                 {
                     await Task.Delay(200);
@@ -312,7 +317,7 @@ namespace CMDInjectorHelper
             RegEdit.SetRegValue("ID_CAP_CHAMBER_PROFILE_DATA_RW", RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
             RegEdit.SetRegValue("ID_CAP_PUBLIC_FOLDER_FULL", RegistryType.REG_MULTI_SZ, "CAPABILITY_CLASS_FIRST_PARTY_APPLICATIONS CAPABILITY_CLASS_THIRD_PARTY_APPLICATIONS ");
 
-            if (tClient.IsConnected && HomeHelper.IsConnected())
+            if (Helper.IsTelnetConnected() && HomeHelper.IsConnected())
             {
                 // The task below was not awaited before. Why? Also should I?
                 await tClient.Send($"MinDeployAppx.exe /Register /PackagePath:\"{installedLocation.Path}\\AppxManifest.xml\" /DeploymentOption:1 >{cacheFolder.Path}\\UnlockResult.txt 2>&1&echo. >{cacheFolder.Path}\\UnlockEnd.txt");
@@ -336,7 +341,9 @@ namespace CMDInjectorHelper
         }
         #endregion
 
-        public static async Task<int?> MessageBox(string content, SoundHelper.Sound sound = SoundHelper.Sound.Alert, string title = "", string buttonText = "Close", bool seconadaryButton = false, string seconadaryButtonText = "Ok")
+        public static async Task<int?> MessageBox(
+            string content, SoundHelper.Sound sound = SoundHelper.Sound.Alert, string title = "",
+            string buttonText = "Close", bool seconadaryButton = false, string seconadaryButtonText = "Ok")
         {
             try
             {
@@ -370,20 +377,17 @@ namespace CMDInjectorHelper
 
         public static uint RebootSystem()
         {
-            return Globals.rpc.SystemReboot();
+            return Globals.nrpc.SystemReboot();
         }
+
+        [DllImport("PolicyProvision.dll", SetLastError = true)]
+        static extern int GetSecureBootPolicyPublisher(out Guid publisher);
 
         public static bool IsSecureBootPolicyInstalled()
         {
-            try
-            {
-                // CHECK: Is $"{{{Guid.Empty}}}" the same as { + Guid.Empty + } ?
-                return sbp.GetSecureBootPolicyPublisher() != $"{{{Guid.Empty}}}" && !string.IsNullOrEmpty(sbp.GetSecureBootPolicyPublisher());
-            }
-            catch
-            {
-                return false;
-            }
+            Guid publisher;
+            GetSecureBootPolicyPublisher(out publisher);
+            return publisher != Guid.Empty;
         }
 
         public static async Task DownloadFile(Uri downloadURL, StorageFile file, IProgress<int> progression)
@@ -435,89 +439,6 @@ namespace CMDInjectorHelper
             await downloadOperation.StartAsync().AsTask(cancellationToken.Token, progress);
         }
 
-        public static class LocalSettingsHelper
-        {
-            public static void SaveSettings(string key, bool updateValue, string fileName = null)
-            {
-                Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
-            }
-
-            public static void SaveSettings(string key, DateTime updateValue, string fileName = null)
-            {
-                Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
-            }
-
-            public static void SaveSettings(string key, decimal updateValue, string fileName = null)
-            {
-                Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
-            }
-
-            public static void SaveSettings(string key, double updateValue, string fileName = null)
-            {
-                Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
-            }
-
-            public static void SaveSettings(string key, float updateValue, string fileName = null)
-            {
-                Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
-            }
-
-            public static void SaveSettings(string key, int updateValue, string fileName = null)
-            {
-                Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
-            }
-
-            public static void SaveSettings(string key, long updateValue, string fileName = null)
-            {
-                Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
-            }
-
-            public static void SaveSettings(string key, string updateValue, string fileName = null)
-            {
-                Plugin.Settings.CrossSettings.Current.AddOrUpdateValue(key, updateValue, fileName);
-            }
-
-            public static bool LoadSettings(string key, bool defaultValue, string fileName = null)
-            {
-                return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-
-            public static DateTime LoadSettings(string key, DateTime defaultValue, string fileName = null)
-            {
-                return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-
-            public static decimal LoadSettings(string key, decimal defaultValue, string fileName = null)
-            {
-                return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-
-            public static double LoadSettings(string key, double defaultValue, string fileName = null)
-            {
-                return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-
-            public static float LoadSettings(string key, float defaultValue, string fileName = null)
-            {
-                return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-
-            public static int LoadSettings(string key, int defaultValue, string fileName = null)
-            {
-                return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-
-            public static long LoadSettings(string key, long defaultValue, string fileName = null)
-            {
-                return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-
-            public static string LoadSettings(string key, string defaultValue, string fileName = null)
-            {
-                return Plugin.Settings.CrossSettings.Current.GetValueOrDefault(key, defaultValue, fileName);
-            }
-        }
-
         public static class NotificationHelper
         {
             public static void PushNotification(
@@ -554,11 +475,9 @@ namespace CMDInjectorHelper
 
             public static bool IsToastAlreadyThere(string tag)
             {
-                var toastsHistory = new List<ToastNotification>(
+                return new List<ToastNotification>(
                     ToastNotificationManager.History.GetHistory()
-                ).Find(o => o.Tag == tag);
-
-                return toastsHistory != null;
+                ).Find(o => o.Tag == tag) != null;
             }
         }
 
@@ -696,19 +615,25 @@ namespace CMDInjectorHelper
 
         public static class Json
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static void ObjectToJsonFile(object obj, string destinationFile)
-            {
-                File.WriteAllText(destinationFile, JsonConvert.SerializeObject(obj, Formatting.Indented));
-            }
+            => File.WriteAllText(destinationFile, JsonConvert.SerializeObject(obj, Formatting.Indented));
         }
 
         public class BackgroundTaskHelper
         {
             private static ExtendedExecutionSession session = null;
             private static int taskCount = 0;
+
             static bool IsSessionStarted = false;
             static bool SupportBackground = false;
+
             static readonly TypedEventHandler<object, ExtendedExecutionRevokedEventArgs> revoked = SessionRevoked;
+
+            private const string ThemeTaskName = "ThemeUpdater";
+            private const string WallpaperTaskName = "WallpaperUpdater";
+            private const string WallpaperTaskEntryPoint = "BackgroundTasks.WallpaperUpdater";
+            private const string ThemeTaskEntryPoint = "BackgroundTasks.ThemeUpdater";
 
             public static async Task RequestSessionAsync(String description)
             {
@@ -754,21 +679,13 @@ namespace CMDInjectorHelper
 
             public static void ClearSession()
             {
-                try
+                if (session != null)
                 {
-                    if (session != null)
-                    {
-                        session.Dispose();
-                        session = null;
-                    }
-
-                    taskCount = 0;
-
+                    session.Dispose();
+                    session = null;
                 }
-                catch (Exception ex)
-                {
 
-                }
+                taskCount = 0;
                 IsSessionStarted = false;
             }
 
@@ -787,22 +704,11 @@ namespace CMDInjectorHelper
                             break;
                     }
                 });
-                
+
                 //The session has been prematurely revoked due to system constraints, ensure the session is disposed
-                if (session != null)
-                {
-                    session.Dispose();
-                    session = null;
-                }
-
-                taskCount = 0;
-
-                IsSessionStarted = false;
+                ClearSession();
             }
 
-            private const string ThemeTaskName = "ThemeUpdater";
-
-            private const string ThemeTaskEntryPoint = "BackgroundTasks.ThemeUpdater";
 
             public static bool IsThemeTaskActivated()
             {
@@ -826,14 +732,8 @@ namespace CMDInjectorHelper
                 );
             }
 
-            public static void UnregisterThemeTask()
-            {
-                UnregisterBackgroundTask(ThemeTaskName);
-            }
+            public static void UnregisterThemeTask() => UnregisterBackgroundTask(ThemeTaskName);
 
-            private const string WallpaperTaskName = "WallpaperUpdater";
-
-            private const string WallpaperTaskEntryPoint = "BackgroundTasks.WallpaperUpdater";
 
             public static bool IsWallpaperTaskActivated()
             {
@@ -847,20 +747,17 @@ namespace CMDInjectorHelper
                 return false;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static async Task<bool> RegisterWallpaperTask(uint? interval = null, SystemTrigger trigger = null)
-            {
-                return await RegisterBackgroundTask(
+                => await RegisterBackgroundTask(
                     WallpaperTaskName,
                     WallpaperTaskEntryPoint,
                     interval,
                     trigger
                 );
-            }
 
-            public static void UnregisterWallpaperTask()
-            {
-                UnregisterBackgroundTask(WallpaperTaskName);
-            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void UnregisterWallpaperTask() => UnregisterBackgroundTask(WallpaperTaskName);
 
             public static async Task<bool> RegisterBackgroundTask(string taskName, string entryPoint, uint? interval = null, SystemTrigger trigger = null, SystemCondition condition = null)
             {

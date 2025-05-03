@@ -45,12 +45,15 @@ namespace CMDInjectorHelper
         #region Get Registry Values
         public static string GetRegValue(RegistryHive hKey, string subKey, string value, RegistryType type)
         {
-            return Globals.oem.rget((uint)hKey, subKey, value, (uint)type);
+            // FIXME
+            byte[] resultArr = new byte[8096];
+            Globals.nrpc.RegQueryValue((uint)hKey, subKey, value, (uint)type, resultArr);
+            return Encoding.UTF8.GetString(resultArr);
         }
         
         public static string GetRegValue(string value, RegistryType type)
         {
-            Debug.Assert(!string.IsNullOrWhiteSpace(CurrentKeyPath), "RegEdit.GoToKey() is not called!");
+            Debug.Assert(CurrentKeyPath.HasContent(), "RegEdit.GoToKey() is not called!");
             return GetRegValue(CurrentHive, CurrentKeyPath, value, type);
         }
 
@@ -72,6 +75,16 @@ namespace CMDInjectorHelper
             SetRegValueEx(RegistryHive.HKEY_LOCAL_MACHINE, subKey, value, type, buffer);
         }
 
+        public static void SetHKLMValue(string subKey, string value, RegistryType type, byte[] buffer)
+        {
+            SetRegValue(RegistryHive.HKEY_LOCAL_MACHINE, subKey, value, type, buffer);
+        }
+
+        public static void SetHKLMValueEx(string subKey, string value, RegistryType type, byte[] buffer)
+        {
+            SetRegValueEx(RegistryHive.HKEY_LOCAL_MACHINE, subKey, value, type, buffer);
+        }
+
         public static void SetRegValue(string value, RegistryType type, string buffer)
         {
             Debug.Assert(
@@ -80,15 +93,39 @@ namespace CMDInjectorHelper
             SetRegValue(CurrentHive, CurrentKeyPath, value, type, buffer);
         }
 
-        public static void SetRegValue(RegistryHive hKey, string subKey, string value, RegistryType type, string buffer)
+        public static void SetRegValue(string value, RegistryType type, byte[] buffer)
         {
-            Globals.oem.rset((uint)hKey, subKey, value, (uint)type, buffer, 0);
+            Debug.Assert(
+                !string.IsNullOrWhiteSpace(CurrentKeyPath),
+                "RegEdit.GoToKey() is not used!");
+            SetRegValue(CurrentHive, CurrentKeyPath, value, type, buffer);
         }
 
         public static void SetRegValue(string subKey, string value, RegistryType type, string buffer)
         {
             Debug.Assert(!Enum.IsDefined(typeof(RegistryHive), CurrentHive), "RegEdit.GoToKey() is not called!");
             SetRegValue(CurrentHive, subKey, value, type, buffer);
+        }
+
+        public static void SetRegValue(string subKey, string value, RegistryType type, byte[] buffer)
+        {
+            Debug.Assert(!Enum.IsDefined(typeof(RegistryHive), CurrentHive), "RegEdit.GoToKey() is not called!");
+            SetRegValue(CurrentHive, subKey, value, type, buffer);
+        }
+
+        public static void SetRegValue(RegistryHive hKey, string subKey, string value, RegistryType type, string buffer)
+        {
+            Globals.nrpc.RegSetValue((uint)hKey, subKey, value, (uint)type, Encoding.UTF8.GetBytes(buffer));
+        }
+
+        public static void SetRegValue(RegistryHive hKey, string subKey, string value, RegistryType type, byte[] buffer)
+        {
+            Globals.nrpc.RegSetValue((uint)hKey, subKey, value, (uint)type, buffer);
+        }
+
+        public static uint SetRegValueEx(RegistryHive hKey, string subKey, string value, RegistryType type, byte[] buffer)
+        {
+            return Globals.nrpc.RegSetValue((uint)hKey, subKey, value, (uint)type, buffer);
         }
 
         public static uint SetRegValueEx(RegistryHive hKey, string subKey, string value, RegistryType type, string buffer)
@@ -110,7 +147,7 @@ namespace CMDInjectorHelper
                     byteArr = Encoding.Unicode.GetBytes(buffer + '\0');
                     break;
             }
-            return Globals.rpc.RegSetValue((uint)hKey, subKey, value, (uint)type, byteArr);
+            return SetRegValueEx(hKey, subKey, value, type, buffer);
         }
 
         public static uint SetRegValueEx(string value, RegistryType type, string buffer)
@@ -120,11 +157,16 @@ namespace CMDInjectorHelper
                 "RegEdit.GoToKey() is not used. Can not use the short overload of SetRegValueEx.");
             return SetRegValueEx(CurrentHive, CurrentKeyPath, value, type, buffer);
         }
+
+        public static uint SetRegValueEx(string value, RegistryType type, byte[] buffer)
+        {
+            return SetRegValueEx(CurrentHive, CurrentKeyPath, value, type, buffer);
+        }
         #endregion
 
         #region Delete Registry Values
         public static uint DeleteRegValue(RegistryHive hive, string subKey, string value)
-            => Globals.rpc.RegDeleteValue((uint)hive, subKey, value);
+            => Globals.nrpc.RegDeleteValue((uint)hive, subKey, value);
 
         public static uint DeleteRegValue(string value)
         {

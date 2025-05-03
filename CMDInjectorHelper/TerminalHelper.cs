@@ -6,7 +6,7 @@
         {
             get
             {
-                var fontSize = Helper.LocalSettingsHelper.LoadSettings("ConFontSizeSet", 3);
+                var fontSize = AppSettings.LoadSettings("ConFontSizeSet", 3);
                 return (5 > fontSize && fontSize > 0) ? 12 + fontSize : 15;
             }
         }

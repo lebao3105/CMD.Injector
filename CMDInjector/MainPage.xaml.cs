@@ -1,38 +1,18 @@
 ﻿using CMDInjectorHelper;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Phone.UI.Input;
-using Windows.Security.Credentials.UI;
 using Windows.Storage;
-using Windows.UI;
-using Windows.UI.Popups;
-using Windows.UI.StartScreen;
-using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using XamlBrewer.Uwp.Controls;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
-
 namespace CMDInjector
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class MainPage : Page
     {
         public MainPage()
@@ -51,7 +31,7 @@ namespace CMDInjector
                 }
             };
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
-            if (Helper.LocalSettingsHelper.LoadSettings("SplitView", false) == false)
+            if (AppSettings.LoadSettings("SplitView", false) == false)
             {
                 MySplitView.CompactPaneLength = 0;
             }
@@ -138,7 +118,7 @@ namespace CMDInjector
             {
                 CMDInjectorPage.IsSelected = true;
                 MyFrame.Navigate(typeof(CMDInjector));
-                if (Helper.LocalSettingsHelper.LoadSettings("MenuTransition", true) && Helper.build >= 10572) (MyFrame.Content as Page).OpenFromSplashScreen(Helper.rect, Helper.color, new Uri("ms-appx:///Assets/Images/Transitions/Transparent.png"));
+                if (AppSettings.LoadSettings("MenuTransition", true) && Helper.build >= 10572) (MyFrame.Content as Page).OpenFromSplashScreen(Helper.rect, Helper.color, new Uri("ms-appx:///Assets/Images/Transitions/Transparent.png"));
             }
         }
 

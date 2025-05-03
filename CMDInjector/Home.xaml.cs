@@ -27,7 +27,7 @@ namespace CMDInjector
             {
                 /*if (build < 14393 && Helper.IsSecureBootPolicyInstalled() && !File.Exists(@"C:\Windows\System32\CMDInjectorVersion.dat"))
                 {
-                    UnlockBLBox.Visibility = Visibility.Visible;
+                    UnlockBLBox.Visible();
                 }*/
 
                 InjectionTypeCombo.SelectedIndex = File.Exists(@"C:\Windows\servicing\Packages\FadilFadz.CMDInjector.Permanent~628844477771337a~arm~~1.0.0.0.mum").ToInt();
@@ -47,8 +47,8 @@ namespace CMDInjector
 
                     reInjectionReboot.Text = "A previous un-injection reboot is pending. Please reboot your device to apply the changes.";
 
-                    UnInjectBtn.Visibility = Visibility.Visible;
-                    reInjectionReboot.Visibility = Visibility.Visible;
+                    UnInjectBtn.Visible();
+                    reInjectionReboot.Visible();
                 }
                 else if (HomeHelper.IsCMDInjected() && File.Exists(@"C:\Windows\System32\CMDInjectorVersion.dat"))
                 {
@@ -58,17 +58,17 @@ namespace CMDInjector
                     {
                         InjectBtn.IsEnabled = false;
                         InjectBtn.Content = "Injected";
-                        reInjectionNote.Visibility = Visibility.Visible;
+                        reInjectionNote.Visible();
                     }
                     else
                     {
                         if (injectedBatchVer < Helper.currentBatchVersion)
                         {
-                            reInjectionBox.Visibility = Visibility.Visible;
+                            reInjectionBox.Visible();
                         }
                         InjectBtn.Content = "Re-Inject";
                     }
-                    UnInjectBtn.Visibility = Visibility.Visible;
+                    UnInjectBtn.Visible();
                 }
             }
             catch (Exception ex) { Helper.ThrowException(ex); }
@@ -247,7 +247,7 @@ namespace CMDInjector
                     FilesHelper.CopyFromAppRoot("Contents\\ConsoleApps\\icacls.exe", @"C:\Windows\System32\icacls.exe");
                     FilesHelper.CopyFromAppRoot("Contents\\ConsoleApps\\imagex.exe", @"C:\Windows\System32\imagex.exe");
                     FilesHelper.CopyFromAppRoot("Contents\\ConsoleApps\\InputProcessorClient.dll", @"C:\Windows\System32\InputProcessorClient.dll");
-                    FilesHelper.CopyFromAppRoot("Contents\\ConsoleApps\\IoTSettings.exe", @"C:\Windows\System32\IoTSettings.exe");
+                    FilesHelper.CopyFromAppRoot("Contents\\ConsoleApps\\IoTAppSettings.exe", @"C:\Windows\System32\IoTAppSettings.exe");
                     FilesHelper.CopyFromAppRoot("Contents\\ConsoleApps\\IoTShell.exe", @"C:\Windows\System32\IoTShell.exe");
                     FilesHelper.CopyFromAppRoot("Contents\\ConsoleApps\\iotstartup.exe", @"C:\Windows\System32\iotstartup.exe");
                     FilesHelper.CopyFromAppRoot("Contents\\ConsoleApps\\ipconfig.exe", @"C:\Windows\System32\ipconfig.exe");
@@ -324,8 +324,8 @@ namespace CMDInjector
                     RegEdit.SetHKLMValue("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Svchost", "bootshsvc", RegistryType.REG_MULTI_SZ, "bootsh ");
                 });
                 reInjectionReboot.Text = "An injection reboot is pending. Please reboot your device as soon as possible to apply the changes.";
-                reInjectionBox.Visibility = Visibility.Collapsed;
-                reInjectionReboot.Visibility = Visibility.Visible;
+                reInjectionBox.Collapse();
+                reInjectionReboot.Visible();
                 InjectBtn.Content = "Injected";
                 ToastNotificationManager.History.Remove("Re-InjectTag");
                 _ = Reboot();
@@ -392,9 +392,9 @@ namespace CMDInjector
                 UnInjectBtn.Content = "Un-Injected";
 
                 reInjectionReboot.Text = "An un-injection reboot is pending. Please reboot your device as soon as possible to apply the changes.";
-                reInjectionBox.Visibility = Visibility.Collapsed;
-                reInjectionNote.Visibility = Visibility.Collapsed;
-                reInjectionReboot.Visibility = Visibility.Visible;
+                reInjectionBox.Collapse();
+                reInjectionNote.Collapse();
+                reInjectionReboot.Visible();
                 _ = Reboot();
             }
         }

@@ -14,19 +14,17 @@ namespace BackgroundTasks
 
             Helper.Init();
 
-            if (Settings.AutoThemeMode)
+            if (AppSettings.AutoThemeMode)
             {
-                var lightTime = Helper.LocalSettingsHelper.LoadSettings("AutoThemeLight", "06:00");
-                var darkTime = Helper.LocalSettingsHelper.LoadSettings("AutoThemeDark", "18:00");
+                var lightTime = AppSettings.LoadSettings("AutoThemeLight", "06:00");
+                var darkTime = AppSettings.LoadSettings("AutoThemeDark", "18:00");
                 var currentTime = DateTime.Now.ToString("HH:mm");
 
-                string useLightTheme;
-
-                useLightTheme = darkTime.IsGreaterThan(lightTime, ':')
+                string useLightTheme = darkTime.IsGreaterThan(lightTime, ':')
                     ? (currentTime.IsGreaterThan(lightTime, ':') && darkTime.IsGreaterThan(currentTime, ':')).ToDWORDStr()
                     : (currentTime.IsGreaterThan(darkTime, ':') && lightTime.IsGreaterThan(currentTime, ':')).Toggle().ToDWORDStr();
 
-                string controlPanelTheme = (useLightTheme == "00000001") ? "00000000" : "00000001";
+                string controlPanelTheme = useLightTheme.DWORDFlagToBool().Toggle().ToDWORDStr();
 
                 RegEdit.GoToKey(RegistryHive.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize");
 
