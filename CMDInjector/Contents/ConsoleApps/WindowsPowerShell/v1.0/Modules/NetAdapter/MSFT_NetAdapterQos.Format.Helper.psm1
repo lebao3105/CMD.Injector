@@ -76,27 +76,27 @@ function Format-NetAdapterQosTrafficClass(
         $tcprimap[$tc] = @()
     }
 
-    for ($pri = 0; $pri -lt $AppSettings.PriorityAssignmentTable.count; $pri++)
+    for ($pri = 0; $pri -lt $settings.PriorityAssignmentTable.count; $pri++)
     {
-        $tc = $AppSettings.PriorityAssignmentTable[$pri]
+        $tc = $settings.PriorityAssignmentTable[$pri]
         $tcprimap[$tc] += @($pri)
     }
 
     $actual_cnt = 0
 
-    for ($tc = 0; $tc -lt $AppSettings.TsaAssignmentTable.count; $tc++)
+    for ($tc = 0; $tc -lt $settings.TsaAssignmentTable.count; $tc++)
     {
         if ($tcprimap[$tc].count -eq 0) { continue }
 
         $actual_cnt++
 
-        $tsa = [Microsoft.PowerShell.Cmdletization.GeneratedTypes.NetAdapterQos.Tsa]$AppSettings.TsaAssignmentTable[$tc]
+        $tsa = [Microsoft.PowerShell.Cmdletization.GeneratedTypes.NetAdapterQos.Tsa]$settings.TsaAssignmentTable[$tc]
         $temp = Format-NetAdapterQosIntegerArray $tcprimap[$tc]
 
         $bw_str = ""
         if ($tsa -eq [Microsoft.PowerShell.Cmdletization.GeneratedTypes.NetAdapterQos.Tsa]::ETS)
         {
-            $bw = $AppSettings.BandwidthAssignmentTable[$tc]
+            $bw = $settings.BandwidthAssignmentTable[$tc]
             $bw_str = "$($bw)%"
         }
 
@@ -122,16 +122,16 @@ function Format-NetAdapterQosFlowControl(
     $enablecnt = 0
     $enablearray = @()
 
-    for ($pri = 0; $pri -lt $AppSettings.PriorityFlowControlEnableArray.count; $pri++)
+    for ($pri = 0; $pri -lt $settings.PriorityFlowControlEnableArray.count; $pri++)
     {
-        if ($AppSettings.PriorityFlowControlEnableArray[$pri])
+        if ($settings.PriorityFlowControlEnableArray[$pri])
         {
             $enablecnt++
             $enablearray += @($pri)
         }
     }
 
-    if ($enablecnt -eq $AppSettings.PriorityFlowControlEnableArray.count) { $out = "All Priorities Enabled" }
+    if ($enablecnt -eq $settings.PriorityFlowControlEnableArray.count) { $out = "All Priorities Enabled" }
     elseif ($enablecnt -eq 0) { $out = "All Priorities Disabled" }
     elseif ($enablecnt -eq 1) { $out = "Priority $($enablearray[0]) Enabled" }
     else { $out = "Priorities $(Format-NetAdapterQosIntegerArray $enablearray) Enabled" }
@@ -147,7 +147,7 @@ function Format-NetAdapterQosClassification(
     $settings
 )
 {
-    if ($AppSettings.ClassificationTable.count -eq 0)
+    if ($settings.ClassificationTable.count -eq 0)
     {
         return ""
     }
@@ -158,7 +158,7 @@ function Format-NetAdapterQosClassification(
     $out += $template -f "Protocol", "Port/Type", "Priority"
     $out += $template -f "--------", "---------", "--------"
 
-    foreach ($element in $AppSettings.ClassificationTable)
+    foreach ($element in $settings.ClassificationTable)
     {
         switch ($element.ProtocolSelector)
         {

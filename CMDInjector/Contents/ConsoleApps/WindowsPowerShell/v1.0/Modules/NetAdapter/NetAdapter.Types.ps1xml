@@ -716,7 +716,7 @@ Copyright (c) 2011 Microsoft Corporation.  All rights reserved.
           $settings = $this.PSBase.CimInstanceProperties['OperationalSettings'].Value
           $out = ""
 
-          if ($settings -and $AppSettings.TransmissionSelectionEnabled) {
+          if ($settings -and $settings.TransmissionSelectionEnabled) {
             $out = Format-NetAdapterQosTrafficClass $settings
           }
 
@@ -735,7 +735,7 @@ Copyright (c) 2011 Microsoft Corporation.  All rights reserved.
           $settings = $this.PSBase.CimInstanceProperties['OperationalSettings'].Value
           $out = ""
 
-          if ($settings -and $AppSettings.FlowControlEnabled) {
+          if ($settings -and $settings.FlowControlEnabled) {
             $out = Format-NetAdapterQosFlowControl $settings
           }
 
@@ -754,7 +754,7 @@ Copyright (c) 2011 Microsoft Corporation.  All rights reserved.
           $settings = $this.PSBase.CimInstanceProperties['OperationalSettings'].Value
           $out = ""
 
-          if ($settings -and $AppSettings.ClassificationEnabled) {
+          if ($settings -and $settings.ClassificationEnabled) {
             $out = Format-NetAdapterQosClassification $settings
           }
 
@@ -773,7 +773,7 @@ Copyright (c) 2011 Microsoft Corporation.  All rights reserved.
           $settings = $this.PSBase.CimInstanceProperties['RemoteSettings'].Value
           $out = ""
 
-          if ($settings -and $AppSettings.TransmissionSelectionEnabled) {
+          if ($settings -and $settings.TransmissionSelectionEnabled) {
             $out = Format-NetAdapterQosTrafficClass $settings
           }
 
@@ -792,7 +792,7 @@ Copyright (c) 2011 Microsoft Corporation.  All rights reserved.
           $settings = $this.PSBase.CimInstanceProperties['RemoteSettings'].Value
           $out = ""
 
-          if ($settings -and $AppSettings.FlowControlEnabled) {
+          if ($settings -and $settings.FlowControlEnabled) {
             $out = Format-NetAdapterQosFlowControl $settings
           }
 
@@ -811,7 +811,7 @@ Copyright (c) 2011 Microsoft Corporation.  All rights reserved.
           $settings = $this.PSBase.CimInstanceProperties['RemoteSettings'].Value
           $out = ""
 
-          if ($settings -and $AppSettings.ClassificationEnabled) {
+          if ($settings -and $settings.ClassificationEnabled) {
             $out = Format-NetAdapterQosClassification $settings
           }
 
