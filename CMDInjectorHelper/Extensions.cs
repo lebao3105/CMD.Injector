@@ -55,8 +55,10 @@ namespace CMDInjectorHelper
     public static class StringExtension
     {
         public static int ToInt32(this string value) => Convert.ToInt32(value);
+        public static int ToInt32(this string value, int baseNum) => Convert.ToInt32(value, baseNum);
 
-        public static uint ToUint32(this string value) => Convert.ToUInt32(value);
+        public static uint ToUInt32(this string value) => Convert.ToUInt32(value);
+        public static uint ToUInt32(this string value, int baseNum) => Convert.ToUInt32(value, baseNum);
 
         public static bool IsGreaterThan(this string strA, string strB, char separator)
         {
